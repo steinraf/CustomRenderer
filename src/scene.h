@@ -35,9 +35,19 @@ public:
     __host__ void renderCPU();
 
 
+
 private:
 
     __host__ void initOpenGL();
+    __host__ void OpenGLDraw(Vector3f *deviceVector, volatile bool& isRendering);
+
+    __host__ void loadShader();
+
+    __host__ void checkShaderCompileError(unsigned int shader, std::string type) const;
+
+    const std::string fragmentShaderPath = "/home/steinraf/ETH/CG/CustomRenderer/shaders/fragmentShader.glsl";
+    const std::string vertexShaderPath = "/home/steinraf/ETH/CG/CustomRenderer/shaders/vertexShader.glsl";
+
 
     const unsigned int blockSizeX = 16, blockSizeY = 16;
 
@@ -66,7 +76,11 @@ private:
 
     const int width, height;
 
-    GLuint PBO;
+    GLuint VAO, VBO, EBO, PBO;
+
+    unsigned int shaderID;
+
+    GLFWwindow *window;
 
     struct cudaGraphicsResource *cudaPBOResource;
 

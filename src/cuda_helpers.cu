@@ -97,6 +97,8 @@ namespace cuda_helpers {
         int i, j, pixelIndex;
         if (!initIndices(i, j, pixelIndex, width, height)) return;
 
+
+
         curandState *pixelRandState = &globalRandState[pixelIndex];
 
         const auto iFloat = static_cast<float>(i);
@@ -127,6 +129,7 @@ namespace cuda_helpers {
                 sqrt(col[2] * scale)
         };
         output[pixelIndex] = col;
+
     }
 
     __global__ void denoise(Vector3f *input, Vector3f *output, int width, int height) {

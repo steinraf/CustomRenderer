@@ -13,7 +13,7 @@ namespace customRenderer{
     [[nodiscard]] __device__ __host__ static constexpr float getCameraFOV() noexcept {return 90.f;}
     [[nodiscard]] __device__ __host__ static constexpr float getCameraAperture() noexcept {return 0.0f;}
 
-    [[nodiscard]] __device__ __host__ static constexpr int getNumSubsamples() noexcept {return 4;}
+    [[nodiscard]] __device__ __host__ static constexpr int getNumSubsamples() noexcept {return 256;}
     [[nodiscard]] __device__ __host__ static constexpr int getMaxRayDepth() noexcept {return 100;}
 
 
