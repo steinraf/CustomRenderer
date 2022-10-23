@@ -4,10 +4,11 @@
 
 #include "cuda_helpers.h"
 #include "utility/ray.h"
-#include "sphere.h"
+#include "shapes/sphere.h"
 #include "hittableList.h"
 #include "material.h"
 #include "constants.h"
+#include "shapes/triangle.h"
 
 #include <iostream>
 #include <cuda/std/limits>
@@ -39,9 +40,9 @@ namespace cuda_helpers {
 
         hittableList[0] = new HittableList(hittables, numHittables);
 
-        hittableList[0]->add(new Sphere({0, 0, -1}, 0.5, new Lambertian{{1.f, 0.0f, 0.83f}}));
-        hittableList[0]->add(new Sphere({0, -100.5, -1}, 100, new Lambertian{{0.f, 0.8f, 0.f}}));
-
+        hittableList[0]->add(new Sphere({0, 0, -1}, 0.05, new Lambertian{{1.f, 0.0f, 0.83f}}));
+//        hittableList[0]->add(new Sphere({0, -100.5, -1}, 100, new Lambertian{{0.f, 0.8f, 0.f}}));
+        hittableList[0]->add(new Triangle({0, 0, -2},{2, 0, -2},{2, 2, -2}, new Lambertian{{0.f, 0.f, 0.83f}}));
     }
 
     __global__ void freeVariables(int width, int height) {

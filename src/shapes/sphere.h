@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "utility/ray.h"
-#include "hittable.h"
+#include "../utility/ray.h"
+#include "../hittable.h"
 
 
 class Sphere : public Hittable {

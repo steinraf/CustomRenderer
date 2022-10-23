@@ -5,11 +5,13 @@
 #pragma once
 
 #include "hittable.h"
-#include "cuda/std/cassert"
+#include <cuda/std/cassert>
+
+#include <thrust/device_vector.h>
 
 class HittableList : public Hittable {
 public:
-    __device__ HittableList(Hittable **hittables, size_t size = 0);
+    __device__ explicit HittableList(Hittable **hittables, size_t size = 0);
 
     __device__ void add(Hittable *hittable);
 
@@ -20,6 +22,8 @@ public:
 
 private:
     Hittable **hittables;
+
+//    thrust::device_vector<Hittable> hittableList;
 
     size_t currentSize = 0;
 

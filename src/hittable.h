@@ -13,7 +13,7 @@ struct HitRecord {
     Vector3f position;
     Vector3f normal;
     Material *material;
-    double t;
+    float t;
     bool frontFace;
 
     __device__ inline void setFaceNormal(const Ray &r, const Vector3f &outwardNormal) {
