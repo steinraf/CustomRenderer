@@ -34,7 +34,8 @@ add_executable(Raytracing
         src/material.cu
         src/material.h
         src/constants.h
-        src/utility/warp.h)
+        src/utility/warp.h
+        src/utility/sampler.h)
 
 set_target_properties(Raytracing PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 

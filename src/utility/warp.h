@@ -9,24 +9,17 @@
 
 
 namespace Warp {
-    [[nodiscard]] __device__ static inline Vector3f Random(curandState *local_rand_state) {
-        return {
-            curand_uniform(local_rand_state),
-            curand_uniform(local_rand_state),
-            curand_uniform(local_rand_state)
-        };
-    }
 
-    [[nodiscard]] __device__ static inline Vector3f  RandomInUnitDisk(curandState *local_rand_state) {
-        const float r = sqrt(curand_uniform(local_rand_state));
-        const float phi = (2 * curand_uniform(local_rand_state) - 1) * M_PIf;
+    [[nodiscard]] __device__ static inline Vector3f  RandomInUnitDisk(Sampler &sampler) {
+        const float r = sqrt(sampler.getSample1D());
+        const float phi = (2 * sampler.getSample1D() - 1) * M_PIf;
         return {r * sin(phi), r * cos(phi), 0};
     }
 
-    [[nodiscard]] __device__ static inline Vector3f  RandomInUnitSphere(curandState *local_rand_state) {
+    [[nodiscard]] __device__ static inline Vector3f  RandomInUnitSphere(Sampler &sampler) {
 
-        float cosT = 2 * curand_uniform(local_rand_state) - 1;
-        float phi = 2 * M_PIf * curand_uniform(local_rand_state);
+        float cosT = 2 * sampler.getSample1D() - 1;
+        float phi = 2 * M_PIf * sampler.getSample1D();
         float sTheta = sin(acos(cosT));
         return {
                 sTheta * sin(phi),

@@ -22,16 +22,14 @@ namespace cuda_helpers {
     __global__ void initRng(int width, int height, curandState *randState);
 
     // Pointer-pointers are used because cuda has problems with passing pointers to objects with virtual functions to global kernels
-    __global__ void
-    initVariables(Camera **cam, Hittable **hittables, HittableList **hittableList, size_t numHittables, int width,
-                  int height);
+    __global__ void initVariables(Hittable **hittables, HittableList **hittableList, size_t numHittables);
 
     __global__ void freeVariables(int width, int height);
 
-    __device__ Color getColor(const Ray &r, HittableList **hittableList, int maxRayDepth, curandState *localRandState);
+    __device__ Color getColor(const Ray &r, HittableList **hittableList, int maxRayDepth, Sampler &sampler);
 
 
-    __global__ void render(Vector3f *output, Camera **cam, HittableList **hittableList, int width, int height,
+    __global__ void render(Vector3f *output, Camera cam, HittableList **hittableList, int width, int height,
                            curandState *globalRandState);
 
     __global__ void denoise(Vector3f *input, Vector3f *output, int width, int height);

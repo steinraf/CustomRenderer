@@ -30,8 +30,8 @@ __device__ __host__ Camera::Camera(Vector3f origin, Vector3f lookAt, Vector3f up
     vertical = 2.0f * halfV;
 }
 
-__device__ Ray Camera::getRay(float s, float t, curandState *localRandState) const {
-    const Vector3f randomDisk = lensRadius * Warp::RandomInUnitDisk(localRandState);
+__device__ Ray Camera::getRay(float s, float t, Sampler &sampler) const {
+    const Vector3f randomDisk = lensRadius * Warp::RandomInUnitDisk(sampler);
     const Vector3f offset = u * randomDisk[0] + v * randomDisk[1];
 
     const Vector3f pos = origin + offset;

@@ -33,8 +33,7 @@ namespace cuda_helpers {
     }
 
     __global__ void
-    initVariables(Camera **cam, Hittable **hittables, HittableList **hittableList, size_t numHittables, int width,
-                  int height) {
+    initVariables(Hittable **hittables, HittableList **hittableList, size_t numHittables) {
         int i, j, pixelIndex;
         if (!initIndices(i, j, pixelIndex, 1, 1)) return;
 
@@ -42,14 +41,6 @@ namespace cuda_helpers {
 
         hittableList[0]->add(new Sphere({0, 0, -1}, 0.5, new Lambertian{{1.f, 0.0f, 0.83f}}));
         hittableList[0]->add(new Sphere({0, -100.5, -1}, 100, new Lambertian{{0.f, 0.8f, 0.f}}));
-
-        cam[0] = new Camera(customRenderer::getCameraOrigin(),
-                            customRenderer::getCameraLookAt(),
-                            customRenderer::getCameraUp(),
-                            customRenderer::getCameraFOV(),
-                            static_cast<float>(width) / static_cast<float>(height),
-                            customRenderer::getCameraAperture(),
-                            (customRenderer::getCameraOrigin() - customRenderer::getCameraLookAt()).norm());
 
     }
 
@@ -60,7 +51,7 @@ namespace cuda_helpers {
 
     }
 
-    __device__ Color getColor(const Ray &r, HittableList **hittableList, int maxRayDepth, curandState *localRandState) {
+    __device__ Color getColor(const Ray &r, HittableList **hittableList, int maxRayDepth, Sampler &sampler) {
 
         HitRecord record;
 
@@ -73,7 +64,7 @@ namespace cuda_helpers {
 
         for (int depth = 0; depth < maxRayDepth; ++depth) {
             if (hittableList[0]->hit(currentRay, 1e-4, cuda::std::numeric_limits<float>::infinity(), record)) {
-                if (record.material->scatter(currentRay, record, attenuation, scattered, localRandState)) {
+                if (record.material->scatter(currentRay, record, attenuation, scattered, sampler)) {
                     currentRay = scattered;
                     currentAttenuation *= attenuation;
                 } else {
@@ -92,14 +83,13 @@ namespace cuda_helpers {
     }
 
 
-    __global__ void render(Vector3f *output, Camera **cam, HittableList **hittableList, int width, int height,
+    __global__ void render(Vector3f *output, Camera cam, HittableList **hittableList, int width, int height,
                            curandState *globalRandState) {
         int i, j, pixelIndex;
         if (!initIndices(i, j, pixelIndex, width, height)) return;
 
 
-
-        curandState *pixelRandState = &globalRandState[pixelIndex];
+        auto sampler = Sampler(&globalRandState[pixelIndex]);
 
         const auto iFloat = static_cast<float>(i);
         const auto jFloat = static_cast<float>(j);
@@ -113,12 +103,12 @@ namespace cuda_helpers {
         Color col{0.0f};
 
         for (int subSamples = 0; subSamples < numSubsamples; ++subSamples) {
-            const float s = (iFloat + curand_uniform(pixelRandState)) / (widthFloat - 1);
-            const float t = (jFloat + curand_uniform(pixelRandState)) / (heightFloat - 1);
+            const float s = (iFloat + sampler.getSample1D()) / (widthFloat - 1);
+            const float t = (jFloat + sampler.getSample1D()) / (heightFloat - 1);
 
-            const auto ray = cam[0]->getRay(s, t, pixelRandState);
+            const auto ray = cam.getRay(s, t, sampler);
 
-            col += getColor(ray, hittableList, maxRayDepth, pixelRandState);
+            col += getColor(ray, hittableList, maxRayDepth, sampler);
         }
 
         constexpr float scale = 1.f / numSubsamples;

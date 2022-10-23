@@ -7,9 +7,9 @@
 
 
 __device__ bool Lambertian::scatter(const Ray &rayIn, const HitRecord &rec, Vector3f &attenuation, Ray &scattered,
-                                    curandState *localRandState) const {
+                                    Sampler &sampler) const {
 
-    Vector3f scatter = rec.normal + Warp::RandomInUnitSphere(localRandState);
+    Vector3f scatter = rec.normal + Warp::RandomInUnitSphere(sampler);
     if (scatter.squaredNorm() < 1e-5)
         scatter = rec.normal;
 

@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
 
 
 
-    Scene s(384, 216);
+    Scene s(3840, 2160);
     s.renderCPU();
 //    s.renderGPU();
 

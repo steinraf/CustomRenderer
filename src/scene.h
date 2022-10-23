@@ -67,7 +67,7 @@ private:
     Hittable **deviceHittables;
     const size_t numHittables;
 
-    Camera **deviceCamera;
+    Camera /* ** */deviceCamera;
 
 
     HittableList **deviceHittableList;

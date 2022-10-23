@@ -3,13 +3,24 @@
 //
 
 #include "scene.h"
+#include "constants.h"
+
 #include <thread>
 #include <fstream>
 
 __host__ Scene::Scene(int width, int height, int numHittables, Device dev) : width(width), height(height),
                                                imageBufferSize(width * height * sizeof(Vector3f)),
                                                blockSize(width / blockSizeX + 1, height / blockSizeY + 1),
-                                               numHittables(numHittables), device(dev){
+                                               numHittables(numHittables), device(dev),
+                                             deviceCamera(customRenderer::getCameraOrigin(),
+                                                          customRenderer::getCameraLookAt(),
+                                                          customRenderer::getCameraUp(),
+                                                          customRenderer::getCameraFOV(),
+                                                          static_cast<float>(width) / static_cast<float>(height),
+                                                          customRenderer::getCameraAperture(),
+                                                          (customRenderer::getCameraOrigin() - customRenderer::getCameraLookAt()).norm()){
+
+//    deviceCamera = Camera(  );
 
 //    std::cout << "Initializing scene with " << width  << ' ' << blockSizeX << '\n';
 
@@ -25,18 +36,14 @@ __host__ Scene::Scene(int width, int height, int numHittables, Device dev) : wid
 
 
     checkCudaErrors(cudaMalloc((void **) &deviceCurandState, width * height * sizeof(curandState)));
-
     checkCudaErrors(cudaMalloc((void **) &deviceHittables, numHittables * sizeof(Hittable *)));
     checkCudaErrors(cudaMalloc((void **) &deviceHittableList, sizeof(HittableList *)));
-
-    checkCudaErrors(cudaMalloc((void **) &deviceCamera, sizeof(Camera *)));
-
 
     cuda_helpers::initRng<<<blockSize, threadSize>>>(width, height, deviceCurandState);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
 
-    cuda_helpers::initVariables<<<1, 1>>>(deviceCamera, deviceHittables, deviceHittableList, numHittables, width, height);
+    cuda_helpers::initVariables<<<1, 1>>>(deviceHittables, deviceHittableList, numHittables);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
 
@@ -54,13 +61,13 @@ __host__ Scene::~Scene() {
     if(device == CPU){
         //        checkCudaErrors(cudaDeviceSynchronize());
         //        checkCudaErrors(cudaFree(deviceImageBuffer));
-        glDeleteVertexArrays(1, &VAO);
-        glDeleteBuffers(1, &VBO);
-        glDeleteBuffers(1, &EBO);
+//        glDeleteVertexArrays(1, &VAO);
+//        glDeleteBuffers(1, &VBO);
+//        glDeleteBuffers(1, &EBO);
     }else{
         cudaGraphicsUnmapResources(1, &cudaPBOResource, 0);
     }
-    glfwTerminate();
+//    glfwTerminate();
     cuda_helpers::freeVariables<<<blockSize, threadSize>>>(width, height);
 }
 
@@ -81,9 +88,6 @@ void Scene::render(){
 
     std::cout << "Synchronizing GPU...\n";
     checkCudaErrors(cudaDeviceSynchronize());
-
-
-
 
 
     std::cout << "Starting denoise...\n";
