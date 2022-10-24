@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.21)
 project(Raytracing LANGUAGES CXX CUDA)
 
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CUDA_CXX_STANDARD 20)
+
 
 set(CMAKE_CXX_FLAGS "-O3 -funroll-loops -DNO_FREETYPE -D_GLIBCXX_ASSERTIONS -fasynchronous-unwind-tables -fexceptions -fpie -Wl,-pie -fstack-clash-protection -fstack-protector-all -fstack-protector-strong -g -grecord-gcc-switches -fcf-protection -pipe -Wall -Werror ")
 
@@ -16,7 +18,7 @@ find_package(OpenGL REQUIRED)
 find_package(X11 REQUIRED)
 
 
-    add_executable(Raytracing
+add_executable(Raytracing
         main.cu
         src/utility/vector.h
         src/cuda_helpers.cu
@@ -40,11 +42,13 @@ find_package(X11 REQUIRED)
         src/utility/sampler.h
         src/Acceleration/bvh.h
         src/Acceleration/bvh.cu
-            src/shapes/triangle.cu
-        src/shapes/triangle.h)
+        src/shapes/triangle.cu
+        src/shapes/triangle.h
+        src/utility/meshLoader.h
+        src/utility/meshLoader.cu src/bsdf.cu src/bsdf.h)
 
 set_target_properties(Raytracing PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
-target_link_libraries(Raytracing PRIVATE PNGwriter::PNGwriter glfw3 X11 GL GLAD dl pthread )
+target_link_libraries(Raytracing PRIVATE PNGwriter::PNGwriter glfw3 X11 GL GLAD dl pthread)
 
 include_directories(${CMAKE_SOURCE_DIR}/includes)

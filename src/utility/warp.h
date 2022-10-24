@@ -8,15 +8,15 @@
 #include <curand_kernel.h>
 
 
-namespace Warp {
+namespace Warp{
 
-    [[nodiscard]] __device__ static inline Vector3f  RandomInUnitDisk(Sampler &sampler) {
+    [[nodiscard]] __device__ static inline Vector3f RandomInUnitDisk(Sampler &sampler){
         const float r = sqrt(sampler.getSample1D());
         const float phi = (2 * sampler.getSample1D() - 1) * M_PIf;
         return {r * sin(phi), r * cos(phi), 0};
     }
 
-    [[nodiscard]] __device__ static inline Vector3f  RandomInUnitSphere(Sampler &sampler) {
+    [[nodiscard]] __device__ static inline Vector3f RandomInUnitSphere(Sampler &sampler){
 
         float cosT = 2 * sampler.getSample1D() - 1;
         float phi = 2 * M_PIf * sampler.getSample1D();

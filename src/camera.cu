@@ -6,8 +6,8 @@
 #include "utility/warp.h"
 
 __device__ __host__ Camera::Camera(Vector3f origin, Vector3f lookAt, Vector3f up, float vFOV,
-                          float aspectRatio, float aperture, float focusDist)
-        : origin(origin), lensRadius(aperture / 2.0f) {
+                                   float aspectRatio, float aperture, float focusDist)
+        : origin(origin), lensRadius(aperture / 2.0f){
 
     const float theta = vFOV * M_PIf / 180.0f;
 
@@ -30,7 +30,7 @@ __device__ __host__ Camera::Camera(Vector3f origin, Vector3f lookAt, Vector3f up
     vertical = 2.0f * halfV;
 }
 
-__device__ Ray Camera::getRay(float s, float t, Sampler &sampler) const {
+__device__ Ray Camera::getRay(float s, float t, Sampler &sampler) const{
     const Vector3f randomDisk = lensRadius * Warp::RandomInUnitDisk(sampler);
     const Vector3f offset = u * randomDisk[0] + v * randomDisk[1];
 

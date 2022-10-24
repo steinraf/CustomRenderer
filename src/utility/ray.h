@@ -7,7 +7,7 @@
 #include "vector.h"
 
 
-class Ray {
+class Ray{
 public:
     __device__ explicit Ray();
 
@@ -15,9 +15,9 @@ public:
 
     __device__ Vector3f atTime(float t) const;
 
-    __device__ Vector3f getOrigin() const { return origin; }
+    __device__ Vector3f getOrigin() const{ return origin; }
 
-    __device__ Vector3f getDirection() const { return dir; }
+    __device__ Vector3f getDirection() const{ return dir; }
 
 
 private:

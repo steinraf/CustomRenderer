@@ -5,13 +5,15 @@
 #pragma once
 
 
+#include "../utility/ray.h"
+#include "../hittable.h"
 
 template<typename Primitive>
 struct BVHNode{
     __device__ explicit BVHNode(const Primitive &primitive) noexcept
-        :left(nullptr), right(nullptr),
-        countLeft(0), countRight(0),
-        primitive(primitive){
+            : left(nullptr), right(nullptr),
+              countLeft(0), countRight(0),
+              primitive(primitive){
 
     }
 
@@ -26,11 +28,14 @@ struct BVHNode{
 template<typename Primitive>
 class BVH{
 public:
-    explicit BVH(Primitive *primitives, int numPrimitives);
+    __device__ explicit BVH(Primitive *primitives, int numPrimitives);
+
+    __device__ bool hit(const Ray &r, float tMin, float tMax, HitRecord &rec) const;
 
 private:
     Primitive *primitives;
-    BVHNode<Primitive> *root;
+    int numPrimitives;
+//    BVHNode<Primitive> *root;
 };
 
 

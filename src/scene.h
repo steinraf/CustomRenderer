@@ -16,6 +16,7 @@
 #include "cuda_helpers.h"
 #include "utility/vector.h"
 #include "hittableList.h"
+#include "utility/meshLoader.h"
 
 enum Device{
     CPU,
@@ -23,23 +24,24 @@ enum Device{
 };
 
 
-class Scene {
+class Scene{
 public:
-    __host__ explicit Scene(int width = 384, int height = 216, int numHittables = 10, Device=CPU);
+    __host__ explicit Scene(HostMeshInfo &&mesh, int width = 384, int height = 216, int numHittables = 10, Device= CPU);
 
     __host__ ~Scene();
 
     __host__ void render();
 
     __host__ void renderGPU();
-    __host__ void renderCPU();
 
+    __host__ void renderCPU();
 
 
 private:
 
     __host__ void initOpenGL();
-    __host__ void OpenGLDraw(Vector3f *deviceVector, volatile bool& isRendering);
+
+    __host__ void OpenGLDraw(Vector3f *deviceVector, volatile bool &isRendering);
 
     __host__ void loadShader();
 
@@ -48,6 +50,7 @@ private:
     const std::string fragmentShaderPath = "/home/steinraf/ETH/CG/CustomRenderer/shaders/fragmentShader.glsl";
     const std::string vertexShaderPath = "/home/steinraf/ETH/CG/CustomRenderer/shaders/vertexShader.glsl";
 
+    HostMeshInfo mesh;
 
     const unsigned int blockSizeX = 16, blockSizeY = 16;
 
@@ -64,13 +67,15 @@ private:
     Vector3f *hostImageBuffer;
     Vector3f *hostImageBufferDenoised;
 
-    Hittable **deviceHittables;
-    const size_t numHittables;
+//    Hittable **deviceHittables;
+//    const size_t numHittables;
 
     Camera /* ** */deviceCamera;
 
 
-    HittableList **deviceHittableList;
+//    HittableList **deviceHittableList;
+
+    BVH<Triangle> *bvh;
 
     curandState *deviceCurandState;
 

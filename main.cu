@@ -3,10 +3,8 @@
 
 #include "src/utility/vector.h"
 #include "src/scene.h"
+#include "src/utility/meshLoader.h"
 
-#include <thrust/host_vector.h>
-#include <thrust/device_vector.h>
-#include <thrust/sort.h>
 
 //struct AABB{
 //    Vector3f start;
@@ -18,7 +16,7 @@
 //};
 
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv){
 
 //    for(int i = 0; i < argc; ++i){
 //        std::cout << i << ": " << argv[i] << '\n';
@@ -54,13 +52,19 @@ int main(int argc, char **argv) {
 //    exit(0);
 
 
+    std::cout << "Parsing obj...\n";
+
+    std::filesystem::path filePath = "/home/steinraf/ETH/CG/CustomRenderer/obj/ajax.obj";
+    assert(filePath.extension() == ".obj");
+
+//    for(int i = 0; i < vertices.size(); ++i)
+//        std::cout << vertices[i][2] << ' ';
+
 
     std::cout << "Starting rendering...\n";
 
 
-
-
-    Scene s(384, 216);
+    Scene s(loadMesh(filePath), 384, 216);
     s.renderCPU();
 //    s.renderGPU();
 
