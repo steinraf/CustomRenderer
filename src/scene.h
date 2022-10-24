@@ -26,7 +26,8 @@ enum Device{
 
 class Scene{
 public:
-    __host__ explicit Scene(HostMeshInfo &&mesh, int width = 384, int height = 216, int numHittables = 10, Device= CPU);
+    __host__ explicit Scene(HostMeshInfo &&mesh, int width = 384, int height = 216/*, int numHittables = 10*/,
+                            Device= CPU);
 
     __host__ ~Scene();
 

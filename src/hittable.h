@@ -15,7 +15,7 @@ struct HitRecord{
     Vector3f position;
     Vector3f normal;
 
-    class Triangle *triangle;
+    class Triangle const *triangle;
 
 //    BSDF bsdf;
 

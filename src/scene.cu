@@ -9,7 +9,7 @@
 #include <thread>
 #include <fstream>
 
-__host__ Scene::Scene(HostMeshInfo &&mesh, int width, int height, int numHittables, Device dev) :
+__host__ Scene::Scene(HostMeshInfo &&mesh, int width, int height/*, int numHittables*/, Device dev) :
         mesh(mesh), width(width), height(height),
         imageBufferSize(width * height * sizeof(Vector3f)),
         blockSize(width / blockSizeX + 1, height / blockSizeY + 1),
@@ -48,7 +48,8 @@ __host__ Scene::Scene(HostMeshInfo &&mesh, int width, int height, int numHittabl
 
 //    cuda_helpers::initVariables<<<1, 1>>>(deviceHittables, deviceHittableList, numHittables);
 
-    cuda_helpers::initVariables<<<1, 1>>>(bvh, triangles, numHittables);
+    checkCudaErrors(cudaMalloc((void **) &bvh, sizeof(BVH<Triangle> *)));
+    cuda_helpers::initVariables<<<1, 1>>>(bvh, triangles, mesh.faces.size());
 
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());

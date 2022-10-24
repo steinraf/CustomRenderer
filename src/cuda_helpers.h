@@ -13,6 +13,7 @@
 #include "utility/meshLoader.h"
 #include "Acceleration/bvh.h"
 #include "constants.h"
+#include "Acceleration/bvh.h"
 #include <cuda/std/limits>
 
 
@@ -49,6 +50,15 @@ namespace cuda_helpers{
         int i, j, pixelIndex;
         if(!initIndices(i, j, pixelIndex, 1, 1)) return;
 
+//        for(int i = 0; i < numPrimitives; ++i)
+//            printf("Receiving GPU Tria with coordinates\n"
+//                   "(%f, %f, %f) \n"
+//                   "(%f, %f, %f) \n"
+//                   "(%f, %f, %f) \n",
+//                   primitives[i].p0[0], primitives[i].p0[1], primitives[i].p0[2],
+//                   primitives[i].p1[0], primitives[i].p1[1], primitives[i].p1[2],
+//                   primitives[i].p2[0], primitives[i].p2[1], primitives[i].p2[2]);
+
         *bvh = BVH<Primitive>(primitives, numPrimitives);
     }
 
@@ -71,15 +81,19 @@ namespace cuda_helpers{
         Color currentAttenuation{1.f};
 
         for(int depth = 0; depth < maxRayDepth; ++depth){
-            if(bvh->hit(currentRay, 1e-4, cuda::std::numeric_limits<float>::infinity(), record)){
+            if(bvh->hit(currentRay, 1e-8, cuda::std::numeric_limits<float>::infinity(), record)){
+//                return Color{1.f};
                 if(record.triangle->bsdf.scatter(currentRay, record, attenuation, scattered, sampler)){
                     currentRay = scattered;
                     currentAttenuation *= attenuation;
+//                    return Color{0.f};
+                    return record.normal * 255.99;
                 }else{
                     return Color{0.f};
                 }
 
             }else{
+                return Color{1.f};
                 float t = 0.5f * (r.getDirection().normalized()[1] + 1.f);
                 Color c = (1 - t) * Vector3f{1.f} + t * Color{0.5f, 0.7f, 1.0f};
                 return currentAttenuation * c;
