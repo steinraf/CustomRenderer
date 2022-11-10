@@ -1,0 +1,83 @@
+//
+// Created by steinraf on 19/08/22.
+//
+
+#include "cudaHelpers.h"
+
+
+#include "utility/ray.h"
+#include "shapes/sphere.h"
+#include "hittableList.h"
+#include "material.h"
+#include "shapes/triangle.h"
+#include "bsdf.h"
+
+#include "utility/meshLoader.h"
+
+#include <iostream>
+
+
+namespace cudaHelpers{
+
+
+    __host__ void check_cuda(cudaError_t result, char const *const func, const char *const file, int line){
+        if(result){
+            std::cerr << "CUDA error = " << static_cast<unsigned int>(result) << " at " <<
+                      file << ":" << line << " '" << func << "' \n";
+            cudaDeviceReset();
+            exit(99);
+        }
+    }
+
+
+    __global__ void initRng(int width, int height, curandState *randState){
+        int i, j, pixelIndex;
+        if(!initIndices(i, j, pixelIndex, width, height)) return;
+
+        curand_init(42, pixelIndex, 0, &randState[pixelIndex]);
+    }
+
+    __global__ void computeMortonCode(thrust::device_ptr<Triangle> triaVec, uint32_t *mortonCodes, int numTriangles){
+
+    }
+
+
+    __global__ void freeVariables(int width, int height){
+        int i, j, pixelIndex;
+        if(!initIndices(i, j, pixelIndex, 1, 1)) return;
+
+
+    }
+
+    __global__ void denoise(Vector3f *input, Vector3f *output, int width, int height){
+        int i, j, pixelIndex;
+        if(!initIndices(i, j, pixelIndex, width, height)) return;
+
+
+        Vector3f tmp{0.f};
+        int count = 0;
+
+        auto between = [](int val, int low, int high){ return val >= low && val < high; };
+
+        const int range = 2;
+
+        float filter[5][5] = {
+                {0, 0,      0,      0, 0},
+                {0, 0,      0.125f, 0, 0},
+                {0, 0.125f, 0.5f,   0.125f,},
+                {0, 0,      0.125f, 0, 0},
+                {0, 0,      0,      0, 0},
+        };
+
+        for(int a = -range; a <= range; ++a){
+            for(int b = -range; b <= range; ++b){
+                if(between(i + a, 0, width) && between(j + b, 0, height)){
+                    ++count;
+                    tmp += filter[range + a][range + b] * input[(j + b) * width + i + a];
+                }
+            }
+        }
+
+        output[pixelIndex] = tmp.clamp(0.f, 1.f); //(input[pixelIndex] + tmp/(count))/2.0;
+    }
+}

@@ -21,8 +21,8 @@ find_package(X11 REQUIRED)
 add_executable(Raytracing
         main.cu
         src/utility/vector.h
-        src/cuda_helpers.cu
-        src/cuda_helpers.h
+        src/cudaHelpers.cu
+        src/cudaHelpers.h
         src/scene.cu
         src/scene.h
         src/utility/ray.cu
@@ -40,12 +40,12 @@ add_executable(Raytracing
         src/constants.h
         src/utility/warp.h
         src/utility/sampler.h
-        src/Acceleration/bvh.h
-        src/Acceleration/bvh.cu
+        src/acceleration/bvh.h
+        src/acceleration/bvh.cu
         src/shapes/triangle.cu
         src/shapes/triangle.h
         src/utility/meshLoader.h
-        src/utility/meshLoader.cu src/bsdf.cu src/bsdf.h)
+        src/utility/meshLoader.cu src/bsdf.cu src/bsdf.h src/acceleration/aabb.cu src/acceleration/aabb.h)
 
 set_target_properties(Raytracing PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 

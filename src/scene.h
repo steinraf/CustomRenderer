@@ -13,7 +13,7 @@
 #include <cuda_gl_interop.h>
 
 
-#include "cuda_helpers.h"
+#include "cudaHelpers.h"
 #include "utility/vector.h"
 #include "hittableList.h"
 #include "utility/meshLoader.h"
@@ -21,6 +21,12 @@
 enum Device{
     CPU,
     GPU
+};
+
+struct PixelInfo{
+    Color color;
+    Vector3f intersection;
+    Vector3f normal;
 };
 
 
@@ -75,6 +81,8 @@ private:
 
 
 //    HittableList **deviceHittableList;
+
+
 
     BVH<Triangle> *bvh;
 

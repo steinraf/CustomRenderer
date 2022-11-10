@@ -4,7 +4,7 @@
 
 #include "scene.h"
 #include "constants.h"
-#include "cuda_helpers.h"
+#include "cudaHelpers.h"
 
 #include <thread>
 #include <fstream>
@@ -40,16 +40,34 @@ __host__ Scene::Scene(HostMeshInfo &&mesh, int width, int height/*, int numHitta
 //    checkCudaErrors(cudaMalloc((void **) &deviceHittables, numHittables * sizeof(Hittable *)));
 //    checkCudaErrors(cudaMalloc((void **) &deviceHittableList, sizeof(HittableList *)));
 
-    cuda_helpers::initRng<<<blockSize, threadSize>>>(width, height, deviceCurandState);
+    cudaHelpers::initRng<<<blockSize, threadSize>>>(width, height, deviceCurandState);
     checkCudaErrors(cudaGetLastError());
-    checkCudaErrors(cudaDeviceSynchronize());
+    // No need to sync because can run independantly
+//    checkCudaErrors(cudaDeviceSynchronize());
 
-    auto *triangles = meshToGPU(mesh);
 
-//    cuda_helpers::initVariables<<<1, 1>>>(deviceHittables, deviceHittableList, numHittables);
+//    Triangle *deviceTriangles;
+
+//    cudaHelpers::getMesh<<<1, blockSizeX*blockSizeY>>>(mesh);
+
+
+//    auto *deviceTriangles = mesh2GPU(mesh);
+    auto *deviceTriangles = meshToGPU(mesh);
+
+    const int numTriangles = static_cast<int>(mesh.normalsIndices.first.size());
+
+    //TODO compute morton Codes
+//    thrust::device_ptr<Triangle> triaVec(deviceTriangles);
+//
+//    uint32_t *mortonCodes;
+//    checkCudaErrors(cudaMalloc((void **) &mortonCodes, numTriangles * sizeof(uint32_t)));
+//    cudaHelpers::computeMortonCode<<<blockSize, threadSize>>>(triaVec, mortonCodes, numTriangles);
+
+//    cudaHelpers::initBVH<<<1, 1>>>(deviceHittables, deviceHittableList, numHittables);
 
     checkCudaErrors(cudaMalloc((void **) &bvh, sizeof(BVH<Triangle> *)));
-    cuda_helpers::initVariables<<<1, 1>>>(bvh, triangles, mesh.faces.size());
+
+    cudaHelpers::initBVH<<<1, 1>>>(bvh, deviceTriangles, numTriangles);
 
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
@@ -75,17 +93,17 @@ __host__ Scene::~Scene(){
         cudaGraphicsUnmapResources(1, &cudaPBOResource, 0);
     }
 //    glfwTerminate();
-    cuda_helpers::freeVariables<<<blockSize, threadSize>>>(width, height);
+    cudaHelpers::freeVariables<<<blockSize, threadSize>>>(width, height);
 }
 
 
 void Scene::render(){
 
-    bool currentlyRendering = true;
+    volatile bool currentlyRendering = true;
     std::cout << "Starting render...\n";
 
 
-    cuda_helpers::render<<<blockSize, threadSize>>>(deviceImageBuffer, deviceCamera, bvh/*deviceHittableList*/, width, height, deviceCurandState);
+    cudaHelpers::render<<<blockSize, threadSize>>>(deviceImageBuffer, deviceCamera, bvh/*deviceHittableList*/, width, height, deviceCurandState);
     checkCudaErrors(cudaGetLastError());
 
     std::cout << "Starting draw thread...\n";
@@ -98,7 +116,7 @@ void Scene::render(){
 
     std::cout << "Starting denoise...\n";
     checkCudaErrors(cudaMemcpy(hostImageBuffer, deviceImageBuffer, imageBufferSize, cudaMemcpyDeviceToHost));
-    cuda_helpers::denoise<<<blockSize, threadSize>>>(deviceImageBuffer, deviceImageBufferDenoised, width, height);
+    cudaHelpers::denoise<<<blockSize, threadSize>>>(deviceImageBuffer, deviceImageBufferDenoised, width, height);
     checkCudaErrors(cudaDeviceSynchronize());
 
     checkCudaErrors(

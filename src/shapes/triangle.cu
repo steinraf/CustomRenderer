@@ -67,7 +67,7 @@ __device__ bool Triangle::hit(const Ray &r, float tMin, float tMax, HitRecord &r
         rec.position = r.atTime(rec.t);
         rec.triangle = this;
 //        rec.bsdf = bsdf;
-        rec.setFaceNormal(r, (p1 - p0).cross(p2 - p0));
+        rec.setFaceNormal(r, n0 * (1 - u - v) + n1 * u + n2 * v);
         return true;
     }
 

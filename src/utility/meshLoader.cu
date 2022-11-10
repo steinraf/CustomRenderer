@@ -4,7 +4,7 @@
 
 #include "meshLoader.h"
 #include "vector.h"
-#include "../cuda_helpers.h"
+#include "../cudaHelpers.h"
 
 HostMeshInfo loadMesh(const std::filesystem::path &filePath){
 
@@ -20,7 +20,20 @@ HostMeshInfo loadMesh(const std::filesystem::path &filePath){
     thrust::host_vector<Vector3f> normals;
 
 
-    thrust::host_vector<FaceElement> faces;
+    thrust::host_vector<int> vertexIndices1;
+    thrust::host_vector<int> vertexIndices2;
+    thrust::host_vector<int> vertexIndices3;
+
+    thrust::host_vector<int> textureIndices1;
+    thrust::host_vector<int> textureIndices2;
+    thrust::host_vector<int> textureIndices3;
+
+    thrust::host_vector<int> normalIndices1;
+    thrust::host_vector<int> normalIndices2;
+    thrust::host_vector<int> normalIndices3;
+
+
+//    thrust::host_vector<FaceElement> faces;
 
     while(std::getline(file, lineString)){
         std::istringstream line{lineString};
@@ -61,13 +74,34 @@ HostMeshInfo loadMesh(const std::filesystem::path &filePath){
             s2 >> v2 >> delim >> t2 >> delim >> n2;
             s3 >> v3 >> delim >> t3 >> delim >> n3;
 
-            faces.push_back(FaceElement(v1 - 1, v2 - 1, v3 - 1, t1 - 1, t2 - 1, t3 - 1, n1 - 1, n2 - 1, n3 - 1));
+            vertexIndices1.push_back(v1 - 1);
+            vertexIndices2.push_back(v2 - 1);
+            vertexIndices3.push_back(v3 - 1);
+
+            textureIndices1.push_back(t1 - 1);
+            textureIndices2.push_back(t2 - 1);
+            textureIndices3.push_back(t3 - 1);
+
+            normalIndices1.push_back(n1 - 1);
+            normalIndices2.push_back(n2 - 1);
+            normalIndices3.push_back(n3 - 1);
 
             if(!e4.empty()){
                 int v4, t4, n4;
                 std::istringstream s4(e4);
                 s4 >> v4 >> delim >> t4 >> delim >> n4;
-                faces.push_back(FaceElement(v1 - 1, v3 - 1, v4 - 1, t1 - 1, t3 - 1, t4 - 1, n1 - 1, n3 - 1, n4 - 1));
+
+                vertexIndices1.push_back(v1 - 1);
+                vertexIndices2.push_back(v3 - 1);
+                vertexIndices3.push_back(v4 - 1);
+
+                textureIndices1.push_back(t1 - 1);
+                textureIndices2.push_back(t3 - 1);
+                textureIndices3.push_back(t4 - 1);
+
+                normalIndices1.push_back(n1 - 1);
+                normalIndices2.push_back(n3 - 1);
+                normalIndices3.push_back(n4 - 1);
             }
         }
     }
@@ -76,46 +110,81 @@ HostMeshInfo loadMesh(const std::filesystem::path &filePath){
             vertices,
             textures,
             normals,
-            faces
+            {vertexIndices1, vertexIndices2, vertexIndices3},
+            {textureIndices1, textureIndices2, textureIndices3},
+            {normalIndices1, normalIndices2, normalIndices3}
     };
 }
 
+Triangle *mesh2GPU(const HostMeshInfo &mesh){
+    thrust::host_vector<Triangle> trias;
+
+    auto triangleFunctorBuilder = [](){
+
+    };
+
+
+    return trias.data();
+}
+
 Triangle *meshToGPU(const HostMeshInfo &mesh){
-    auto *hostTriangles = (Triangle *) malloc(mesh.faces.size() * sizeof(Triangle));
+    const int numTriangles = mesh.normalsIndices.first.size();
+    auto *hostTriangles = (Triangle *) malloc(numTriangles * sizeof(Triangle));
     Triangle *deviceTriangles;
-    checkCudaErrors(cudaMalloc((void **) &deviceTriangles, mesh.faces.size() * sizeof(Triangle)));
+    checkCudaErrors(cudaMalloc((void **) &deviceTriangles, numTriangles * sizeof(Triangle)));
 
-    const auto &[vertices, textures, normals, faces] = mesh;
-
-//    printf("Received vertices:\n");
-//    for(const auto &vertex: mesh.vertices)
-//        printf("(%f,%f,%f)\n", vertex[0], vertex[1], vertex[2]);
-//
-//    printf("Received Vertex Indices:\n");
-//    for(const auto &face: mesh.faces)
-//        printf("(%i,%i,%i)\n", face.vertices[0], face.vertices[1], face.vertices[2]);
-
-    int counter = 0;
-    for(const auto &face: faces){
-//        printf("Assembling triangle with p0 = (%f,%f,%f)\n",
-//               vertices[face.vertices[0]][0],
-//               vertices[face.vertices[0]][1],
-//               vertices[face.vertices[0]][2]);
-
-        hostTriangles[counter++] = {
-                vertices[face.vertices[0]],
-                vertices[face.vertices[1]],
-                vertices[face.vertices[2]],
+    const auto &[
+            vertices,
+            textures,
+            normals,
+            vertexIndexList,
+            textureIndexList,
+            normalIndexList] = mesh;
+    
+//#pragma omp parallel for
+    for(int i = 0; i < numTriangles; ++i){
+        hostTriangles[i] = {
+                vertices[vertexIndexList.first[i]],
+                vertices[vertexIndexList.second[i]],
+                vertices[vertexIndexList.third[i]],
+                textures[textureIndexList.first[i]],
+                textures[textureIndexList.second[i]],
+                textures[textureIndexList.third[i]],
+                normals[normalIndexList.first[i]],
+                normals[normalIndexList.second[i]],
+                normals[normalIndexList.third[i]],
                 BSDF{Material::DIFFUSE}
         };
     }
 
     checkCudaErrors(
-            cudaMemcpy(deviceTriangles, hostTriangles, mesh.faces.size() * sizeof(Triangle), cudaMemcpyHostToDevice));
+            cudaMemcpy(deviceTriangles, hostTriangles, numTriangles * sizeof(Triangle), cudaMemcpyHostToDevice));
     checkCudaErrors(cudaDeviceSynchronize());
     delete[] hostTriangles;
     return deviceTriangles;
 }
 
 
+//BVH<Triangle> getBVHFromMesh(const HostMeshInfo &mesh){
+//
+//}
 
+
+
+
+//DeviceMeshInfo::DeviceMeshInfo(HostMeshInfo meshInfo){
+//
+//
+//
+//    totalBoundingBox = thrust::transform_reduce()
+
+
+
+//    thrust::device_vector<Vector3f> vertices;
+//    thrust::device_vector<Vector2f> textures;
+//    thrust::device_vector<Vector3f> normals;
+//    thrust::device_vector<FaceElement> faces;
+//    thrust::device_vector<uint32_t> mortonCodes;
+//    thrust::device_vector<AABB> boundingBoxes;
+//    AABB totalBoundingBox;
+//}

@@ -6,10 +6,7 @@
 #include "src/utility/meshLoader.h"
 
 
-//struct AABB{
-//    Vector3f start;
-//    Vector3f end;
-//};
+
 //
 //struct Test{
 //    int a;
@@ -64,7 +61,8 @@ int main(int argc, char **argv){
     std::cout << "Starting rendering...\n";
 
 
-    Scene s(loadMesh(filePath), 384, 216);
+    constexpr int k = 1;
+    Scene s(loadMesh(filePath), k * 384, k * 216);
     s.renderCPU();
 //    s.renderGPU();
 
