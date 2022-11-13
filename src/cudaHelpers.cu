@@ -37,10 +37,6 @@ namespace cudaHelpers{
         curand_init(42, pixelIndex, 0, &randState[pixelIndex]);
     }
 
-    __global__ void computeMortonCode(thrust::device_ptr<Triangle> triaVec, uint32_t *mortonCodes, int numTriangles){
-
-    }
-
 
     __global__ void freeVariables(int width, int height){
         int i, j, pixelIndex;
@@ -79,5 +75,40 @@ namespace cudaHelpers{
         }
 
         output[pixelIndex] = tmp.clamp(0.f, 1.f); //(input[pixelIndex] + tmp/(count))/2.0;
+    }
+
+
+
+    __device__ int findSplit(const uint32_t *mortonCodes, int first, int last, int numPrimitives){
+
+        const unsigned int first_code = mortonCodes[first];
+
+        // calculate the number of highest bits that are the same
+        // for all objects, using the count-leading-zeros intrinsic
+
+        const int common_prefix =
+                delta(first, last, numPrimitives, mortonCodes, first_code);
+
+        // use binary search to find where the next bit differs
+        // specifically, we are looking for the highest object that
+        // shares more than commonPrefix bits with the first one
+
+        int split = first; // initial guess
+        int step = last - first;
+
+        do {
+            step = (step + 1) >> 1; // exponential decrease
+            const int new_split = split + step; // proposed new position
+
+            if (new_split < last) {
+                const int split_prefix = delta(
+                        first, new_split, numPrimitives, mortonCodes, first_code);
+                if (split_prefix > common_prefix) {
+                    split = new_split; // accept proposal
+                }
+            }
+        } while (step > 1);
+
+        return split;
     }
 }

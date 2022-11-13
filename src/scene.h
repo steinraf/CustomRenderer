@@ -74,6 +74,8 @@ private:
     Vector3f *hostImageBuffer;
     Vector3f *hostImageBufferDenoised;
 
+    thrust::device_vector<Triangle> deviceTriangles;
+
 //    Hittable **deviceHittables;
 //    const size_t numHittables;
 

@@ -13,15 +13,21 @@
 
 struct AABB{
 
-    __device__ AABB(const Vector3f &min, const Vector3f max) : min(min), max(max){}
+    __host__ __device__ AABB() : min(INFINITY), max(-INFINITY){}
 
-    __device__ AABB(const Vector3f &a, const Vector3f &b, const Vector3f &c);
+    __host__ __device__ AABB(const Vector3f &min, const Vector3f max) : min(min), max(max){}
+
+    __host__ __device__ AABB(const Vector3f &a, const Vector3f &b, const Vector3f &c);
 
     //Nori BoundingBox RayIntersect
     __device__ bool rayIntersect(const Ray &ray, float &nearT, float &farT) const;
 
-    __device__ AABB operator+(const AABB &other);
+    __device__ __host__ Vector3f getCenter() const{
+        return 0.5f * (min + max);
+    }
 
-private:
+    __device__ AABB operator+(const AABB &other) const;
+
+//private:
     Vector3f min, max;
 };

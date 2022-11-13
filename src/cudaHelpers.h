@@ -37,15 +37,180 @@ namespace cudaHelpers{
 
     __global__ void initRng(int width, int height, curandState *randState);
 
-    // Pointer-pointers are used because cuda has problems with passing pointers to objects with virtual functions to global kernels
-//    __global__ void
-//    initBVH(Hittable **hittables, HittableList **hittableList, size_t numHittables);
 
-//    template<typename Primitive>
-//    __global__ void initBVH(BVH<Primitive> *bvh, Primitive *primitives, int numPrimitives);
+    // The findSplit, delta and determineRange are taken from here
+    // https://developer.nvidia.com/blog/thinking-parallel-part-iii-tree-construction-gpu/
+    // https://github.com/nolmoonen/cuda-lbvh/blob/main/src/build.cu
+
+    __device__ int findSplit(const uint32_t *mortonCodes, int first, int last, int numPrimitives);
+
+    __forceinline__ __device__ int delta(int a, int b, unsigned int n, const unsigned int *c, unsigned int ka){
+        // this guard is for leaf nodes, not internal nodes (hence [0, n-1])
+//        assert (b >= 0 && b < n);
+        if (b < 0 || b > n - 1) return -1;
+
+        unsigned int kb = c[b];
+        if (ka == kb) {
+            // if keys are equal, use id as fallback
+            // (+32 because they have the same morton code and thus the string-concatenated XOR
+            //  version would have 32 leading zeros)
+            return 32 + __clz(static_cast<uint32_t>(a) ^ static_cast<uint32_t>(b));
+        }
+        // clz = count leading zeros
+        return __clz(ka ^ kb);
+    }
+
+    __forceinline__ __device__ thrust::pair<int, int> determineRange(const uint32_t *mortonCodes, int numPrimitives, int i){
+        const unsigned int *c = mortonCodes;
+        unsigned int ki = c[i]; // key of i
+
+        // determine direction of the range (+1 or -1)
+        const int delta_l = delta(i, i - 1, numPrimitives, c, ki);
+        const int delta_r = delta(i, i + 1, numPrimitives, c, ki);
+
+        int d; // direction
+        int delta_min; // min of delta_r and delta_l
+        if (delta_r < delta_l) {
+            d = -1;
+            delta_min = delta_r;
+        } else {
+            d = 1;
+            delta_min = delta_l;
+        }
+
+        // compute upper bound of the length of the range
+        unsigned int l_max = 2;
+        while (delta(i, i + l_max * d, numPrimitives, c, ki) > delta_min) {
+            l_max <<= 1;
+        }
+
+        // find other end using binary search
+        unsigned int l = 0;
+        for (unsigned int t = l_max >> 1; t > 0; t >>= 1) {
+            if (delta(i, i + (l + t) * d, numPrimitives, c, ki) > delta_min) {
+                l += t;
+            }
+        }
+        const int j = i + l * d;
+
+//        printf("Stats of range are i=%i, j=%i, l=%i, d=%i\n", i, j, l, d);
+
+        // ensure i <= j
+        return {min(i, j), max(i, j)};
+    }
 
 
-    __global__ void computeMortonCode(thrust::device_ptr<Triangle> triaVec, uint32_t *mortonCodes, int numTriangles);
+    template<typename Primitive>
+    __global__ void constructBVH(BVHNode<Primitive> *bvhNodes, Primitive *primitives, const uint32_t *mortonCodes, int numPrimitives){
+
+        const int i = blockDim.x * blockIdx.x + threadIdx.x;
+
+        if(i > numPrimitives-1) return;
+
+//        if(i == 0){
+//            for(int tmp = 0; tmp < numPrimitives; ++tmp){
+//                printf("morton %i: %u\n", tmp, mortonCodes[tmp]);
+//            }
+//        }
+
+
+        // [0, numPrimitives-1]                     -> internal nodes
+        // [numPrimitives, (2*numPrimitives)-1]     -> leaf nodes
+        bvhNodes[numPrimitives + i - 1] = {
+              nullptr,
+              nullptr,
+              &primitives[i],
+              AABB{},
+              true,
+        };
+
+
+//        printf("%p is leaf\n", &bvhNodes[numPrimitives + i - 1]);
+
+
+        if(i == numPrimitives-1) return;
+
+
+        auto[first, last] = determineRange(mortonCodes, numPrimitives, i);
+
+        int split = findSplit(mortonCodes, first, last, numPrimitives);
+
+//        printf("Constructing BVH %i (%i | %i | %i)...\n",i, first, split, last);
+
+
+        auto childA = (split == first)  ? &bvhNodes[numPrimitives-1 + split]    : &bvhNodes[split];
+        auto childB = (split+1 == last) ? &bvhNodes[numPrimitives-1 + split + 1]: &bvhNodes[split+1];
+
+//        if(split == first){
+//            printf("%i: Leaf node with index %i was taken.\n", i, numPrimitives-1 + split);
+//        } else {
+//            printf("%i: Internal node with index %i was taken.\n", i, split);
+//        }
+
+//        if(split+1 == last){
+//            printf("%i: Leaf node with index %i was taken.\n", i, numPrimitives-1 + split+1);
+//        } else {
+//            printf("%i: Internal node with index %i was taken.\n", i, split+1  );
+//        }
+
+        bvhNodes[i] = {
+                childA,
+                childB,
+                nullptr,
+                AABB{},//nullptr, //                childA->boundingBox + childB ->boundingBox,
+                false,
+        };
+
+//        printf("%p is interior\n", &bvhNodes[i]);
+
+
+//        throw std::runtime_error("Must initialize all children before accessing their BoundingBoxes");
+
+
+//        bvhInternalNodes, deviceTrianglePtr, deviceMortonCodes.data().get(), numTriangles-1
+    }
+
+    template<typename Primitive>
+    __device__ const AABB &getBoundingBox(BVHNode<Primitive> *node){
+
+//        printf("Started recursion... %p \n", node);
+
+
+
+        if(node->isLeaf){
+//            printf("Found Leaf...\n");
+            assert(node->primitive);
+            node->boundingBox = node->primitive->boundingBox;
+        }else{
+//            printf("Diverging Path...\n");
+            assert(node->left && node->right);
+
+            const AABB &leftAABB = getBoundingBox(node->left);
+//            printf("Got left AABB\n");
+            node->boundingBox = leftAABB + getBoundingBox(node->right);
+//            printf("Completed Path...\n");
+        }
+
+        return node->boundingBox;
+
+    }
+
+    template<typename Primitive>
+    __global__ void computeBVHBoundingBoxes(BVHNode<Primitive> *bvhNodes){
+        int i, j, pixelIndex;
+        if(!cudaHelpers::initIndices(i, j, pixelIndex, 1, 1)) return;
+
+        printf("Starting BVH BB Computation...\n");
+
+        const AABB &totalBoundingBox = getBoundingBox(&bvhNodes[0]);
+
+        printf("Total bounding box is (%f, %f, %f) -> (%f, %f, %f)\n",
+               totalBoundingBox.min[0],  totalBoundingBox.min[1],  totalBoundingBox.min[2],
+               totalBoundingBox.max[0],  totalBoundingBox.max[1],  totalBoundingBox.max[2]);
+
+
+    }
+
 
     template<typename Primitive>
     __global__ void initBVH(BVH<Primitive> *bvh, Primitive *primitives, int numPrimitives){
@@ -139,9 +304,13 @@ namespace cudaHelpers{
                 sqrt(col[1] * scale),
                 sqrt(col[2] * scale)
         };
+
         output[pixelIndex] = col;
 
     }
+
+
+
 
 
 };

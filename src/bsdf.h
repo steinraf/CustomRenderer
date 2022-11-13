@@ -18,6 +18,9 @@ enum class Material{
 
 class BSDF{
 public:
+
+    __device__ __host__ BSDF() : material(Material::DIFFUSE){}
+
     __device__ __host__ BSDF(Material mat) : material(mat){}
 
     __device__ bool scatter(const Ray &rIn, const HitRecord &rec, Vector3f &attenuation, Ray &scattered,

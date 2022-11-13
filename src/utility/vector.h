@@ -57,6 +57,8 @@ public:
 
     __host__ __device__ inline Vector3f &clamp(float minimum, float maximum) noexcept;
 
+    __host__ __device__ inline Vector3f absValues() const noexcept;
+
 
     friend inline std::ostream &operator<<(std::ostream &os, const Vector3f &t);
 
@@ -226,6 +228,14 @@ __host__ __device__ inline Vector3f &Vector3f::clamp(float minimum, float maximu
     data[1] *= max(minimum, min(maximum, data[1]));
     data[2] *= max(minimum, min(maximum, data[2]));
     return *this;
+}
+
+__host__ __device__ inline Vector3f Vector3f::absValues() const noexcept {
+    return {
+        abs(data[0]),
+        abs(data[1]),
+        abs(data[2])
+    };
 }
 
 

@@ -51,7 +51,7 @@ int main(int argc, char **argv){
 
     std::cout << "Parsing obj...\n";
 
-    std::filesystem::path filePath = "/home/steinraf/ETH/CG/CustomRenderer/obj/ajax.obj";
+    std::filesystem::path filePath = "./obj/ajax.obj";
     assert(filePath.extension() == ".obj");
 
 //    for(int i = 0; i < vertices.size(); ++i)

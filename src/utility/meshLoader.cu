@@ -46,7 +46,6 @@ HostMeshInfo loadMesh(const std::filesystem::path &filePath){
         if(start == "v"){
             float x, y, z;
             line >> x >> y >> z;
-//            printf("VERT: %f,%f,%f \n", x, y, z);
             vertices.push_back({x, y, z});
 
         }else if(start == "vt"){
@@ -117,21 +116,20 @@ HostMeshInfo loadMesh(const std::filesystem::path &filePath){
 }
 
 Triangle *mesh2GPU(const HostMeshInfo &mesh){
-    thrust::host_vector<Triangle> trias;
+//    thrust::host_vector<Triangle> trias;
 
-    auto triangleFunctorBuilder = [](){
+//    auto triangleFunctorBuilder = [](){
+//
+//    };
 
-    };
 
-
-    return trias.data();
+    return nullptr;
 }
 
-Triangle *meshToGPU(const HostMeshInfo &mesh){
+DeviceMeshInfo meshToGPU(const HostMeshInfo &mesh){
     const int numTriangles = mesh.normalsIndices.first.size();
-    auto *hostTriangles = (Triangle *) malloc(numTriangles * sizeof(Triangle));
-    Triangle *deviceTriangles;
-    checkCudaErrors(cudaMalloc((void **) &deviceTriangles, numTriangles * sizeof(Triangle)));
+
+    std::vector<Triangle> hostTriangles(numTriangles);
 
     const auto &[
             vertices,
@@ -141,7 +139,7 @@ Triangle *meshToGPU(const HostMeshInfo &mesh){
             textureIndexList,
             normalIndexList] = mesh;
     
-//#pragma omp parallel for
+#pragma omp parallel for
     for(int i = 0; i < numTriangles; ++i){
         hostTriangles[i] = {
                 vertices[vertexIndexList.first[i]],
@@ -157,34 +155,34 @@ Triangle *meshToGPU(const HostMeshInfo &mesh){
         };
     }
 
-    checkCudaErrors(
-            cudaMemcpy(deviceTriangles, hostTriangles, numTriangles * sizeof(Triangle), cudaMemcpyHostToDevice));
-    checkCudaErrors(cudaDeviceSynchronize());
-    delete[] hostTriangles;
-    return deviceTriangles;
+    thrust::device_vector<Triangle> deviceTriangles(hostTriangles);
+
+
+
+    TriaToAABB triangleToAABB;
+    AABB aabb{};
+    AABBAdder aabbAddition;
+
+
+    AABB maxBoundingBox = thrust::transform_reduce(deviceTriangles.begin(), deviceTriangles.end(),
+                                                   triangleToAABB, aabb, aabbAddition);
+
+    //TODO maybe try to only compute total BB once (but morton codes require normalize with BB)
+
+//    printf("Bounding box of total scene is (%f, %f, %f), (%f, %f, %f)\n",
+//            maxBoundingBox.min[0], maxBoundingBox.min[1], maxBoundingBox.min[2],
+//           maxBoundingBox.max[0], maxBoundingBox.max[1], maxBoundingBox.max[2]
+//    );
+
+    TriangleToMortonCode triangleToMortonCode(maxBoundingBox);
+
+    thrust::device_vector<uint32_t> mortonCodes(numTriangles);
+
+    thrust::transform(deviceTriangles.begin(), deviceTriangles.end(), mortonCodes.begin(),
+                      triangleToMortonCode);
+
+    thrust::sort_by_key(mortonCodes.begin(), mortonCodes.end(), deviceTriangles.begin());
+    //TODO maybe use radix sort instead of default sort
+
+    return {deviceTriangles, mortonCodes/*, maxBoundingBox*/};
 }
-
-
-//BVH<Triangle> getBVHFromMesh(const HostMeshInfo &mesh){
-//
-//}
-
-
-
-
-//DeviceMeshInfo::DeviceMeshInfo(HostMeshInfo meshInfo){
-//
-//
-//
-//    totalBoundingBox = thrust::transform_reduce()
-
-
-
-//    thrust::device_vector<Vector3f> vertices;
-//    thrust::device_vector<Vector2f> textures;
-//    thrust::device_vector<Vector3f> normals;
-//    thrust::device_vector<FaceElement> faces;
-//    thrust::device_vector<uint32_t> mortonCodes;
-//    thrust::device_vector<AABB> boundingBoxes;
-//    AABB totalBoundingBox;
-//}

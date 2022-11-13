@@ -4,7 +4,7 @@
 
 #include "aabb.h"
 
-__device__ AABB::AABB(const Vector3f &a, const Vector3f &b, const Vector3f &c){
+__host__ __device__ AABB::AABB(const Vector3f &a, const Vector3f &b, const Vector3f &c){
     min = {
             thrust::min(a[0], thrust::min(b[0], c[0])),
             thrust::min(a[1], thrust::min(b[1], c[1])),
@@ -15,6 +15,7 @@ __device__ AABB::AABB(const Vector3f &a, const Vector3f &b, const Vector3f &c){
             thrust::max(a[1], thrust::max(b[1], c[1])),
             thrust::max(a[2], thrust::max(b[2], c[2])),
     };
+
 }
 
 __device__ bool AABB::rayIntersect(const Ray &ray, float &nearT, float &farT) const{
@@ -49,9 +50,9 @@ __device__ bool AABB::rayIntersect(const Ray &ray, float &nearT, float &farT) co
     return true;
 }
 
-__device__ AABB AABB::operator+(const AABB &other){
+__device__ AABB AABB::operator+(const AABB &other) const{
     return {
-            {thrust::min(min[0], other.min[0]), thrust::min(min[1], other.min[1]), thrust::min(min[2], other.min[2])},
-            {thrust::max(max[0], other.max[0]), thrust::max(max[1], other.max[1]), thrust::max(max[2], other.max[2])},
+            Vector3f{-FLT_EPSILON} + Vector3f{thrust::min(min[0], other.min[0]), thrust::min(min[1], other.min[1]), thrust::min(min[2], other.min[2])},
+            Vector3f{ FLT_EPSILON} + Vector3f{thrust::max(max[0], other.max[0]), thrust::max(max[1], other.max[1]), thrust::max(max[2], other.max[2])},
     };
 }

@@ -52,25 +52,44 @@ __host__ Scene::Scene(HostMeshInfo &&mesh, int width, int height/*, int numHitta
 
 
 //    auto *deviceTriangles = mesh2GPU(mesh);
-    auto *deviceTriangles = meshToGPU(mesh);
+
+    clock_t startGeometryBVH = clock();
+
+    thrust::device_vector<uint32_t> deviceMortonCodes;
+//    AABB hostAABB;
+
+    std::tie(deviceTriangles, deviceMortonCodes/*, hostAABB*/) = meshToGPU(mesh).toTuple();
 
     const int numTriangles = static_cast<int>(mesh.normalsIndices.first.size());
 
-    //TODO compute morton Codes
-//    thrust::device_ptr<Triangle> triaVec(deviceTriangles);
-//
-//    uint32_t *mortonCodes;
-//    checkCudaErrors(cudaMalloc((void **) &mortonCodes, numTriangles * sizeof(uint32_t)));
-//    cudaHelpers::computeMortonCode<<<blockSize, threadSize>>>(triaVec, mortonCodes, numTriangles);
-
-//    cudaHelpers::initBVH<<<1, 1>>>(deviceHittables, deviceHittableList, numHittables);
-
+    BVHNode<Triangle> *bvhTotalNodes;
+    checkCudaErrors(cudaMalloc((void **) &bvhTotalNodes, sizeof(BVHNode<Triangle>) * (2*numTriangles-1))); //n-1 internal, n leaf
     checkCudaErrors(cudaMalloc((void **) &bvh, sizeof(BVH<Triangle> *)));
 
-    cudaHelpers::initBVH<<<1, 1>>>(bvh, deviceTriangles, numTriangles);
+    Triangle *deviceTrianglePtr = deviceTriangles.data().get();
+
+
+    cudaHelpers::constructBVH<<<(numTriangles + 1024 - 1)/1024, 1024>>>(bvhTotalNodes, deviceTrianglePtr, deviceMortonCodes.data().get(), numTriangles);
+
+
 
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
+
+    cudaHelpers::computeBVHBoundingBoxes<<<1, 1>>>(bvhTotalNodes);
+
+    checkCudaErrors(cudaGetLastError());
+    checkCudaErrors(cudaDeviceSynchronize());
+
+    cudaHelpers::initBVH<<<1, 1>>>(bvh, deviceTrianglePtr, numTriangles);
+
+
+    checkCudaErrors(cudaGetLastError());
+    checkCudaErrors(cudaDeviceSynchronize());
+
+    std::cout << "Loading Geometry and BVH construction took "
+              << ((double) (clock() - startGeometryBVH)) / CLOCKS_PER_SEC
+              << '\n';
 
     hostImageBuffer = new Vector3f[imageBufferSize];
     hostImageBufferDenoised = new Vector3f[imageBufferSize];
@@ -140,11 +159,6 @@ __host__ void Scene::renderGPU(){
 //        render();
 //    }
 
-
-
-
-
-
 }
 
 __host__ void Scene::renderCPU(){
@@ -161,9 +175,8 @@ __host__ void Scene::renderCPU(){
 
     std::cout << "Writing resulting image to disk...\n";
 
-    const std::string base_path = std::filesystem::path(__FILE__).parent_path().parent_path();
-    const std::string pngPath = base_path + "/data/image.png";
-    const std::string pngPathDenoised = base_path + "/data/imageDenoised.png";
+    const std::string pngPath = "./data/image.png";
+    const std::string pngPathDenoised = "./data/imageDenoised.png";
 
 
     pngwriter png(width, height, 1., pngPath.c_str());

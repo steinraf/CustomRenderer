@@ -4,24 +4,26 @@
 
 #pragma once
 
+#include "aabb.h"
 
 #include "../utility/ray.h"
 #include "../hittable.h"
 
 template<typename Primitive>
 struct BVHNode{
-    __device__ explicit BVHNode(const Primitive &primitive) noexcept
-            : left(nullptr), right(nullptr),
-              countLeft(0), countRight(0),
-              primitive(primitive){
+    BVHNode() noexcept = default;
 
+    __device__ __host__ BVHNode(BVHNode *left, BVHNode *right, Primitive *primitive, AABB boundingBox, bool isLeaf)
+        : left(left), right(right), primitive(primitive), boundingBox(boundingBox), isLeaf(isLeaf){
+        assert(left != this && right != this);
     }
+
 
     BVHNode *left;
     BVHNode *right;
-    int countLeft;
-    int countRight;
-    const Primitive &primitive;
+    Primitive *primitive;
+    AABB boundingBox; // Only needs to be set if not leaf
+    bool isLeaf;
 };
 
 

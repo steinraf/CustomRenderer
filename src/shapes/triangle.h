@@ -12,7 +12,8 @@
 
 class Triangle/* : public Hittable*/{
 public:
-    Triangle() = delete;
+
+    Triangle() = default;
 
 //    __host__ Triangle(Triangle &&) = default;
 
@@ -26,6 +27,10 @@ public:
               n0(n0), n1(n1), n2(n2),
               bsdf(bsdf), boundingBox(p0, p1, p2){
 
+//        printf("initializing with boundingBox (%f, %f, %f)\n",
+//               boundingBox.min[0], boundingBox.min[1], boundingBox.min[2]
+//               );
+//
 //        printf("Initializing triangle with coordinates\n"
 //               "(%f, %f, %f) \n"
 //               "(%f, %f, %f) \n"
@@ -33,6 +38,7 @@ public:
 //               p0[0], p0[1], p0[2],
 //               p1[0], p1[1], p1[2],
 //               p2[0], p2[1], p2[2]);
+
     }
 
     __device__ bool hit(const Ray &r, float tMin, float tMax, HitRecord &rec) const;
