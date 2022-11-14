@@ -62,9 +62,13 @@ __host__ Scene::Scene(HostMeshInfo &&mesh, int width, int height/*, int numHitta
 
     const int numTriangles = static_cast<int>(mesh.normalsIndices.first.size());
 
+    std::cout << "Managing " << numTriangles << " triangles.\n";
+
     BVHNode<Triangle> *bvhTotalNodes;
     checkCudaErrors(cudaMalloc((void **) &bvhTotalNodes, sizeof(BVHNode<Triangle>) * (2*numTriangles-1))); //n-1 internal, n leaf
     checkCudaErrors(cudaMalloc((void **) &bvh, sizeof(BVH<Triangle> *)));
+
+    printf("BVH has allocation range of (%p, %p)\n", bvhTotalNodes, bvhTotalNodes + (2*numTriangles-1));
 
     Triangle *deviceTrianglePtr = deviceTriangles.data().get();
 
@@ -76,20 +80,21 @@ __host__ Scene::Scene(HostMeshInfo &&mesh, int width, int height/*, int numHitta
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
 
-    cudaHelpers::computeBVHBoundingBoxes<<<1, 1>>>(bvhTotalNodes);
+    cudaHelpers::computeBVHBoundingBoxes<<<1, 1>>>(bvhTotalNodes, numTriangles);
 
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
 
-    cudaHelpers::initBVH<<<1, 1>>>(bvh, deviceTrianglePtr, numTriangles);
-
+//    cudaHelpers::initBVH<<<1, 1>>>(bvh, deviceTrianglePtr, numTriangles);
+    cudaHelpers::initBVH2<<<1, 1>>>(bvh, bvhTotalNodes);
 
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
 
     std::cout << "Loading Geometry and BVH construction took "
               << ((double) (clock() - startGeometryBVH)) / CLOCKS_PER_SEC
-              << '\n';
+              << " seconds.\n";
+
 
     hostImageBuffer = new Vector3f[imageBufferSize];
     hostImageBufferDenoised = new Vector3f[imageBufferSize];

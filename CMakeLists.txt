@@ -45,7 +45,7 @@ add_executable(Raytracing
         src/shapes/triangle.cu
         src/shapes/triangle.h
         src/utility/meshLoader.h
-        src/utility/meshLoader.cu src/bsdf.cu src/bsdf.h src/acceleration/aabb.cu src/acceleration/aabb.h)
+        src/utility/meshLoader.cu src/bsdf.cu src/bsdf.h src/acceleration/aabb.cu src/acceleration/aabb.h src/utility/vector.cu)
 
 set_target_properties(Raytracing PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 

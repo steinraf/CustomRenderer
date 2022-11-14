@@ -26,6 +26,10 @@ struct AABB{
         return 0.5f * (min + max);
     }
 
+    [[nodiscard]] __device__ bool isEmpty() const noexcept{
+        return min == Vector3f(INFINITY) && max == Vector3f(-INFINITY);
+    }
+
     __device__ AABB operator+(const AABB &other) const;
 
 //private:

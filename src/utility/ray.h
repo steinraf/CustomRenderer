@@ -11,7 +11,7 @@ class Ray{
 public:
     __device__ explicit Ray();
 
-    __device__ Ray(const Vector3f &a, const Vector3f &b);
+    __device__ Ray(const Vector3f &origin, const Vector3f &direction);
 
     __device__ Vector3f atTime(float t) const;
 

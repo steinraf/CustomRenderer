@@ -51,7 +51,9 @@ int main(int argc, char **argv){
 
     std::cout << "Parsing obj...\n";
 
+//    std::filesystem::path filePath = "./obj/ajax.obj";
     std::filesystem::path filePath = "./obj/ajax.obj";
+
     assert(filePath.extension() == ".obj");
 
 //    for(int i = 0; i < vertices.size(); ++i)
@@ -61,7 +63,7 @@ int main(int argc, char **argv){
     std::cout << "Starting rendering...\n";
 
 
-    constexpr int k = 1;
+    constexpr int k = 10;
     Scene s(loadMesh(filePath), k * 384, k * 216);
     s.renderCPU();
 //    s.renderGPU();

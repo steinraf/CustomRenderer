@@ -114,15 +114,19 @@ namespace cudaHelpers{
 //        }
 
 
-        // [0, numPrimitives-1]                     -> internal nodes
-        // [numPrimitives, (2*numPrimitives)-1]     -> leaf nodes
-        bvhNodes[numPrimitives + i - 1] = {
+        // [0, numPrimitives-2]                    -> internal nodes
+        // [numPrimitives-1, (2*numPrimitives)-1]     -> leaf nodes
+        bvhNodes[numPrimitives - 1 + i] = {
               nullptr,
               nullptr,
               &primitives[i],
-              AABB{},
+              primitives[i].boundingBox,
               true,
         };
+
+//        printf("Leaf Init %p\n", &bvhNodes[numPrimitives + i - 1]);
+
+//        assert(!(numPrimitives + i - 1 == 2*numPrimitives-2));
 
 
 //        printf("%p is leaf\n", &bvhNodes[numPrimitives + i - 1]);
@@ -138,8 +142,17 @@ namespace cudaHelpers{
 //        printf("Constructing BVH %i (%i | %i | %i)...\n",i, first, split, last);
 
 
-        auto childA = (split == first)  ? &bvhNodes[numPrimitives-1 + split]    : &bvhNodes[split];
-        auto childB = (split+1 == last) ? &bvhNodes[numPrimitives-1 + split + 1]: &bvhNodes[split+1];
+
+        BVHNode<Primitive> *childA = (split == first)  ? &bvhNodes[numPrimitives-1 + split]    : &bvhNodes[split];
+        BVHNode<Primitive> *childB = (split+1 == last) ? &bvhNodes[numPrimitives-1 + split + 1]: &bvhNodes[split+1];
+
+//        printf("Parent: %p, \tLeft: %p, \tRight: %p\n", bvhNodes+i, childA, childB);
+
+
+//        printf("Left  child is %p\n", childA);
+//        printf("Right child is %p\n", childB);
+
+
 
 //        if(split == first){
 //            printf("%i: Leaf node with index %i was taken.\n", i, numPrimitives-1 + split);
@@ -161,7 +174,13 @@ namespace cudaHelpers{
                 false,
         };
 
-//        printf("%p is interior\n", &bvhNodes[i]);
+        childA->isPointedTo = true;
+        childB->isPointedTo = true;
+
+
+
+
+//        printf("Inte Init %p \n", &bvhNodes[i]);
 
 
 //        throw std::runtime_error("Must initialize all children before accessing their BoundingBoxes");
@@ -171,37 +190,207 @@ namespace cudaHelpers{
     }
 
     template<typename Primitive>
-    __device__ const AABB &getBoundingBox(BVHNode<Primitive> *node){
+    __device__ AABB getBoundingBox(BVHNode<Primitive> *root, int indentLevel=1){
 
-//        printf("Started recursion... %p \n", node);
+        typedef BVHNode<Primitive>* NodePtr;
+
+        constexpr int stackSize = 1024;
+        NodePtr stack[stackSize];
+        int idx = 0;
+        stack[0] = root;
+
+        assert(root);
+
+        NodePtr currentNode = root;
+
+        do {
+
+//            printf("STACK: "); for(int tmp = 0; tmp < idx+1; ++tmp) printf("| %p ", stack[tmp]);
+//            printf("\n");
+
+            assert(idx < stackSize);
+
+            currentNode = stack[idx];
+
+            NodePtr left = currentNode->left;
+            NodePtr right = currentNode->right;
+
+            assert(left && right);
+
+            if(left->hasBoundingBox() && right->hasBoundingBox()){
+//                for(int tmp = 0; tmp < idx; ++tmp) printf("\t");
+//                printf("oB %p\n", currentNode);
+                assert(!left->boundingBox.isEmpty() && !right->boundingBox.isEmpty());
+                currentNode->boundingBox = left->boundingBox + right->boundingBox;
+                --idx;
+            }else if(right->hasBoundingBox()){
+//                for(int tmp = 0; tmp < idx; ++tmp) printf("\t");
+//                printf("Le %p\n", currentNode);
+                stack[++idx] = left;
+            }else if(left->hasBoundingBox()){
+//                for(int tmp = 0; tmp < idx; ++tmp) printf("\t");
+//                printf("Ri %p\n", currentNode);
+                stack[++idx] = right;
+            }else{
+//                for(int tmp = 0; tmp < idx; ++tmp) printf("\t");
+//                printf("Bo %p\n", currentNode);
+
+                stack[++idx] = right;
+                stack[++idx] = left;
+            }
+        } while (idx >= 0);
+
+        return root->boundingBox;
+
+//        do {
+//            assert(!currentNode->isLeaf);
+
+            NodePtr left = currentNode->left;
+            NodePtr right = currentNode->right;
+
+            if(left && right){
+                if(left->hasBoundingBox()){
+                    if(right->hasBoundingBox()){
+                        for(int tmp = 0; tmp < idx-1; ++tmp) printf("\t");
+                        printf("Pop : Both filled\n");
+                        currentNode->boundingBox = left->boundingBox + right->boundingBox;
+                        currentNode = stack[--idx];
+                    } else {
+                        for(int tmp = 0; tmp < idx+1; ++tmp) printf("\t");
+                        printf("Push: Right No BB\n");
+                        stack[++idx] = right;
+                        currentNode = right;
+                    }
+                }else if(right->hasBoundingBox()){
+                    for(int tmp = 0; tmp < idx+1; ++tmp) printf("\t");
+                    printf("Push: Left No BB\n");
+                    stack[++idx] = left;
+                    currentNode = left;
+                } else {
+                    for(int tmp = 0; tmp < idx+1; ++tmp) printf("\t");
+                    printf("Push: Neither BB\n");
+                    stack[++idx] = currentNode;
+//                    stack[++idx] = right;
+                    currentNode = left;
+                }
+            } else if (left){
+                if(left->hasBoundingBox()){
+                    for(int tmp = 0; tmp < idx-1; ++tmp) printf("\t");
+                    printf("Pop : Right Nullptr\n");
+                    currentNode->boundingBox = left->boundingBox;
+                    currentNode = stack[--idx];
+                } else {
+                    for(int tmp = 0; tmp < idx+1; ++tmp) printf("\t");
+                    printf("Push: Right Nullptr\n");
+                    stack[++idx] = left;
+                    currentNode = left;
+                }
+            } else if (right){
+                if(right->hasBoundingBox()){
+                    for(int tmp = 0; tmp < idx-1; ++tmp) printf("\t");
+                    printf("Pop : Left Nullptr\n");
+                    currentNode->boundingBox = right->boundingBox;
+                    currentNode = stack[--idx];
+                } else {
+                    for(int tmp = 0; tmp < idx+1; ++tmp) printf("\t");
+                    printf("Push: Left Nullptr\n");
+                    stack[++idx] = right;
+                    currentNode = right;
+                }
+            } else {
+                assert(!currentNode->isLeaf);
+                assert(false && "Right and left are nullptr and this is not a leaf");
+                currentNode = stack[--idx];
+            }
 
 
 
-        if(node->isLeaf){
+
+//
+//            if(!currentNode->left->isLeaf && !currentNode->right->isLeaf){
+//                if(currentNode->left->boundingBox.isEmpty()){
+//                    for(int tmp = 0; tmp < idx+1; ++tmp) printf("\t");
+//                    printf("Push: Left  empty\n");
+//                    stack[++idx] = currentNode;
+//                    currentNode = currentNode->left;
+//                } else if(currentNode->right->boundingBox.isEmpty()){
+//                    for(int tmp = 0; tmp < idx+1; ++tmp) printf("\t");
+//                    printf("Push: Right empty\n");
+//                    stack[++idx] = currentNode;
+//                    currentNode = currentNode->right;
+//                } else{
+//                    for(int tmp = 0; tmp < idx-1; ++tmp) printf("\t");
+//                    printf("Pop : Both  full\n");
+//                    currentNode->boundingBox = currentNode->left->boundingBox + currentNode->right->boundingBox;
+//                    currentNode = stack[--idx];
+//                }
+//            } else if (currentNode->left->isLeaf && !currentNode->right->isLeaf){
+//                for(int tmp = 0; tmp < idx+1; ++tmp) printf("\t");
+//                printf("Push: Left  Leaf\n");
+//                stack[++idx] = currentNode;
+//                currentNode = currentNode->right;
+//            } else if (!currentNode->left->isLeaf &&currentNode->right->isLeaf){
+//                for(int tmp = 0; tmp < idx+1; ++tmp) printf("\t");
+//                printf("Push: Right Leaf\n");
+//                stack[++idx] = currentNode;
+//                currentNode = currentNode->left;
+//            } else {
+//                for(int tmp = 0; tmp < idx-1; ++tmp) printf("\t");
+//                printf("Pop : Both  Leaf\n");
+//                currentNode->boundingBox = currentNode->left->boundingBox + currentNode->right->boundingBox;
+//                currentNode = stack[--idx];
+//            }
+//            assert(idx < stackSize);
+//        } while(idx >= 0);
+//
+//        assert(root);
+//
+//        printf("Started recursion... %p \n", root);
+//
+//
+//        if(root->isLeaf){
 //            printf("Found Leaf...\n");
-            assert(node->primitive);
-            node->boundingBox = node->primitive->boundingBox;
-        }else{
-//            printf("Diverging Path...\n");
-            assert(node->left && node->right);
-
-            const AABB &leftAABB = getBoundingBox(node->left);
-//            printf("Got left AABB\n");
-            node->boundingBox = leftAABB + getBoundingBox(node->right);
+//            assert(root->primitive);
+//            root->boundingBox = root->primitive->boundingBox;
+//            printf("Got Leaf AABB %f\n", root->boundingBox.min[0]);
+//        }else{
+////            printf("Diverging Path...\n");
+//            assert(root->left && root->right);
+//
+//            printf("Diverging Path %p...\n", root);
+//
+//            AABB leftAABB = getBoundingBox(root->left);
+//
+//            printf("Got left AABB %f\n", leftAABB.min[0]);
+//            AABB rightAABB = getBoundingBox(root->right);
+//
+//
+//            root->boundingBox = leftAABB + rightAABB;
 //            printf("Completed Path...\n");
-        }
+//        }
 
-        return node->boundingBox;
+
+//        printf("Computed BB (%f, %f, %f) -> (%f, %f, %f)",
+//               root->boundingBox.min[0], root->boundingBox.min[1], root->boundingBox.min[2],
+//               root->boundingBox.max[0], root->boundingBox.max[1], root->boundingBox.max[2]);
+
+        return root->boundingBox;
 
     }
 
     template<typename Primitive>
-    __global__ void computeBVHBoundingBoxes(BVHNode<Primitive> *bvhNodes){
+    __global__ void computeBVHBoundingBoxes(BVHNode<Primitive> *bvhNodes, int numPrimitives){
         int i, j, pixelIndex;
         if(!cudaHelpers::initIndices(i, j, pixelIndex, 1, 1)) return;
 
+//        for(int tmp = 0; tmp < 2*numPrimitives-1; ++tmp){
+//            printf("%i, (%p, %p, %p, %p, %d)\n", tmp, bvhNodes + tmp, bvhNodes[tmp].left, bvhNodes[tmp].right, bvhNodes[tmp].primitive, bvhNodes[tmp].isLeaf);
+//        }
+
         printf("Starting BVH BB Computation...\n");
 
+
+        printf("Root %p -> %p -> %p \n", bvhNodes, bvhNodes + 544566 - 1,  bvhNodes + (2*544566-1));
         const AABB &totalBoundingBox = getBoundingBox(&bvhNodes[0]);
 
         printf("Total bounding box is (%f, %f, %f) -> (%f, %f, %f)\n",
@@ -209,24 +398,23 @@ namespace cudaHelpers{
                totalBoundingBox.max[0],  totalBoundingBox.max[1],  totalBoundingBox.max[2]);
 
 
+        for(int idx = numPrimitives-1; idx < 2*numPrimitives-1; ++idx){
+            assert(bvhNodes[idx].isPointedTo);
+//            if(!bvhNodes[idx].isPointedTo)
+//                printf("%i\n", idx);
+        }
+
+
+
+
     }
 
-
     template<typename Primitive>
-    __global__ void initBVH(BVH<Primitive> *bvh, Primitive *primitives, int numPrimitives){
+    __global__ void initBVH2(BVH<Primitive> *bvh, BVHNode<Primitive> *bvhTotalNodes){
         int i, j, pixelIndex;
         if(!cudaHelpers::initIndices(i, j, pixelIndex, 1, 1)) return;
 
-//        for(int i = 0; i < numPrimitives; ++i)
-//            printf("Receiving GPU Tria with coordinates\n"
-//                   "(%f, %f, %f) \n"
-//                   "(%f, %f, %f) \n"
-//                   "(%f, %f, %f) \n",
-//                   primitives[i].p0[0], primitives[i].p0[1], primitives[i].p0[2],
-//                   primitives[i].p1[0], primitives[i].p1[1], primitives[i].p1[2],
-//                   primitives[i].p2[0], primitives[i].p2[1], primitives[i].p2[2]);
-
-        *bvh = BVH<Primitive>(primitives, numPrimitives);
+        *bvh = BVH<Primitive>(bvhTotalNodes);
     }
 
     __global__ void freeVariables(int width, int height);
@@ -273,6 +461,20 @@ namespace cudaHelpers{
                            curandState *globalRandState){
         int i, j, pixelIndex;
         if(!initIndices(i, j, pixelIndex, width, height)) return;
+
+//        if(i == 0 && j == 0){
+//            printf("Testing Hit: \n");
+//
+//            auto r = Ray(customRenderer::getCameraOrigin(), customRenderer::getCameraLookAt() - customRenderer::getCameraOrigin());
+//            HitRecord h;
+//            bool didHit = bvh->hit(r, FLT_EPSILON, INFINITY, h);
+//            printf("Testing Hit: %d \n", didHit);
+//            output[pixelIndex] = Vector3f{1.f};
+//            return;
+//        }else{
+//            output[pixelIndex] = Vector3f{0.f};
+//            return;
+//        }
 
 
         auto sampler = Sampler(&globalRandState[pixelIndex]);

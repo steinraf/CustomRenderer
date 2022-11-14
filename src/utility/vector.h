@@ -31,6 +31,10 @@ public:
 
     [[nodiscard]] __host__ __device__ inline Vector3f operator/(float t) const;
 
+    __host__ __device__ inline bool operator==(const Vector3f &v2) const noexcept;
+
+    __host__ __device__ inline bool operator!=(const Vector3f &v2) const noexcept;
+
     __host__ __device__ inline Vector3f &operator+=(const Vector3f &v2) noexcept;
 
     __host__ __device__ inline Vector3f &operator-=(const Vector3f &v2) noexcept;
@@ -68,6 +72,8 @@ private:
 };
 
 using Color = Vector3f;
+
+__host__ __device__ inline Vector3f operator*(float t, const Vector3f &v) noexcept;
 
 
 inline std::ostream &operator<<(std::ostream &os, const Vector3f &t){
@@ -232,10 +238,18 @@ __host__ __device__ inline Vector3f &Vector3f::clamp(float minimum, float maximu
 
 __host__ __device__ inline Vector3f Vector3f::absValues() const noexcept {
     return {
-        abs(data[0]),
-        abs(data[1]),
-        abs(data[2])
+            abs(data[0]),
+            abs(data[1]),
+            abs(data[2])
     };
+}
+
+__host__ __device__ inline bool Vector3f::operator==(const Vector3f &v2) const noexcept{
+    return data[0] == v2.data[0] && data[1] == v2.data[1] && data[2] == v2.data[2];
+}
+
+__host__ __device__ inline bool Vector3f::operator!=(const Vector3f &v2) const noexcept{
+    return !(*this == v2);
 }
 
 

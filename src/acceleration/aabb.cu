@@ -34,9 +34,7 @@ __device__ bool AABB::rayIntersect(const Ray &ray, float &nearT, float &farT) co
             float t2 = (maxVal - origin) / ray.getDirection()[i];
 
             if(t1 > t2){
-                auto tmp = t1;
-                t1 = t2;
-                t2 = tmp;
+                cuda::std::swap(t1, t2);
             }
 
             nearT = thrust::max(t1, nearT);

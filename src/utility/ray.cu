@@ -6,13 +6,13 @@
 
 
 __device__ Ray::Ray()
-        : origin{1.0, 0.0, 0.0}, dir{1.0, 0.0, 0.0}{
+        : origin{0.f, 0.f, 0.f}, dir{1.f, 0.f, 0.f}{
 
 }
 
-__device__ Ray::Ray(const Vector3f &a, const Vector3f &b){
-    origin = a;
-    dir = b;
+__device__ Ray::Ray(const Vector3f &origin, const Vector3f &direction)
+    :origin(origin), dir(direction){
+
 }
 
 __device__ Vector3f Ray::atTime(float t) const{
