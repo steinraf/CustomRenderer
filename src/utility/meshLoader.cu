@@ -138,7 +138,7 @@ DeviceMeshInfo meshToGPU(const HostMeshInfo &mesh){
             vertexIndexList,
             textureIndexList,
             normalIndexList] = mesh;
-    
+
 #pragma omp parallel for
     for(int i = 0; i < numTriangles; ++i){
         hostTriangles[i] = {
@@ -156,7 +156,6 @@ DeviceMeshInfo meshToGPU(const HostMeshInfo &mesh){
     }
 
     thrust::device_vector<Triangle> deviceTriangles(hostTriangles);
-
 
 
     TriaToAABB triangleToAABB;

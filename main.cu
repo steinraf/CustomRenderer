@@ -63,8 +63,12 @@ int main(int argc, char **argv){
     std::cout << "Starting rendering...\n";
 
 
-    constexpr int k = 10;
-    Scene s(loadMesh(filePath), k * 384, k * 216);
+//    constexpr int k = 10;
+//    Scene s(loadMesh(filePath), k * 384, k * 216);
+
+    constexpr int k = 1;
+    Scene s(loadMesh(filePath), k * 786, k * 786);
+
     s.renderCPU();
 //    s.renderGPU();
 

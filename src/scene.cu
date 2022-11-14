@@ -24,8 +24,6 @@ __host__ Scene::Scene(HostMeshInfo &&mesh, int width, int height/*, int numHitta
 
 //    deviceCamera = Camera(  );
 
-//    std::cout << "Initializing scene with " << width  << ' ' << blockSizeX << '\n';
-
     if(dev == CPU){
         checkCudaErrors(cudaMalloc((void **) &deviceImageBuffer, imageBufferSize));
         checkCudaErrors(cudaMalloc((void **) &deviceImageBufferDenoised, imageBufferSize));
@@ -42,39 +40,32 @@ __host__ Scene::Scene(HostMeshInfo &&mesh, int width, int height/*, int numHitta
 
     cudaHelpers::initRng<<<blockSize, threadSize>>>(width, height, deviceCurandState);
     checkCudaErrors(cudaGetLastError());
-    // No need to sync because can run independantly
+    // No need to sync because can run independently
 //    checkCudaErrors(cudaDeviceSynchronize());
 
-
-//    Triangle *deviceTriangles;
-
-//    cudaHelpers::getMesh<<<1, blockSizeX*blockSizeY>>>(mesh);
-
-
-//    auto *deviceTriangles = mesh2GPU(mesh);
 
     clock_t startGeometryBVH = clock();
 
     thrust::device_vector<uint32_t> deviceMortonCodes;
-//    AABB hostAABB;
 
-    std::tie(deviceTriangles, deviceMortonCodes/*, hostAABB*/) = meshToGPU(mesh).toTuple();
+    std::tie(deviceTriangles, deviceMortonCodes) = meshToGPU(mesh).toTuple();
 
     const int numTriangles = static_cast<int>(mesh.normalsIndices.first.size());
 
     std::cout << "Managing " << numTriangles << " triangles.\n";
 
     BVHNode<Triangle> *bvhTotalNodes;
-    checkCudaErrors(cudaMalloc((void **) &bvhTotalNodes, sizeof(BVHNode<Triangle>) * (2*numTriangles-1))); //n-1 internal, n leaf
+    checkCudaErrors(cudaMalloc((void **) &bvhTotalNodes,
+                               sizeof(BVHNode<Triangle>) * (2 * numTriangles - 1))); //n-1 internal, n leaf
     checkCudaErrors(cudaMalloc((void **) &bvh, sizeof(BVH<Triangle> *)));
 
-    printf("BVH has allocation range of (%p, %p)\n", bvhTotalNodes, bvhTotalNodes + (2*numTriangles-1));
+    printf("BVH has allocation range of (%p, %p)\n", bvhTotalNodes, bvhTotalNodes + (2 * numTriangles - 1));
 
     Triangle *deviceTrianglePtr = deviceTriangles.data().get();
 
 
-    cudaHelpers::constructBVH<<<(numTriangles + 1024 - 1)/1024, 1024>>>(bvhTotalNodes, deviceTrianglePtr, deviceMortonCodes.data().get(), numTriangles);
-
+    cudaHelpers::constructBVH<<<(numTriangles + 1024 - 1) /
+                                1024, 1024>>>(bvhTotalNodes, deviceTrianglePtr, deviceMortonCodes.data().get(), numTriangles);
 
 
     checkCudaErrors(cudaGetLastError());
@@ -85,8 +76,7 @@ __host__ Scene::Scene(HostMeshInfo &&mesh, int width, int height/*, int numHitta
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
 
-//    cudaHelpers::initBVH<<<1, 1>>>(bvh, deviceTrianglePtr, numTriangles);
-    cudaHelpers::initBVH2<<<1, 1>>>(bvh, bvhTotalNodes);
+    cudaHelpers::initBVH<<<1, 1>>>(bvh, bvhTotalNodes);
 
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
@@ -108,8 +98,8 @@ __host__ Scene::~Scene(){
     delete[] hostImageBufferDenoised;
 
     if(device == CPU){
-        //        checkCudaErrors(cudaDeviceSynchronize());
-        //        checkCudaErrors(cudaFree(deviceImageBuffer));
+        checkCudaErrors(cudaDeviceSynchronize());
+//                checkCudaErrors(cudaFree(deviceImageBuffer));
 //        glDeleteVertexArrays(1, &VAO);
 //        glDeleteBuffers(1, &VBO);
 //        glDeleteBuffers(1, &EBO);
@@ -224,7 +214,6 @@ __host__ void Scene::initOpenGL(){
     if(!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)){
         std::cerr << "Failed to initialize GLAD" << std::endl;
         throw std::runtime_error("GLAD INIT ERROR");
-        return;
     }
 
     loadShader();

@@ -15,7 +15,6 @@
 
 #include "cudaHelpers.h"
 #include "utility/vector.h"
-#include "hittableList.h"
 #include "utility/meshLoader.h"
 
 enum Device{

@@ -29,14 +29,8 @@ add_executable(Raytracing
         src/utility/ray.h
         src/hittable.cu
         src/hittable.h
-        src/shapes/sphere.cu
-        src/shapes/sphere.h
-        src/hittableList.cu
-        src/hittableList.h
         src/camera.cu
         src/camera.h
-        src/material.cu
-        src/material.h
         src/constants.h
         src/utility/warp.h
         src/utility/sampler.h
@@ -45,7 +39,12 @@ add_executable(Raytracing
         src/shapes/triangle.cu
         src/shapes/triangle.h
         src/utility/meshLoader.h
-        src/utility/meshLoader.cu src/bsdf.cu src/bsdf.h src/acceleration/aabb.cu src/acceleration/aabb.h src/utility/vector.cu)
+        src/utility/meshLoader.cu
+        src/bsdf.cu
+        src/bsdf.h
+        src/acceleration/aabb.cu
+        src/acceleration/aabb.h
+        src/utility/vector.cu)
 
 set_target_properties(Raytracing PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 

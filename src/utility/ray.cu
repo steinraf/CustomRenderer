@@ -11,7 +11,7 @@ __device__ Ray::Ray()
 }
 
 __device__ Ray::Ray(const Vector3f &origin, const Vector3f &direction)
-    :origin(origin), dir(direction){
+        : origin(origin), dir(direction){
 
 }
 

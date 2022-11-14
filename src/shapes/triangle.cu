@@ -4,7 +4,10 @@
 
 #include "triangle.h"
 
+//Nori Triangle Hit
 __device__ bool Triangle::hit(const Ray &r, float tMin, float tMax, HitRecord &rec) const{
+
+//    printf("Trying to hit triangle %p\n", this);
 
 //    printf("Intersecting triangle with coordinates\n"
 //           "(%f, %f, %f) \n"

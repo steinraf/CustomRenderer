@@ -15,8 +15,6 @@ public:
 
     Triangle() = default;
 
-//    __host__ Triangle(Triangle &&) = default;
-
     __device__ __host__ Triangle(
             const Vector3f &p0, const Vector3f &p1, const Vector3f &p2,
             const Vector2f &uv0, const Vector2f &uv1, const Vector2f &uv2,

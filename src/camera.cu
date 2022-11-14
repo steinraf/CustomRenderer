@@ -37,5 +37,5 @@ __device__ Ray Camera::getRay(float s, float t, Sampler &sampler) const{
     const Vector3f pos = origin + offset;
 
 
-    return Ray(pos, lowerLeftCorner + s * horizontal + t * vertical - pos);
+    return {pos, lowerLeftCorner + s * horizontal + t * vertical - pos};
 }

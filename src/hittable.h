@@ -6,10 +6,7 @@
 
 #include "utility/vector.h"
 #include "utility/ray.h"
-//#include "shapes/triangle.h"
-//#include "bsdf.h"
 
-//class Material;
 
 struct HitRecord{
     Vector3f position;
@@ -32,11 +29,4 @@ struct HitRecord{
 
     //TODO add textures?
 };
-
-//
-//class Hittable{
-//public:
-//    __device__ virtual bool hit(const Ray &r, float tMin, float tMax, HitRecord &rec) const = 0;
-//};
-
 

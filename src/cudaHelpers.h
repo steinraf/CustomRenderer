@@ -8,7 +8,6 @@
 
 #include "utility/vector.h"
 #include "utility/ray.h"
-#include "hittableList.h"
 #include "camera.h"
 #include "utility/meshLoader.h"
 #include "acceleration/bvh.h"
@@ -47,10 +46,10 @@ namespace cudaHelpers{
     __forceinline__ __device__ int delta(int a, int b, unsigned int n, const unsigned int *c, unsigned int ka){
         // this guard is for leaf nodes, not internal nodes (hence [0, n-1])
 //        assert (b >= 0 && b < n);
-        if (b < 0 || b > n - 1) return -1;
+        if(b < 0 || b > n - 1) return -1;
 
         unsigned int kb = c[b];
-        if (ka == kb) {
+        if(ka == kb){
             // if keys are equal, use id as fallback
             // (+32 because they have the same morton code and thus the string-concatenated XOR
             //  version would have 32 leading zeros)
@@ -60,7 +59,8 @@ namespace cudaHelpers{
         return __clz(ka ^ kb);
     }
 
-    __forceinline__ __device__ thrust::pair<int, int> determineRange(const uint32_t *mortonCodes, int numPrimitives, int i){
+    __forceinline__ __device__ thrust::pair<int, int>
+    determineRange(const uint32_t *mortonCodes, int numPrimitives, int i){
         const unsigned int *c = mortonCodes;
         unsigned int ki = c[i]; // key of i
 
@@ -70,24 +70,24 @@ namespace cudaHelpers{
 
         int d; // direction
         int delta_min; // min of delta_r and delta_l
-        if (delta_r < delta_l) {
+        if(delta_r < delta_l){
             d = -1;
             delta_min = delta_r;
-        } else {
+        }else{
             d = 1;
             delta_min = delta_l;
         }
 
         // compute upper bound of the length of the range
         unsigned int l_max = 2;
-        while (delta(i, i + l_max * d, numPrimitives, c, ki) > delta_min) {
+        while(delta(i, i + l_max * d, numPrimitives, c, ki) > delta_min){
             l_max <<= 1;
         }
 
         // find other end using binary search
         unsigned int l = 0;
-        for (unsigned int t = l_max >> 1; t > 0; t >>= 1) {
-            if (delta(i, i + (l + t) * d, numPrimitives, c, ki) > delta_min) {
+        for(unsigned int t = l_max >> 1; t > 0; t >>= 1){
+            if(delta(i, i + (l + t) * d, numPrimitives, c, ki) > delta_min){
                 l += t;
             }
         }
@@ -101,11 +101,12 @@ namespace cudaHelpers{
 
 
     template<typename Primitive>
-    __global__ void constructBVH(BVHNode<Primitive> *bvhNodes, Primitive *primitives, const uint32_t *mortonCodes, int numPrimitives){
+    __global__ void
+    constructBVH(BVHNode<Primitive> *bvhNodes, Primitive *primitives, const uint32_t *mortonCodes, int numPrimitives){
 
         const int i = blockDim.x * blockIdx.x + threadIdx.x;
 
-        if(i > numPrimitives-1) return;
+        if(i > numPrimitives - 1) return;
 
 //        if(i == 0){
 //            for(int tmp = 0; tmp < numPrimitives; ++tmp){
@@ -117,11 +118,11 @@ namespace cudaHelpers{
         // [0, numPrimitives-2]                    -> internal nodes
         // [numPrimitives-1, (2*numPrimitives)-1]     -> leaf nodes
         bvhNodes[numPrimitives - 1 + i] = {
-              nullptr,
-              nullptr,
-              &primitives[i],
-              primitives[i].boundingBox,
-              true,
+                nullptr,
+                nullptr,
+                &primitives[i],
+                primitives[i].boundingBox,
+                true,
         };
 
 //        printf("Leaf Init %p\n", &bvhNodes[numPrimitives + i - 1]);
@@ -132,10 +133,10 @@ namespace cudaHelpers{
 //        printf("%p is leaf\n", &bvhNodes[numPrimitives + i - 1]);
 
 
-        if(i == numPrimitives-1) return;
+        if(i == numPrimitives - 1) return;
 
 
-        auto[first, last] = determineRange(mortonCodes, numPrimitives, i);
+        auto [first, last] = determineRange(mortonCodes, numPrimitives, i);
 
         int split = findSplit(mortonCodes, first, last, numPrimitives);
 
@@ -143,14 +144,20 @@ namespace cudaHelpers{
 
 
 
-        BVHNode<Primitive> *childA = (split == first)  ? &bvhNodes[numPrimitives-1 + split]    : &bvhNodes[split];
-        BVHNode<Primitive> *childB = (split+1 == last) ? &bvhNodes[numPrimitives-1 + split + 1]: &bvhNodes[split+1];
+        BVHNode<Primitive> *childA = (split == first) ? &bvhNodes[numPrimitives - 1 + split] : &bvhNodes[split];
+        BVHNode<Primitive> *childB = (split + 1 == last) ? &bvhNodes[numPrimitives - 1 + split + 1] : &bvhNodes[split +
+                                                                                                                1];
 
 //        printf("Parent: %p, \tLeft: %p, \tRight: %p\n", bvhNodes+i, childA, childB);
+//
+//        if(childA->isLeaf){
+//            printf("Child A leaf: %p\n", childA->primitive);
+//        }
+//
+//        if(childB->isLeaf){
+//            printf("Child B leaf: %p\n", childB->primitive);
+//        }
 
-
-//        printf("Left  child is %p\n", childA);
-//        printf("Right child is %p\n", childB);
 
 
 
@@ -190,9 +197,9 @@ namespace cudaHelpers{
     }
 
     template<typename Primitive>
-    __device__ AABB getBoundingBox(BVHNode<Primitive> *root, int indentLevel=1){
+    __device__ AABB getBoundingBox(BVHNode<Primitive> *root, int indentLevel = 1){
 
-        typedef BVHNode<Primitive>* NodePtr;
+        typedef BVHNode<Primitive> *NodePtr;
 
         constexpr int stackSize = 1024;
         NodePtr stack[stackSize];
@@ -203,7 +210,7 @@ namespace cudaHelpers{
 
         NodePtr currentNode = root;
 
-        do {
+        do{
 
 //            printf("STACK: "); for(int tmp = 0; tmp < idx+1; ++tmp) printf("| %p ", stack[tmp]);
 //            printf("\n");
@@ -238,70 +245,70 @@ namespace cudaHelpers{
                 stack[++idx] = right;
                 stack[++idx] = left;
             }
-        } while (idx >= 0);
+        }while(idx >= 0);
 
         return root->boundingBox;
 
 //        do {
 //            assert(!currentNode->isLeaf);
 
-            NodePtr left = currentNode->left;
-            NodePtr right = currentNode->right;
+        NodePtr left = currentNode->left;
+        NodePtr right = currentNode->right;
 
-            if(left && right){
-                if(left->hasBoundingBox()){
-                    if(right->hasBoundingBox()){
-                        for(int tmp = 0; tmp < idx-1; ++tmp) printf("\t");
-                        printf("Pop : Both filled\n");
-                        currentNode->boundingBox = left->boundingBox + right->boundingBox;
-                        currentNode = stack[--idx];
-                    } else {
-                        for(int tmp = 0; tmp < idx+1; ++tmp) printf("\t");
-                        printf("Push: Right No BB\n");
-                        stack[++idx] = right;
-                        currentNode = right;
-                    }
-                }else if(right->hasBoundingBox()){
-                    for(int tmp = 0; tmp < idx+1; ++tmp) printf("\t");
-                    printf("Push: Left No BB\n");
-                    stack[++idx] = left;
-                    currentNode = left;
-                } else {
-                    for(int tmp = 0; tmp < idx+1; ++tmp) printf("\t");
-                    printf("Push: Neither BB\n");
-                    stack[++idx] = currentNode;
-//                    stack[++idx] = right;
-                    currentNode = left;
-                }
-            } else if (left){
-                if(left->hasBoundingBox()){
-                    for(int tmp = 0; tmp < idx-1; ++tmp) printf("\t");
-                    printf("Pop : Right Nullptr\n");
-                    currentNode->boundingBox = left->boundingBox;
-                    currentNode = stack[--idx];
-                } else {
-                    for(int tmp = 0; tmp < idx+1; ++tmp) printf("\t");
-                    printf("Push: Right Nullptr\n");
-                    stack[++idx] = left;
-                    currentNode = left;
-                }
-            } else if (right){
+        if(left && right){
+            if(left->hasBoundingBox()){
                 if(right->hasBoundingBox()){
-                    for(int tmp = 0; tmp < idx-1; ++tmp) printf("\t");
-                    printf("Pop : Left Nullptr\n");
-                    currentNode->boundingBox = right->boundingBox;
+                    for(int tmp = 0; tmp < idx - 1; ++tmp) printf("\t");
+                    printf("Pop : Both filled\n");
+                    currentNode->boundingBox = left->boundingBox + right->boundingBox;
                     currentNode = stack[--idx];
-                } else {
-                    for(int tmp = 0; tmp < idx+1; ++tmp) printf("\t");
-                    printf("Push: Left Nullptr\n");
+                }else{
+                    for(int tmp = 0; tmp < idx + 1; ++tmp) printf("\t");
+                    printf("Push: Right No BB\n");
                     stack[++idx] = right;
                     currentNode = right;
                 }
-            } else {
-                assert(!currentNode->isLeaf);
-                assert(false && "Right and left are nullptr and this is not a leaf");
-                currentNode = stack[--idx];
+            }else if(right->hasBoundingBox()){
+                for(int tmp = 0; tmp < idx + 1; ++tmp) printf("\t");
+                printf("Push: Left No BB\n");
+                stack[++idx] = left;
+                currentNode = left;
+            }else{
+                for(int tmp = 0; tmp < idx + 1; ++tmp) printf("\t");
+                printf("Push: Neither BB\n");
+                stack[++idx] = currentNode;
+//                    stack[++idx] = right;
+                currentNode = left;
             }
+        }else if(left){
+            if(left->hasBoundingBox()){
+                for(int tmp = 0; tmp < idx - 1; ++tmp) printf("\t");
+                printf("Pop : Right Nullptr\n");
+                currentNode->boundingBox = left->boundingBox;
+                currentNode = stack[--idx];
+            }else{
+                for(int tmp = 0; tmp < idx + 1; ++tmp) printf("\t");
+                printf("Push: Right Nullptr\n");
+                stack[++idx] = left;
+                currentNode = left;
+            }
+        }else if(right){
+            if(right->hasBoundingBox()){
+                for(int tmp = 0; tmp < idx - 1; ++tmp) printf("\t");
+                printf("Pop : Left Nullptr\n");
+                currentNode->boundingBox = right->boundingBox;
+                currentNode = stack[--idx];
+            }else{
+                for(int tmp = 0; tmp < idx + 1; ++tmp) printf("\t");
+                printf("Push: Left Nullptr\n");
+                stack[++idx] = right;
+                currentNode = right;
+            }
+        }else{
+            assert(!currentNode->isLeaf);
+            assert(false && "Right and left are nullptr and this is not a leaf");
+            currentNode = stack[--idx];
+        }
 
 
 
@@ -390,27 +397,25 @@ namespace cudaHelpers{
         printf("Starting BVH BB Computation...\n");
 
 
-        printf("Root %p -> %p -> %p \n", bvhNodes, bvhNodes + 544566 - 1,  bvhNodes + (2*544566-1));
+        printf("Root %p -> %p -> %p \n", bvhNodes, bvhNodes + 544566 - 1, bvhNodes + (2 * 544566 - 1));
         const AABB &totalBoundingBox = getBoundingBox(&bvhNodes[0]);
 
         printf("Total bounding box is (%f, %f, %f) -> (%f, %f, %f)\n",
-               totalBoundingBox.min[0],  totalBoundingBox.min[1],  totalBoundingBox.min[2],
-               totalBoundingBox.max[0],  totalBoundingBox.max[1],  totalBoundingBox.max[2]);
+               totalBoundingBox.min[0], totalBoundingBox.min[1], totalBoundingBox.min[2],
+               totalBoundingBox.max[0], totalBoundingBox.max[1], totalBoundingBox.max[2]);
 
 
-        for(int idx = numPrimitives-1; idx < 2*numPrimitives-1; ++idx){
+        for(int idx = numPrimitives - 1; idx < 2 * numPrimitives - 1; ++idx){
             assert(bvhNodes[idx].isPointedTo);
 //            if(!bvhNodes[idx].isPointedTo)
 //                printf("%i\n", idx);
         }
 
 
-
-
     }
 
     template<typename Primitive>
-    __global__ void initBVH2(BVH<Primitive> *bvh, BVHNode<Primitive> *bvhTotalNodes){
+    __global__ void initBVH(BVH<Primitive> *bvh, BVHNode<Primitive> *bvhTotalNodes){
         int i, j, pixelIndex;
         if(!cudaHelpers::initIndices(i, j, pixelIndex, 1, 1)) return;
 
@@ -437,7 +442,7 @@ namespace cudaHelpers{
                 if(record.triangle->bsdf.scatter(currentRay, record, attenuation, scattered, sampler)){
                     currentRay = scattered;
                     currentAttenuation *= attenuation;
-                    return record.normal * 255.99;
+                    return record.normal;// * 255.99;
                 }else{
                     return Color{0.f};
                 }
@@ -510,9 +515,6 @@ namespace cudaHelpers{
         output[pixelIndex] = col;
 
     }
-
-
-
 
 
 };

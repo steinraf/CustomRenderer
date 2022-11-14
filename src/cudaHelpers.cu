@@ -6,13 +6,8 @@
 
 
 #include "utility/ray.h"
-#include "shapes/sphere.h"
-#include "hittableList.h"
-#include "material.h"
-#include "shapes/triangle.h"
 #include "bsdf.h"
 
-#include "utility/meshLoader.h"
 
 #include <iostream>
 
@@ -60,7 +55,7 @@ namespace cudaHelpers{
         float filter[5][5] = {
                 {0, 0,      0,      0, 0},
                 {0, 0,      0.125f, 0, 0},
-                {0, 0.125f, 0.5f,   0.125f,},
+                {0, 0.125f, 0.5f,   0.125f, 0.f},
                 {0, 0,      0.125f, 0, 0},
                 {0, 0,      0,      0, 0},
         };
@@ -76,7 +71,6 @@ namespace cudaHelpers{
 
         output[pixelIndex] = tmp.clamp(0.f, 1.f); //(input[pixelIndex] + tmp/(count))/2.0;
     }
-
 
 
     __device__ int findSplit(const uint32_t *mortonCodes, int first, int last, int numPrimitives){
@@ -96,18 +90,18 @@ namespace cudaHelpers{
         int split = first; // initial guess
         int step = last - first;
 
-        do {
+        do{
             step = (step + 1) >> 1; // exponential decrease
             const int new_split = split + step; // proposed new position
 
-            if (new_split < last) {
+            if(new_split < last){
                 const int split_prefix = delta(
                         first, new_split, numPrimitives, mortonCodes, first_code);
-                if (split_prefix > common_prefix) {
+                if(split_prefix > common_prefix){
                     split = new_split; // accept proposal
                 }
             }
-        } while (step > 1);
+        }while(step > 1);
 
         return split;
     }

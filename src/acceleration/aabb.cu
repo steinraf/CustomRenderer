@@ -50,7 +50,9 @@ __device__ bool AABB::rayIntersect(const Ray &ray, float &nearT, float &farT) co
 
 __device__ AABB AABB::operator+(const AABB &other) const{
     return {
-            Vector3f{-FLT_EPSILON} + Vector3f{thrust::min(min[0], other.min[0]), thrust::min(min[1], other.min[1]), thrust::min(min[2], other.min[2])},
-            Vector3f{ FLT_EPSILON} + Vector3f{thrust::max(max[0], other.max[0]), thrust::max(max[1], other.max[1]), thrust::max(max[2], other.max[2])},
+            Vector3f{-FLT_EPSILON} + Vector3f{thrust::min(min[0], other.min[0]), thrust::min(min[1], other.min[1]),
+                                              thrust::min(min[2], other.min[2])},
+            Vector3f{FLT_EPSILON} + Vector3f{thrust::max(max[0], other.max[0]), thrust::max(max[1], other.max[1]),
+                                             thrust::max(max[2], other.max[2])},
     };
 }

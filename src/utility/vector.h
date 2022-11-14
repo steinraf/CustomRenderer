@@ -236,7 +236,7 @@ __host__ __device__ inline Vector3f &Vector3f::clamp(float minimum, float maximu
     return *this;
 }
 
-__host__ __device__ inline Vector3f Vector3f::absValues() const noexcept {
+__host__ __device__ inline Vector3f Vector3f::absValues() const noexcept{
     return {
             abs(data[0]),
             abs(data[1]),
