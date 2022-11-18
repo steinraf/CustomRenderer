@@ -1,0 +1,2 @@
+[submodule "libs/std"]
+	url = git@github.com:nothings/stb.git

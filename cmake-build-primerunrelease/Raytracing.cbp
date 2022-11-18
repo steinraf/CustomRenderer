@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6"/>
+	<Project>
+		<Option title="Raytracing"/>
+		<Option makefile_is_custom="1"/>
+		<Option compiler="gcc"/>
+		<Option virtualFolders="CMake Files\;CMake Files\..\;CMake Files\..\..\;CMake Files\..\..\..\;CMake Files\..\..\..\..\;CMake Files\..\..\..\..\..\;CMake Files\..\..\..\..\..\usr\;CMake Files\..\..\..\..\..\usr\local\;CMake Files\..\..\..\..\..\usr\local\lib\;CMake Files\..\..\..\..\..\usr\local\lib\cmake\;CMake Files\..\..\..\..\..\usr\local\lib\cmake\PNGwriter\;CMake Files\..\..\..\..\..\usr\local\lib\cmake\glfw3\;"/>
+		<Build>
+			<Target title="all">
+				<Option working_dir="/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j16 -f &quot;/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="/usr/bin/make -j16 -f &quot;/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j16 -f &quot;/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j16 -f &quot;/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="GLAD">
+				<Option output="/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/libGLAD.a" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease"/>
+				<Option object_output="./"/>
+				<Option type="2"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/home/steinraf/ETH/CG/CustomRenderer/libs/stb"/>
+					<Add directory="/home/steinraf/ETH/CG/CustomRenderer/includes"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/x86_64-pc-linux-gnu"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/12.2.0/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/12.2.0/include-fixed"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j16 -f &quot;/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/Makefile&quot;  VERBOSE=1 GLAD"/>
+					<CompileFile command="/usr/bin/make -j16 -f &quot;/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j16 -f &quot;/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j16 -f &quot;/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="GLAD/fast">
+				<Option output="/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/libGLAD.a" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease"/>
+				<Option object_output="./"/>
+				<Option type="2"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/home/steinraf/ETH/CG/CustomRenderer/libs/stb"/>
+					<Add directory="/home/steinraf/ETH/CG/CustomRenderer/includes"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/x86_64-pc-linux-gnu"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/12.2.0/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/12.2.0/include-fixed"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j16 -f &quot;/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/Makefile&quot;  VERBOSE=1 GLAD/fast"/>
+					<CompileFile command="/usr/bin/make -j16 -f &quot;/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j16 -f &quot;/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j16 -f &quot;/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="Raytracing">
+				<Option output="/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/Raytracing" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add option="-DUSE_FREETYPE"/>
+					<Add directory="/home/steinraf/ETH/CG/CustomRenderer/libs/stb"/>
+					<Add directory="/home/steinraf/ETH/CG/CustomRenderer/includes"/>
+					<Add directory="/usr/include/freetype2"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/x86_64-pc-linux-gnu"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/12.2.0/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/12.2.0/include-fixed"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j16 -f &quot;/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/Makefile&quot;  VERBOSE=1 Raytracing"/>
+					<CompileFile command="/usr/bin/make -j16 -f &quot;/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j16 -f &quot;/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j16 -f &quot;/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="Raytracing/fast">
+				<Option output="/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/Raytracing" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add option="-DUSE_FREETYPE"/>
+					<Add directory="/home/steinraf/ETH/CG/CustomRenderer/libs/stb"/>
+					<Add directory="/home/steinraf/ETH/CG/CustomRenderer/includes"/>
+					<Add directory="/usr/include/freetype2"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/x86_64-pc-linux-gnu"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/12.2.0/../../../../include/c++/12.2.0/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/12.2.0/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/12.2.0/include-fixed"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j16 -f &quot;/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/Makefile&quot;  VERBOSE=1 Raytracing/fast"/>
+					<CompileFile command="/usr/bin/make -j16 -f &quot;/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j16 -f &quot;/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j16 -f &quot;/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="edit_cache">
+				<Option working_dir="/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j16 -f &quot;/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="/usr/bin/make -j16 -f &quot;/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j16 -f &quot;/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j16 -f &quot;/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rebuild_cache">
+				<Option working_dir="/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j16 -f &quot;/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="/usr/bin/make -j16 -f &quot;/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j16 -f &quot;/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j16 -f &quot;/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="/home/steinraf/ETH/CG/CustomRenderer/libs/glad/glad.cu">
+			<Option target="GLAD"/>
+		</Unit>
+		<Unit filename="/home/steinraf/ETH/CG/CustomRenderer/libs/glad/glad.h">
+			<Option target="GLAD"/>
+		</Unit>
+		<Unit filename="/home/steinraf/ETH/CG/CustomRenderer/main.cu">
+			<Option target="Raytracing"/>
+		</Unit>
+		<Unit filename="/home/steinraf/ETH/CG/CustomRenderer/src/acceleration/aabb.h">
+			<Option target="Raytracing"/>
+		</Unit>
+		<Unit filename="/home/steinraf/ETH/CG/CustomRenderer/src/acceleration/bvh.h">
+			<Option target="Raytracing"/>
+		</Unit>
+		<Unit filename="/home/steinraf/ETH/CG/CustomRenderer/src/bsdf.cu">
+			<Option target="Raytracing"/>
+		</Unit>
+		<Unit filename="/home/steinraf/ETH/CG/CustomRenderer/src/bsdf.h">
+			<Option target="Raytracing"/>
+		</Unit>
+		<Unit filename="/home/steinraf/ETH/CG/CustomRenderer/src/camera.cu">
+			<Option target="Raytracing"/>
+		</Unit>
+		<Unit filename="/home/steinraf/ETH/CG/CustomRenderer/src/camera.h">
+			<Option target="Raytracing"/>
+		</Unit>
+		<Unit filename="/home/steinraf/ETH/CG/CustomRenderer/src/constants.h">
+			<Option target="Raytracing"/>
+		</Unit>
+		<Unit filename="/home/steinraf/ETH/CG/CustomRenderer/src/cudaHelpers.cu">
+			<Option target="Raytracing"/>
+		</Unit>
+		<Unit filename="/home/steinraf/ETH/CG/CustomRenderer/src/cudaHelpers.h">
+			<Option target="Raytracing"/>
+		</Unit>
+		<Unit filename="/home/steinraf/ETH/CG/CustomRenderer/src/hittable.cu">
+			<Option target="Raytracing"/>
+		</Unit>
+		<Unit filename="/home/steinraf/ETH/CG/CustomRenderer/src/hittable.h">
+			<Option target="Raytracing"/>
+		</Unit>
+		<Unit filename="/home/steinraf/ETH/CG/CustomRenderer/src/scene.cu">
+			<Option target="Raytracing"/>
+		</Unit>
+		<Unit filename="/home/steinraf/ETH/CG/CustomRenderer/src/scene.h">
+			<Option target="Raytracing"/>
+		</Unit>
+		<Unit filename="/home/steinraf/ETH/CG/CustomRenderer/src/shapes/triangle.h">
+			<Option target="Raytracing"/>
+		</Unit>
+		<Unit filename="/home/steinraf/ETH/CG/CustomRenderer/src/utility/meshLoader.cu">
+			<Option target="Raytracing"/>
+		</Unit>
+		<Unit filename="/home/steinraf/ETH/CG/CustomRenderer/src/utility/meshLoader.h">
+			<Option target="Raytracing"/>
+		</Unit>
+		<Unit filename="/home/steinraf/ETH/CG/CustomRenderer/src/utility/ray.h">
+			<Option target="Raytracing"/>
+		</Unit>
+		<Unit filename="/home/steinraf/ETH/CG/CustomRenderer/src/utility/sampler.h">
+			<Option target="Raytracing"/>
+		</Unit>
+		<Unit filename="/home/steinraf/ETH/CG/CustomRenderer/src/utility/vector.cu">
+			<Option target="Raytracing"/>
+		</Unit>
+		<Unit filename="/home/steinraf/ETH/CG/CustomRenderer/src/utility/vector.h">
+			<Option target="Raytracing"/>
+		</Unit>
+		<Unit filename="/home/steinraf/ETH/CG/CustomRenderer/src/utility/warp.h">
+			<Option target="Raytracing"/>
+		</Unit>
+		<Unit filename="/home/steinraf/ETH/CG/CustomRenderer/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+		<Unit filename="/home/steinraf/ETH/CG/CustomRenderer/../../../../../usr/local/lib/cmake/PNGwriter/PNGwriterConfig.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\local\lib\cmake\PNGwriter\"/>
+		</Unit>
+		<Unit filename="/home/steinraf/ETH/CG/CustomRenderer/../../../../../usr/local/lib/cmake/PNGwriter/PNGwriterConfigVersion.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\local\lib\cmake\PNGwriter\"/>
+		</Unit>
+		<Unit filename="/home/steinraf/ETH/CG/CustomRenderer/../../../../../usr/local/lib/cmake/PNGwriter/PNGwriterTargets-release.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\local\lib\cmake\PNGwriter\"/>
+		</Unit>
+		<Unit filename="/home/steinraf/ETH/CG/CustomRenderer/../../../../../usr/local/lib/cmake/PNGwriter/PNGwriterTargets.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\local\lib\cmake\PNGwriter\"/>
+		</Unit>
+		<Unit filename="/home/steinraf/ETH/CG/CustomRenderer/../../../../../usr/local/lib/cmake/glfw3/glfw3Config.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\local\lib\cmake\glfw3\"/>
+		</Unit>
+		<Unit filename="/home/steinraf/ETH/CG/CustomRenderer/../../../../../usr/local/lib/cmake/glfw3/glfw3ConfigVersion.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\local\lib\cmake\glfw3\"/>
+		</Unit>
+		<Unit filename="/home/steinraf/ETH/CG/CustomRenderer/../../../../../usr/local/lib/cmake/glfw3/glfw3Targets-noconfig.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\local\lib\cmake\glfw3\"/>
+		</Unit>
+		<Unit filename="/home/steinraf/ETH/CG/CustomRenderer/../../../../../usr/local/lib/cmake/glfw3/glfw3Targets.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\..\usr\local\lib\cmake\glfw3\"/>
+		</Unit>
+	</Project>
+</CodeBlocks_project_file>

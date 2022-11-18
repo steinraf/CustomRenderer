@@ -10,12 +10,15 @@ set(CMAKE_CXX_FLAGS "-O3 -funroll-loops -DNO_FREETYPE -D_GLIBCXX_ASSERTIONS -fas
 set(CMAKE_CUDA_FLAGS "-extended-lambda ")
 
 add_library(GLAD "libs/glad/glad.cu")
+include_directories(libs/stb)
 
 
 find_package(PNGwriter 0.7.0 REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(X11 REQUIRED)
+
+include_directories(${CMAKE_SOURCE_DIR}/includes)
 
 
 add_executable(Raytracing
@@ -25,7 +28,6 @@ add_executable(Raytracing
         src/cudaHelpers.h
         src/scene.cu
         src/scene.h
-        src/utility/ray.cu
         src/utility/ray.h
         src/hittable.cu
         src/hittable.h
@@ -35,19 +37,17 @@ add_executable(Raytracing
         src/utility/warp.h
         src/utility/sampler.h
         src/acceleration/bvh.h
-        src/acceleration/bvh.cu
-        src/shapes/triangle.cu
         src/shapes/triangle.h
         src/utility/meshLoader.h
         src/utility/meshLoader.cu
         src/bsdf.cu
         src/bsdf.h
-        src/acceleration/aabb.cu
         src/acceleration/aabb.h
         src/utility/vector.cu)
 
+
+
 set_target_properties(Raytracing PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
-target_link_libraries(Raytracing PRIVATE PNGwriter::PNGwriter glfw3 X11 GL GLAD dl pthread)
+target_link_libraries(Raytracing PRIVATE PNGwriter::PNGwriter glfw3 X11 GL GLAD dl pthread ${OPENEXR_LIBRARIES})
 
-include_directories(${CMAKE_SOURCE_DIR}/includes)

@@ -66,8 +66,10 @@ int main(int argc, char **argv){
 //    constexpr int k = 10;
 //    Scene s(loadMesh(filePath), k * 384, k * 216);
 
-    constexpr int k = 1;
-    Scene s(loadMesh(filePath), k * 786, k * 786);
+    Device device = CPU;
+
+    constexpr int k = 6; // nori k = 6
+    Scene s(loadMesh(filePath), k * 128, k * 128, device);
 
     s.renderCPU();
 //    s.renderGPU();
@@ -78,7 +80,7 @@ int main(int argc, char **argv){
     std::cout << "Drew image to file\n";
 
 
-    cudaDeviceReset();
+//    cudaDeviceReset();
 
     return EXIT_SUCCESS;
 }

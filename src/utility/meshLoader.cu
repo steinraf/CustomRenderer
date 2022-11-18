@@ -115,19 +115,9 @@ HostMeshInfo loadMesh(const std::filesystem::path &filePath){
     };
 }
 
-Triangle *mesh2GPU(const HostMeshInfo &mesh){
-//    thrust::host_vector<Triangle> trias;
 
-//    auto triangleFunctorBuilder = [](){
-//
-//    };
-
-
-    return nullptr;
-}
-
-DeviceMeshInfo meshToGPU(const HostMeshInfo &mesh){
-    const int numTriangles = mesh.normalsIndices.first.size();
+DeviceMeshInfo meshToGPU(const HostMeshInfo &mesh) noexcept {
+    const auto numTriangles = mesh.normalsIndices.first.size();
 
     std::vector<Triangle> hostTriangles(numTriangles);
 
@@ -183,5 +173,5 @@ DeviceMeshInfo meshToGPU(const HostMeshInfo &mesh){
     thrust::sort_by_key(mortonCodes.begin(), mortonCodes.end(), deviceTriangles.begin());
     //TODO maybe use radix sort instead of default sort
 
-    return {deviceTriangles, mortonCodes/*, maxBoundingBox*/};
+    return {deviceTriangles, mortonCodes};
 }

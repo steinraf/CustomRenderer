@@ -1,0 +1,4 @@
+/home/steinraf/.local/share/JetBrains/Toolbox/apps/CLion/ch-0/221.5080.224/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" -S /home/steinraf/ETH/CG/CustomRenderer -B /home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerundebug
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerundebug

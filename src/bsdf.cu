@@ -7,10 +7,7 @@
 __device__ bool
 BSDF::scatter(const Ray &rIn, const HitRecord &rec, Vector3f &attenuation, Ray &scattered, Sampler &sampler) const{
 
-    Vector3f scatter = rec.normal + Warp::RandomInUnitSphere(sampler);
-
-    if(scatter.squaredNorm() < 1e-5)
-        scatter = rec.normal;
+    const Vector3f scatter = Warp::squareToCosineHemisphere(sampler.getSample2D());
 
     const Vector3f target = rec.position + scatter;
 
@@ -19,5 +16,5 @@ BSDF::scatter(const Ray &rIn, const HitRecord &rec, Vector3f &attenuation, Ray &
 
     return true;
 
-    return false;
+//    return false;
 }

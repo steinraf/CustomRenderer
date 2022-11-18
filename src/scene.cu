@@ -6,6 +6,10 @@
 #include "constants.h"
 #include "cudaHelpers.h"
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
+
 #include <thread>
 #include <fstream>
 
@@ -20,7 +24,7 @@ __host__ Scene::Scene(HostMeshInfo &&mesh, int width, int height, Device dev) :
                      customRenderer::getCameraFOV(),
                      static_cast<float>(width) / static_cast<float>(height),
                      customRenderer::getCameraAperture(),
-                     (customRenderer::getCameraOrigin() - customRenderer::getCameraLookAt()).norm()){
+                     100.f){//(customRenderer::getCameraOrigin() - customRenderer::getCameraLookAt()).norm()){
 
 
     if(dev == CPU){
@@ -51,14 +55,20 @@ __host__ Scene::Scene(HostMeshInfo &&mesh, int width, int height, Device dev) :
 
     const int numTriangles = static_cast<int>(mesh.normalsIndices.first.size());
 
+    std::cout << "Loading Geometry took "
+              << ((double) (clock() - startGeometryBVH)) / CLOCKS_PER_SEC
+              << " seconds.\n";
+
     std::cout << "Managing " << numTriangles << " triangles.\n";
 
-    BVHNode<Triangle> *bvhTotalNodes;
-    checkCudaErrors(cudaMalloc((void **) &bvhTotalNodes,
-                               sizeof(BVHNode<Triangle>) * (2 * numTriangles - 1))); //n-1 internal, n leaf
-    checkCudaErrors(cudaMalloc((void **) &bvh, sizeof(BVH<Triangle> *)));
+    clock_t bvhConstructStart = clock();
 
-    printf("BVH has allocation range of (%p, %p)\n", bvhTotalNodes, bvhTotalNodes + (2 * numTriangles - 1));
+    AccelerationNode<Triangle> *bvhTotalNodes;
+    checkCudaErrors(cudaMalloc((void **) &bvhTotalNodes,
+                               sizeof(AccelerationNode<Triangle>) * (2 * numTriangles - 1))); //n-1 internal, n leaf
+    checkCudaErrors(cudaMalloc((void **) &bvh, sizeof(BLAS<Triangle> *)));
+
+//    printf("BLAS has allocation range of (%p, %p)\n", bvhTotalNodes, bvhTotalNodes + (2 * numTriangles - 1));
 
     Triangle *deviceTrianglePtr = deviceTriangles.data().get();
 
@@ -70,17 +80,33 @@ __host__ Scene::Scene(HostMeshInfo &&mesh, int width, int height, Device dev) :
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
 
+    std::cout << "BLAS construction took "
+              << ((double) (clock() - bvhConstructStart)) / CLOCKS_PER_SEC
+              << " seconds.\n";
+
+    clock_t bvhBoundingBox = clock();
+
     cudaHelpers::computeBVHBoundingBoxes<<<1, 1>>>(bvhTotalNodes, numTriangles);
 
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
+
+    std::cout << "BLAS boundingBox Compute took "
+              << ((double) (clock() - bvhBoundingBox)) / CLOCKS_PER_SEC
+              << " seconds.\n";
+
+    clock_t initBVHTime = clock();
 
     cudaHelpers::initBVH<<<1, 1>>>(bvh, bvhTotalNodes);
 
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
 
-    std::cout << "Loading Geometry and BVH construction took "
+    std::cout << "BLAS init took "
+              << ((double) (clock() - initBVHTime)) / CLOCKS_PER_SEC
+              << " seconds.\n";
+
+    std::cout << "Loading Geometry and BLAS construction took "
               << ((double) (clock() - startGeometryBVH)) / CLOCKS_PER_SEC
               << " seconds.\n";
 
@@ -121,7 +147,13 @@ void Scene::render(){
 
     std::cout << "Starting draw thread...\n";
 
-//    std::thread drawingThread([this](Vector3f *v, volatile bool& render){OpenGLDraw(v, render);}, deviceImageBuffer, std::ref(currentlyRendering));
+    std::thread drawingThread;
+
+    if(device == GPU){
+        drawingThread = std::thread{[this](Vector3f *v, volatile bool &render){
+            OpenGLDraw(v, render);
+        }, deviceImageBuffer, std::ref(currentlyRendering)};
+    }
 
     std::cout << "Synchronizing GPU...\n";
     checkCudaErrors(cudaDeviceSynchronize());
@@ -136,11 +168,16 @@ void Scene::render(){
             cudaMemcpy(hostImageBufferDenoised, deviceImageBufferDenoised, imageBufferSize, cudaMemcpyDeviceToHost));
     checkCudaErrors(cudaDeviceSynchronize());
 
-    std::cout << "Joining draw thread...\n";
+
 
     currentlyRendering = false;
-//    drawingThread.join();
 
+    if(device == GPU){
+        drawingThread.join();
+    }
+
+
+    std::cout << "Joined draw thread...\n";
 
 
 }
@@ -148,10 +185,10 @@ void Scene::render(){
 __host__ void Scene::renderGPU(){
 
 
-//    for(int i = 0; i < 10000; ++i){
-//        std::cout << "Rendering frame " << i << '\n';
-//        render();
-//    }
+    for(int i = 0; i < 10000; ++i){
+        std::cout << "Rendering frame " << i << '\n';
+        render();
+    }
 
 }
 
@@ -172,16 +209,35 @@ __host__ void Scene::renderCPU(){
     const std::string pngPath = "./data/image.png";
     const std::string pngPathDenoised = "./data/imageDenoised.png";
 
+    const std::string hdrPath = "./data/image.hdr";
+    const std::string hdrPathDenoised = "./data/imageDenoised.hdr";
+
+//    stbi_set_flip_vertically_on_load(true);
+
+    const bool didHDR = stbi_write_hdr(hdrPath.c_str(), width, height, 3, (float *)hostImageBuffer);
+    assert(didHDR);
+
 
     pngwriter png(width, height, 1., pngPath.c_str());
     pngwriter pngDenoised(width, height, 1., pngPathDenoised.c_str());
 
+    auto gammaCorrect = [](float value){
+        if (value <= 0.0031308f) return std::clamp(12.92f * value, 0.f, 1.f);
+        return std::clamp(1.055f * std::pow(value, 1.f / 2.4f) - 0.055f, 0.f, 1.f);
+    };
 
-    for(int j = height - 1; j >= 0; j--){
+
+//#pragma omp parallel for
+    for(int j = 0; j < height; j++){
         for(int i = 0; i < width; i++){
             const int idx = j * width + i;
-            png.plot(i + 1, j + 1, hostImageBuffer[idx][0], hostImageBuffer[idx][1], hostImageBuffer[idx][2]);
-            pngDenoised.plot(i + 1, j + 1, hostImageBufferDenoised[idx][0], hostImageBufferDenoised[idx][1],
+            png.plot(i + 1, height - j,
+                     gammaCorrect(hostImageBuffer[idx][0]),
+                     gammaCorrect(hostImageBuffer[idx][1]),
+                     gammaCorrect(hostImageBuffer[idx][2]));
+            pngDenoised.plot(i + 1, height - j,
+                             hostImageBufferDenoised[idx][0],
+                             hostImageBufferDenoised[idx][1],
                              hostImageBufferDenoised[idx][2]);
         }
     }
@@ -226,7 +282,7 @@ __host__ void Scene::initOpenGL(){
             glGenBuffers(1, &PBO);
             glBindBuffer(GL_PIXEL_UNPACK_BUFFER, PBO);
             glBufferData(GL_PIXEL_UNPACK_BUFFER, sizeof(Vector3f) * width * height, nullptr, GL_STREAM_DRAW);
-
+            glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 
             //    glGenTextures(1, &tex);
             //    glBindTexture(GL_TEXTURE_2D, tex);
@@ -236,7 +292,7 @@ __host__ void Scene::initOpenGL(){
 
             checkCudaErrors(cudaGraphicsMapResources(1, &cudaPBOResource, nullptr));
             checkCudaErrors(
-                    cudaGraphicsResourceGetMappedPointer((void **) &deviceImageBufferDenoised, NULL, cudaPBOResource));
+                    cudaGraphicsResourceGetMappedPointer((void **) &deviceImageBufferDenoised, nullptr, cudaPBOResource));
             break;
         case CPU:
             glGenVertexArrays(1, &VAO);
@@ -250,20 +306,33 @@ __host__ void Scene::initOpenGL(){
 
 __host__ void Scene::OpenGLDraw(Vector3f *deviceVector, volatile bool &isRendering){
 
+    glGenVertexArrays(1, &VAO);
+
+    std::cout << "Starting OpenGLDraw\n";
+
     float vertices[] = {
             -0.5f, -0.5f, 0.0f,
             0.5f, -0.5f, 0.0f,
             0.0f, 0.5f, 0.0f
     };
 
+    std::cout << "Hehe 2";
+
+//    float *vertices;
+
     glBindVertexArray(VAO);
+
+    std::cout << "Hehe 2.5";
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
+    std::cout << "Hehe 3";
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
     glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0 * 3 * sizeof(float), nullptr);
+
+    std::cout << "Hehe 4";
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
@@ -272,6 +341,7 @@ __host__ void Scene::OpenGLDraw(Vector3f *deviceVector, volatile bool &isRenderi
     while(isRendering){
 //        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
+
 
         glUseProgram(shaderID);
         glBindVertexArray(VAO);

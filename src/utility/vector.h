@@ -84,7 +84,7 @@ private:
     float data[3];
 };
 
-using Color = Vector3f;
+using Color3f = Vector3f;
 
 __host__ __device__ constexpr inline Vector3f operator*(float t, const Vector3f &v) noexcept;
 

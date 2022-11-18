@@ -14,7 +14,9 @@ namespace customRenderer{
 
     [[nodiscard]] __device__ __host__ static constexpr Vector3f getCameraLookAt() noexcept{
 //        return {-0.f, 22.f, -18.f};
-        return {-64.8161, 47.2211, 23.8576};
+
+//        return Vector3f{0.f};
+        return {-64.8161, 47.2211, 23.8576}; //Nori Ajax
     }
 
     [[nodiscard]] __device__ __host__ static constexpr Vector3f getCameraUp() noexcept{
@@ -27,7 +29,7 @@ namespace customRenderer{
 
     [[nodiscard]] __device__ __host__ static constexpr int getNumSubsamples() noexcept{ return 32; }
 
-    [[nodiscard]] __device__ __host__ static constexpr int getMaxRayDepth() noexcept{ return 1; }
+    [[nodiscard]] __device__ __host__ static constexpr int getMaxRayDepth() noexcept{ return 3; }
 
 
 }

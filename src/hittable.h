@@ -8,13 +8,14 @@
 #include "utility/ray.h"
 
 
+
 struct HitRecord{
     Vector3f position;
     Vector3f normal;
 
     class Triangle const *triangle;
 
-//    BSDF bsdf;
+    Vector2f uv;
 
     float t;
     bool frontFace;
@@ -23,6 +24,8 @@ struct HitRecord{
         frontFace = r.getDirection().dot(outwardNormal) < 0;
         normal = frontFace ? outwardNormal : -outwardNormal;
     }
+
+
 
     //TODO hit records need to set in the shape class, and not just with ray.at(t) because of numerical
     //instabilities

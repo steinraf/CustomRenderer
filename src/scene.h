@@ -23,7 +23,7 @@ enum Device{
 };
 
 struct PixelInfo{
-    Color color;
+    Color3f color;
     Vector3f intersection;
     Vector3f normal;
 };
@@ -85,7 +85,8 @@ private:
 
 
 
-    BVH<Triangle> *bvh;
+
+    BLAS<Triangle> *bvh;
 
     curandState *deviceCurandState;
 
@@ -99,5 +100,11 @@ private:
 
     struct cudaGraphicsResource *cudaPBOResource;
 
+};
+
+
+class RenderingScene{
+
+    BLAS<Triangle> *bvh;
 };
 

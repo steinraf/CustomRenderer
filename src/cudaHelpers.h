@@ -6,7 +6,8 @@
 
 #include <curand_kernel.h>
 
-#include "utility/vector.h"
+#include "utility/warp.h"
+//#include "utility/vector.h"
 #include "utility/ray.h"
 #include "camera.h"
 #include "utility/meshLoader.h"
@@ -62,21 +63,18 @@ namespace cudaHelpers{
     __forceinline__ __device__ thrust::pair<int, int>
     determineRange(const uint32_t *mortonCodes, int numPrimitives, int i){
         const unsigned int *c = mortonCodes;
-        unsigned int ki = c[i]; // key of i
+        const unsigned int ki = c[i]; // key of i
 
         // determine direction of the range (+1 or -1)
         const int delta_l = delta(i, i - 1, numPrimitives, c, ki);
         const int delta_r = delta(i, i + 1, numPrimitives, c, ki);
 
-        int d; // direction
-        int delta_min; // min of delta_r and delta_l
-        if(delta_r < delta_l){
-            d = -1;
-            delta_min = delta_r;
-        }else{
-            d = 1;
-            delta_min = delta_l;
-        }
+        const auto [d, delta_min] = [&]() -> const thrust::pair<int, int>{
+            if(delta_r < delta_l)
+                return thrust::pair{-1, delta_r};
+            else
+                return thrust::pair{1, delta_l};
+        }();
 
         // compute upper bound of the length of the range
         unsigned int l_max = 2;
@@ -102,17 +100,12 @@ namespace cudaHelpers{
 
     template<typename Primitive>
     __global__ void
-    constructBVH(BVHNode<Primitive> *bvhNodes, Primitive *primitives, const uint32_t *mortonCodes, int numPrimitives){
+    constructBVH(AccelerationNode<Primitive> *bvhNodes, Primitive *primitives, const uint32_t *mortonCodes,
+                 int numPrimitives){
 
         const int i = blockDim.x * blockIdx.x + threadIdx.x;
 
         if(i > numPrimitives - 1) return;
-
-//        if(i == 0){
-//            for(int tmp = 0; tmp < numPrimitives; ++tmp){
-//                printf("morton %i: %u\n", tmp, mortonCodes[tmp]);
-//            }
-//        }
 
 
         // [0, numPrimitives-2]                    -> internal nodes
@@ -125,13 +118,6 @@ namespace cudaHelpers{
                 true,
         };
 
-//        printf("Leaf Init %p\n", &bvhNodes[numPrimitives + i - 1]);
-
-//        assert(!(numPrimitives + i - 1 == 2*numPrimitives-2));
-
-
-//        printf("%p is leaf\n", &bvhNodes[numPrimitives + i - 1]);
-
 
         if(i == numPrimitives - 1) return;
 
@@ -140,66 +126,26 @@ namespace cudaHelpers{
 
         int split = findSplit(mortonCodes, first, last, numPrimitives);
 
-//        printf("Constructing BVH %i (%i | %i | %i)...\n",i, first, split, last);
-
-
-
-        BVHNode<Primitive> *childA = (split == first) ? &bvhNodes[numPrimitives - 1 + split] : &bvhNodes[split];
-        BVHNode<Primitive> *childB = (split + 1 == last) ? &bvhNodes[numPrimitives - 1 + split + 1] : &bvhNodes[split +
-                                                                                                                1];
-
-//        printf("Parent: %p, \tLeft: %p, \tRight: %p\n", bvhNodes+i, childA, childB);
-//
-//        if(childA->isLeaf){
-//            printf("Child A leaf: %p\n", childA->primitive);
-//        }
-//
-//        if(childB->isLeaf){
-//            printf("Child B leaf: %p\n", childB->primitive);
-//        }
-
-
-
-
-//        if(split == first){
-//            printf("%i: Leaf node with index %i was taken.\n", i, numPrimitives-1 + split);
-//        } else {
-//            printf("%i: Internal node with index %i was taken.\n", i, split);
-//        }
-
-//        if(split+1 == last){
-//            printf("%i: Leaf node with index %i was taken.\n", i, numPrimitives-1 + split+1);
-//        } else {
-//            printf("%i: Internal node with index %i was taken.\n", i, split+1  );
-//        }
+        AccelerationNode<Primitive> *childA = (split == first) ? &bvhNodes[numPrimitives - 1 + split]
+                                                               : &bvhNodes[split];
+        AccelerationNode<Primitive> *childB = (split + 1 == last) ? &bvhNodes[numPrimitives - 1 + split + 1]
+                                                                  : &bvhNodes[split +
+                                                                              1];
 
         bvhNodes[i] = {
                 childA,
                 childB,
                 nullptr,
-                AABB{},//nullptr, //                childA->boundingBox + childB ->boundingBox,
+                (childA->isLeaf && childB->isLeaf) ? childA->boundingBox + childB->boundingBox : AABB{},
                 false,
         };
 
-        childA->isPointedTo = true;
-        childB->isPointedTo = true;
-
-
-
-
-//        printf("Inte Init %p \n", &bvhNodes[i]);
-
-
-//        throw std::runtime_error("Must initialize all children before accessing their BoundingBoxes");
-
-
-//        bvhInternalNodes, deviceTrianglePtr, deviceMortonCodes.data().get(), numTriangles-1
     }
 
     template<typename Primitive>
-    __device__ AABB getBoundingBox(BVHNode<Primitive> *root, int indentLevel = 1){
+    __device__ AABB getBoundingBox(AccelerationNode<Primitive> *root, int indentLevel = 1){
 
-        typedef BVHNode<Primitive> *NodePtr;
+        typedef AccelerationNode<Primitive> *NodePtr;
 
         constexpr int stackSize = 1024;
         NodePtr stack[stackSize];
@@ -277,7 +223,7 @@ namespace cudaHelpers{
                 for(int tmp = 0; tmp < idx + 1; ++tmp) printf("\t");
                 printf("Push: Neither BB\n");
                 stack[++idx] = currentNode;
-//                    stack[++idx] = right;
+//                    stack[++idx] = left;
                 currentNode = left;
             }
         }else if(left){
@@ -314,29 +260,29 @@ namespace cudaHelpers{
 
 
 //
-//            if(!currentNode->left->isLeaf && !currentNode->right->isLeaf){
+//            if(!currentNode->left->isLeaf && !currentNode->left->isLeaf){
 //                if(currentNode->left->boundingBox.isEmpty()){
 //                    for(int tmp = 0; tmp < idx+1; ++tmp) printf("\t");
 //                    printf("Push: Left  empty\n");
 //                    stack[++idx] = currentNode;
 //                    currentNode = currentNode->left;
-//                } else if(currentNode->right->boundingBox.isEmpty()){
+//                } else if(currentNode->left->boundingBox.isEmpty()){
 //                    for(int tmp = 0; tmp < idx+1; ++tmp) printf("\t");
 //                    printf("Push: Right empty\n");
 //                    stack[++idx] = currentNode;
-//                    currentNode = currentNode->right;
+//                    currentNode = currentNode->left;
 //                } else{
 //                    for(int tmp = 0; tmp < idx-1; ++tmp) printf("\t");
 //                    printf("Pop : Both  full\n");
-//                    currentNode->boundingBox = currentNode->left->boundingBox + currentNode->right->boundingBox;
+//                    currentNode->boundingBox = currentNode->left->boundingBox + currentNode->left->boundingBox;
 //                    currentNode = stack[--idx];
 //                }
-//            } else if (currentNode->left->isLeaf && !currentNode->right->isLeaf){
+//            } else if (currentNode->left->isLeaf && !currentNode->left->isLeaf){
 //                for(int tmp = 0; tmp < idx+1; ++tmp) printf("\t");
 //                printf("Push: Left  Leaf\n");
 //                stack[++idx] = currentNode;
-//                currentNode = currentNode->right;
-//            } else if (!currentNode->left->isLeaf &&currentNode->right->isLeaf){
+//                currentNode = currentNode->left;
+//            } else if (!currentNode->left->isLeaf &&currentNode->left->isLeaf){
 //                for(int tmp = 0; tmp < idx+1; ++tmp) printf("\t");
 //                printf("Push: Right Leaf\n");
 //                stack[++idx] = currentNode;
@@ -344,7 +290,7 @@ namespace cudaHelpers{
 //            } else {
 //                for(int tmp = 0; tmp < idx-1; ++tmp) printf("\t");
 //                printf("Pop : Both  Leaf\n");
-//                currentNode->boundingBox = currentNode->left->boundingBox + currentNode->right->boundingBox;
+//                currentNode->boundingBox = currentNode->left->boundingBox + currentNode->left->boundingBox;
 //                currentNode = stack[--idx];
 //            }
 //            assert(idx < stackSize);
@@ -362,14 +308,14 @@ namespace cudaHelpers{
 //            printf("Got Leaf AABB %f\n", root->boundingBox.min[0]);
 //        }else{
 ////            printf("Diverging Path...\n");
-//            assert(root->left && root->right);
+//            assert(root->left && root->left);
 //
 //            printf("Diverging Path %p...\n", root);
 //
 //            AABB leftAABB = getBoundingBox(root->left);
 //
 //            printf("Got left AABB %f\n", leftAABB.min[0]);
-//            AABB rightAABB = getBoundingBox(root->right);
+//            AABB rightAABB = getBoundingBox(root->left);
 //
 //
 //            root->boundingBox = leftAABB + rightAABB;
@@ -386,83 +332,97 @@ namespace cudaHelpers{
     }
 
     template<typename Primitive>
-    __global__ void computeBVHBoundingBoxes(BVHNode<Primitive> *bvhNodes, int numPrimitives){
+    __global__ void computeBVHBoundingBoxes(AccelerationNode<Primitive> *bvhNodes, int numPrimitives){
         int i, j, pixelIndex;
         if(!cudaHelpers::initIndices(i, j, pixelIndex, 1, 1)) return;
 
 //        for(int tmp = 0; tmp < 2*numPrimitives-1; ++tmp){
-//            printf("%i, (%p, %p, %p, %p, %d)\n", tmp, bvhNodes + tmp, bvhNodes[tmp].left, bvhNodes[tmp].right, bvhNodes[tmp].primitive, bvhNodes[tmp].isLeaf);
+//            printf("%i, (%p, %p, %p, %p, %d)\n", tmp, bvhNodes + tmp, bvhNodes[tmp].left, bvhNodes[tmp].left, bvhNodes[tmp].primitive, bvhNodes[tmp].isLeaf);
 //        }
 
-        printf("Starting BVH BB Computation...\n");
+//        printf("Starting BLAS BB Computation...\n");
 
 
-        printf("Root %p -> %p -> %p \n", bvhNodes, bvhNodes + 544566 - 1, bvhNodes + (2 * 544566 - 1));
+//        printf("Root %p -> %p -> %p \n", bvhNodes, bvhNodes + 544566 - 1, bvhNodes + (2 * 544566 - 1));
         const AABB &totalBoundingBox = getBoundingBox(&bvhNodes[0]);
 
-        printf("Total bounding box is (%f, %f, %f) -> (%f, %f, %f)\n",
-               totalBoundingBox.min[0], totalBoundingBox.min[1], totalBoundingBox.min[2],
-               totalBoundingBox.max[0], totalBoundingBox.max[1], totalBoundingBox.max[2]);
+//        printf("Total bounding box is (%f, %f, %f) -> (%f, %f, %f)\n",
+//               totalBoundingBox.min[0], totalBoundingBox.min[1], totalBoundingBox.min[2],
+//               totalBoundingBox.max[0], totalBoundingBox.max[1], totalBoundingBox.max[2]);
 
 
+#ifdef NDEBUG
         for(int idx = numPrimitives - 1; idx < 2 * numPrimitives - 1; ++idx){
             assert(bvhNodes[idx].isPointedTo);
-//            if(!bvhNodes[idx].isPointedTo)
-//                printf("%i\n", idx);
         }
-
-
+#endif
     }
 
     template<typename Primitive>
-    __global__ void initBVH(BVH<Primitive> *bvh, BVHNode<Primitive> *bvhTotalNodes){
+    __global__ void initBVH(BLAS<Primitive> *bvh, AccelerationNode<Primitive> *bvhTotalNodes){
         int i, j, pixelIndex;
         if(!cudaHelpers::initIndices(i, j, pixelIndex, 1, 1)) return;
 
-        *bvh = BVH<Primitive>(bvhTotalNodes);
+        *bvh = BLAS<Primitive>(bvhTotalNodes);
     }
 
     __global__ void freeVariables(int width, int height);
 
 
     template<typename Primitive>
-    __device__ Color getColor(const Ray &r, BVH<Primitive> *bvh, int maxRayDepth, Sampler &sampler){
+    __device__ Color3f getColor(const Ray &r, BLAS<Primitive> *bvh, int maxRayDepth, Sampler &sampler){
 
         HitRecord record;
 
-        Ray currentRay = r;
+        if(!bvh->hit(r, record))
+            return Color3f{0.f};
 
-        Ray scattered;
-        Color attenuation;
+        return record.normal.absValues();
 
-        Color currentAttenuation{1.f};
+//        Ray scattered;
+//        Color3f attenuation;
+//
+//        Color3f currentAttenuation{1.f};
+//
+//        for(int depth = 0; depth < maxRayDepth; ++depth){
+//            if(bvh->hit(currentRay, FLT_EPSILON, cuda::std::numeric_limits<float>::infinity(), record)){
+//                if(record.triangle->bsdf.scatter(currentRay, record, attenuation, scattered, sampler)){
+//                    currentRay = scattered;
+////                    currentAttenuation *= attenuation;
+////                    return record.normal;// * 255.99;
+//                }else{
+//                    return Color3f{0.f};
+//                }
+//
+//            }else{
+////                return Color3f{1.f};
+////                float t = 0.5f * (r.getDirection().normalized()[1] + 1.f);
+////                Color3f c = (1 - t) * Vector3f{1.f} + t * Color3f{0.5f, 0.7f, 1.0f};
+//                const Color3f c{1.f};
+//                return currentAttenuation * c;
+//            }
+//        }
 
-        for(int depth = 0; depth < maxRayDepth; ++depth){
-            if(bvh->hit(currentRay, 1e-8, cuda::std::numeric_limits<float>::infinity(), record)){
-                if(record.triangle->bsdf.scatter(currentRay, record, attenuation, scattered, sampler)){
-                    currentRay = scattered;
-                    currentAttenuation *= attenuation;
-                    return record.normal;// * 255.99;
-                }else{
-                    return Color{0.f};
-                }
+        if(!bvh->hit(r, record))
+            return Color3f{1.f};
 
-            }else{
-//                return Color{1.f};
-                float t = 0.5f * (r.getDirection().normalized()[1] + 1.f);
-                Color c = (1 - t) * Vector3f{1.f} + t * Color{0.5f, 0.7f, 1.0f};
-                return currentAttenuation * c;
-            }
-        }
+        const Vector3f scatter = Warp::sampleUniformHemisphere(sampler, record.normal);
 
-        return Vector3f{0.f};
+
+
+        if(!bvh->hit({record.position, scatter, FLT_EPSILON, 10}, record))
+            return Color3f{1.f};
+
+
+
+        return Color3f{0.f};
 
     }
 
     __global__ void denoise(Vector3f *input, Vector3f *output, int width, int height);
 
     template<typename Primitive>
-    __global__ void render(Vector3f *output, Camera cam, BVH<Primitive> *bvh, int width, int height,
+    __global__ void render(Vector3f *output, Camera cam, BLAS<Primitive> *bvh, int width, int height,
                            curandState *globalRandState){
         int i, j, pixelIndex;
         if(!initIndices(i, j, pixelIndex, width, height)) return;
@@ -493,7 +453,7 @@ namespace cudaHelpers{
         const int maxRayDepth = customRenderer::getMaxRayDepth();
         const int numSubsamples = customRenderer::getNumSubsamples();
 
-        Color col{0.0f};
+        Color3f col{0.0f};
 
         for(int subSamples = 0; subSamples < numSubsamples; ++subSamples){
             const float s = (iFloat + sampler.getSample1D()) / (widthFloat - 1);
@@ -504,19 +464,21 @@ namespace cudaHelpers{
             col += getColor(ray, bvh, maxRayDepth, sampler);
         }
 
-        constexpr float scale = 1.f / numSubsamples;
+//        constexpr float scale = 1.f ;
 
-        col = {
-                sqrt(col[0] * scale),
-                sqrt(col[1] * scale),
-                sqrt(col[2] * scale)
-        };
+//        col = {
+//                sqrt(col[0] * scale),
+//                sqrt(col[1] * scale),
+//                sqrt(col[2] * scale)
+//        };
+
+        col /= numSubsamples;
 
         output[pixelIndex] = col;
 
     }
 
 
-};
+}
 
 

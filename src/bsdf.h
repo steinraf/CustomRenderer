@@ -19,15 +19,21 @@ enum class Material{
 class BSDF{
 public:
 
-    __device__ __host__ BSDF() : material(Material::DIFFUSE){}
+    __device__ __host__ constexpr BSDF() noexcept
+        : material(Material::DIFFUSE){
 
-    __device__ __host__ BSDF(Material mat) : material(mat){}
+    }
+
+    __device__ __host__ constexpr BSDF(Material mat) noexcept
+        : material(mat){
+
+    }
 
     __device__ bool scatter(const Ray &rIn, const HitRecord &rec, Vector3f &attenuation, Ray &scattered,
                             Sampler &sampler) const;
 
 private:
     Material material;
-    Color albedo{0.5f};
+    Color3f albedo{0.5f};
 
 };
