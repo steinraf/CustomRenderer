@@ -64,6 +64,7 @@ CMAKE_BINARY_DIR = /home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrele
 
 # The main recursive "all" target.
 all: CMakeFiles/GLAD.dir/all
+all: CMakeFiles/pugixml.dir/all
 all: CMakeFiles/Raytracing.dir/all
 .PHONY : all
 
@@ -73,6 +74,7 @@ preinstall:
 
 # The main recursive "clean" target.
 clean: CMakeFiles/GLAD.dir/clean
+clean: CMakeFiles/pugixml.dir/clean
 clean: CMakeFiles/Raytracing.dir/clean
 .PHONY : clean
 
@@ -103,18 +105,45 @@ CMakeFiles/GLAD.dir/clean:
 .PHONY : CMakeFiles/GLAD.dir/clean
 
 #=============================================================================
+# Target rules for target CMakeFiles/pugixml.dir
+
+# All Build rule for target.
+CMakeFiles/pugixml.dir/all:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pugixml.dir/build.make CMakeFiles/pugixml.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pugixml.dir/build.make CMakeFiles/pugixml.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/CMakeFiles --progress-num=14,15 "Built target pugixml"
+.PHONY : CMakeFiles/pugixml.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/pugixml.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/CMakeFiles 2
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/pugixml.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/CMakeFiles 0
+.PHONY : CMakeFiles/pugixml.dir/rule
+
+# Convenience name for target.
+pugixml: CMakeFiles/pugixml.dir/rule
+.PHONY : pugixml
+
+# clean rule for target.
+CMakeFiles/pugixml.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pugixml.dir/build.make CMakeFiles/pugixml.dir/clean
+.PHONY : CMakeFiles/pugixml.dir/clean
+
+#=============================================================================
 # Target rules for target CMakeFiles/Raytracing.dir
 
 # All Build rule for target.
 CMakeFiles/Raytracing.dir/all: CMakeFiles/GLAD.dir/all
+CMakeFiles/Raytracing.dir/all: CMakeFiles/pugixml.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Raytracing.dir/build.make CMakeFiles/Raytracing.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Raytracing.dir/build.make CMakeFiles/Raytracing.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/CMakeFiles --progress-num=3,4,5,6,7,8,9,10,11,12 "Built target Raytracing"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/CMakeFiles --progress-num=3,4,5,6,7,8,9,10,11,12,13 "Built target Raytracing"
 .PHONY : CMakeFiles/Raytracing.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/Raytracing.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/CMakeFiles 12
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/CMakeFiles 15
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/Raytracing.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/CMakeFiles 0
 .PHONY : CMakeFiles/Raytracing.dir/rule

@@ -1,4 +1,5 @@
 /home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/CMakeFiles/GLAD.dir
+/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/CMakeFiles/pugixml.dir
 /home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/CMakeFiles/Raytracing.dir
 /home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/CMakeFiles/edit_cache.dir
 /home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease/CMakeFiles/rebuild_cache.dir

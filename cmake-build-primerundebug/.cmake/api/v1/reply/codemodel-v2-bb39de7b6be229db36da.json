@@ -6,7 +6,7 @@
 			[
 				{
 					"build" : ".",
-					"jsonFile" : "directory-.-Release-f5ebdc15457944623624.json",
+					"jsonFile" : "directory-.-Debug-f5ebdc15457944623624.json",
 					"minimumCMakeVersion" : 
 					{
 						"string" : "3.21"
@@ -16,11 +16,12 @@
 					"targetIndexes" : 
 					[
 						0,
-						1
+						1,
+						2
 					]
 				}
 			],
-			"name" : "Release",
+			"name" : "Debug",
 			"projects" : 
 			[
 				{
@@ -32,7 +33,8 @@
 					"targetIndexes" : 
 					[
 						0,
-						1
+						1,
+						2
 					]
 				}
 			],
@@ -41,15 +43,22 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "GLAD::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-GLAD-Release-f7768cfe7439d2110985.json",
+					"jsonFile" : "target-GLAD-Debug-236da32783b84c4133ec.json",
 					"name" : "GLAD",
 					"projectIndex" : 0
 				},
 				{
 					"directoryIndex" : 0,
 					"id" : "Raytracing::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-Raytracing-Release-b35141ccc94b09f1db9c.json",
+					"jsonFile" : "target-Raytracing-Debug-1aaf4ab7c5198100ce64.json",
 					"name" : "Raytracing",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "pugixml::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-pugixml-Debug-df86747968995d263c8f.json",
+					"name" : "pugixml",
 					"projectIndex" : 0
 				}
 			]
@@ -58,7 +67,7 @@
 	"kind" : "codemodel",
 	"paths" : 
 	{
-		"build" : "/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease",
+		"build" : "/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerundebug",
 		"source" : "/home/steinraf/ETH/CG/CustomRenderer"
 	},
 	"version" : 

@@ -2,7 +2,8 @@
 
 
 #include "src/utility/vector.h"
-#include "src/scene.h"
+#include "src/scene/scene.h"
+#include "src/scene/sceneLoader.h"
 #include "src/utility/meshLoader.h"
 
 

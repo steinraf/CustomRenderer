@@ -223,7 +223,7 @@ namespace cudaHelpers{
                 for(int tmp = 0; tmp < idx + 1; ++tmp) printf("\t");
                 printf("Push: Neither BB\n");
                 stack[++idx] = currentNode;
-//                    stack[++idx] = left;
+//                    stack[++idx] = right;
                 currentNode = left;
             }
         }else if(left){
@@ -252,7 +252,7 @@ namespace cudaHelpers{
             }
         }else{
             assert(!currentNode->isLeaf);
-            assert(false && "Right and left are nullptr and this is not a leaf");
+            assert(false && "Right and right are nullptr and this is not a leaf");
             currentNode = stack[--idx];
         }
 
@@ -260,37 +260,37 @@ namespace cudaHelpers{
 
 
 //
-//            if(!currentNode->left->isLeaf && !currentNode->left->isLeaf){
-//                if(currentNode->left->boundingBox.isEmpty()){
+//            if(!currentNode->right->isLeaf && !currentNode->right->isLeaf){
+//                if(currentNode->right->boundingBox.isEmpty()){
 //                    for(int tmp = 0; tmp < idx+1; ++tmp) printf("\t");
 //                    printf("Push: Left  empty\n");
 //                    stack[++idx] = currentNode;
-//                    currentNode = currentNode->left;
-//                } else if(currentNode->left->boundingBox.isEmpty()){
+//                    currentNode = currentNode->right;
+//                } else if(currentNode->right->boundingBox.isEmpty()){
 //                    for(int tmp = 0; tmp < idx+1; ++tmp) printf("\t");
 //                    printf("Push: Right empty\n");
 //                    stack[++idx] = currentNode;
-//                    currentNode = currentNode->left;
+//                    currentNode = currentNode->right;
 //                } else{
 //                    for(int tmp = 0; tmp < idx-1; ++tmp) printf("\t");
 //                    printf("Pop : Both  full\n");
-//                    currentNode->boundingBox = currentNode->left->boundingBox + currentNode->left->boundingBox;
+//                    currentNode->boundingBox = currentNode->right->boundingBox + currentNode->right->boundingBox;
 //                    currentNode = stack[--idx];
 //                }
-//            } else if (currentNode->left->isLeaf && !currentNode->left->isLeaf){
+//            } else if (currentNode->right->isLeaf && !currentNode->right->isLeaf){
 //                for(int tmp = 0; tmp < idx+1; ++tmp) printf("\t");
 //                printf("Push: Left  Leaf\n");
 //                stack[++idx] = currentNode;
-//                currentNode = currentNode->left;
-//            } else if (!currentNode->left->isLeaf &&currentNode->left->isLeaf){
+//                currentNode = currentNode->right;
+//            } else if (!currentNode->right->isLeaf &&currentNode->right->isLeaf){
 //                for(int tmp = 0; tmp < idx+1; ++tmp) printf("\t");
 //                printf("Push: Right Leaf\n");
 //                stack[++idx] = currentNode;
-//                currentNode = currentNode->left;
+//                currentNode = currentNode->right;
 //            } else {
 //                for(int tmp = 0; tmp < idx-1; ++tmp) printf("\t");
 //                printf("Pop : Both  Leaf\n");
-//                currentNode->boundingBox = currentNode->left->boundingBox + currentNode->left->boundingBox;
+//                currentNode->boundingBox = currentNode->right->boundingBox + currentNode->right->boundingBox;
 //                currentNode = stack[--idx];
 //            }
 //            assert(idx < stackSize);
@@ -308,14 +308,14 @@ namespace cudaHelpers{
 //            printf("Got Leaf AABB %f\n", root->boundingBox.min[0]);
 //        }else{
 ////            printf("Diverging Path...\n");
-//            assert(root->left && root->left);
+//            assert(root->right && root->right);
 //
 //            printf("Diverging Path %p...\n", root);
 //
-//            AABB leftAABB = getBoundingBox(root->left);
+//            AABB leftAABB = getBoundingBox(root->right);
 //
-//            printf("Got left AABB %f\n", leftAABB.min[0]);
-//            AABB rightAABB = getBoundingBox(root->left);
+//            printf("Got right AABB %f\n", leftAABB.min[0]);
+//            AABB rightAABB = getBoundingBox(root->right);
 //
 //
 //            root->boundingBox = leftAABB + rightAABB;
@@ -337,7 +337,7 @@ namespace cudaHelpers{
         if(!cudaHelpers::initIndices(i, j, pixelIndex, 1, 1)) return;
 
 //        for(int tmp = 0; tmp < 2*numPrimitives-1; ++tmp){
-//            printf("%i, (%p, %p, %p, %p, %d)\n", tmp, bvhNodes + tmp, bvhNodes[tmp].left, bvhNodes[tmp].left, bvhNodes[tmp].primitive, bvhNodes[tmp].isLeaf);
+//            printf("%i, (%p, %p, %p, %p, %d)\n", tmp, bvhNodes + tmp, bvhNodes[tmp].right, bvhNodes[tmp].right, bvhNodes[tmp].primitive, bvhNodes[tmp].isLeaf);
 //        }
 
 //        printf("Starting BLAS BB Computation...\n");

@@ -4,18 +4,21 @@
 
 #pragma once
 
+
 #include <filesystem>
 #include <functional>
 
-#include <pngwriter.h>
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-#include <cuda_gl_interop.h>
+#include "pngwriter.h"
+#include "glad/glad.h"
+#include "GLFW/glfw3.h"
+#include "cuda_gl_interop.h"
 
 
-#include "cudaHelpers.h"
-#include "utility/vector.h"
-#include "utility/meshLoader.h"
+
+
+#include "../cudaHelpers.h"
+#include "../utility/vector.h"
+#include "../utility/meshLoader.h"
 
 enum Device{
     CPU,
@@ -101,6 +104,12 @@ private:
     struct cudaGraphicsResource *cudaPBOResource;
 
 };
+
+//struct SceneDescriptor{
+//    std::vector<std::string> meshFilenames;
+//    std::vector<Vector3f> meshPositions;
+//    std::vector<L
+//};
 
 
 class RenderingScene{

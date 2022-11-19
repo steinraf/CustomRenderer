@@ -14,11 +14,14 @@ __device__ __host__ Camera::Camera(Vector3f origin, Vector3f lookAt, Vector3f _u
     const float halfWidth = aspectRatio * halfHeight;
 
 
-    front = (lookAt - origin).normalized();
-    left = (_up.cross(front)).normalized();
-    up = front.cross(left);
+    constexpr int noriConvert = -1; // -1 for nori, 1 for correct handedness
 
-    const Vector3f halfU = halfWidth * focusDist * left;
+
+    front = (lookAt - origin).normalized();
+    right = noriConvert*(_up.cross(-front)).normalized();
+    up = front.cross(noriConvert*-right);
+
+    const Vector3f halfU = halfWidth * focusDist * right;
     const Vector3f halfV = halfHeight * focusDist * up;
 
     upperLeft = origin
@@ -32,7 +35,7 @@ __device__ __host__ Camera::Camera(Vector3f origin, Vector3f lookAt, Vector3f _u
 
 __device__ Ray Camera::getRay(float s, float t, Sampler &sampler) const{
     const Vector2f randomDisk = lensRadius * Warp::squareToUniformDisk(sampler.getSample2D());
-    const Vector3f offset = left * randomDisk[0] + up * randomDisk[1];
+    const Vector3f offset = right * randomDisk[0] + up * randomDisk[1];
 
     const Vector3f pos = origin + offset;
 

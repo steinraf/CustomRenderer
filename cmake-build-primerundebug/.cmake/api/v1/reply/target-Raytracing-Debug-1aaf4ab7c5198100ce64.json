@@ -12,6 +12,7 @@
 		[
 			"add_executable",
 			"target_link_libraries",
+			"add_dependencies",
 			"include_directories"
 		],
 		"files" : 
@@ -26,25 +27,37 @@
 			{
 				"command" : 0,
 				"file" : 0,
-				"line" : 24,
+				"line" : 28,
 				"parent" : 0
 			},
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 52,
+				"line" : 58,
 				"parent" : 0
 			},
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 13,
+				"line" : 56,
 				"parent" : 0
 			},
 			{
-				"command" : 2,
+				"command" : 3,
 				"file" : 0,
-				"line" : 21,
+				"line" : 15,
+				"parent" : 0
+			},
+			{
+				"command" : 3,
+				"file" : 0,
+				"line" : 23,
+				"parent" : 0
+			},
+			{
+				"command" : 3,
+				"file" : 0,
+				"line" : 24,
 				"parent" : 0
 			}
 		]
@@ -68,12 +81,16 @@
 			"includes" : 
 			[
 				{
-					"backtrace" : 3,
+					"backtrace" : 4,
 					"path" : "/home/steinraf/ETH/CG/CustomRenderer/libs/stb"
 				},
 				{
-					"backtrace" : 4,
+					"backtrace" : 5,
 					"path" : "/home/steinraf/ETH/CG/CustomRenderer/includes"
+				},
+				{
+					"backtrace" : 6,
+					"path" : "/home/steinraf/ETH/CG/CustomRenderer/libs/pugixml/src"
 				},
 				{
 					"backtrace" : 2,
@@ -99,7 +116,8 @@
 				9,
 				17,
 				18,
-				21
+				21,
+				22
 			]
 		}
 	],
@@ -108,6 +126,10 @@
 		{
 			"backtrace" : 2,
 			"id" : "GLAD::@6890427a1f51a3e7e1df"
+		},
+		{
+			"backtrace" : 3,
+			"id" : "pugixml::@6890427a1f51a3e7e1df"
 		}
 	],
 	"id" : "Raytracing::@6890427a1f51a3e7e1df",
@@ -229,7 +251,8 @@
 				9,
 				17,
 				18,
-				21
+				21,
+				22
 			]
 		},
 		{
@@ -249,7 +272,8 @@
 				15,
 				16,
 				19,
-				20
+				20,
+				23
 			]
 		}
 	],
@@ -280,12 +304,12 @@
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
-			"path" : "src/scene.cu",
+			"path" : "src/scene/scene.cu",
 			"sourceGroupIndex" : 0
 		},
 		{
 			"backtrace" : 1,
-			"path" : "src/scene.h",
+			"path" : "src/scene/scene.h",
 			"sourceGroupIndex" : 1
 		},
 		{
@@ -372,6 +396,17 @@
 			"compileGroupIndex" : 0,
 			"path" : "src/utility/vector.cu",
 			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "src/scene/sceneLoader.cu",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "src/scene/sceneLoader.h",
+			"sourceGroupIndex" : 1
 		}
 	],
 	"type" : "EXECUTABLE"

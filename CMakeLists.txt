@@ -10,6 +10,8 @@ set(CMAKE_CXX_FLAGS "-O3 -funroll-loops -DNO_FREETYPE -D_GLIBCXX_ASSERTIONS -fas
 set(CMAKE_CUDA_FLAGS "-extended-lambda ")
 
 add_library(GLAD "libs/glad/glad.cu")
+add_library(pugixml STATIC libs/pugixml/src/pugixml.cpp)
+
 include_directories(libs/stb)
 
 
@@ -19,6 +21,8 @@ find_package(OpenGL REQUIRED)
 find_package(X11 REQUIRED)
 
 include_directories(${CMAKE_SOURCE_DIR}/includes)
+include_directories(libs/pugixml/src)
+
 
 
 add_executable(Raytracing
@@ -26,8 +30,8 @@ add_executable(Raytracing
         src/utility/vector.h
         src/cudaHelpers.cu
         src/cudaHelpers.h
-        src/scene.cu
-        src/scene.h
+        src/scene/scene.cu
+        src/scene/scene.h
         src/utility/ray.h
         src/hittable.cu
         src/hittable.h
@@ -43,11 +47,13 @@ add_executable(Raytracing
         src/bsdf.cu
         src/bsdf.h
         src/acceleration/aabb.h
-        src/utility/vector.cu)
+        src/utility/vector.cu src/scene/sceneLoader.cu src/scene/sceneLoader.h)
 
 
 
 set_target_properties(Raytracing PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+
+add_dependencies(Raytracing pugixml)
 
 target_link_libraries(Raytracing PRIVATE PNGwriter::PNGwriter glfw3 X11 GL GLAD dl pthread ${OPENEXR_LIBRARIES})
 

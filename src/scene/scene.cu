@@ -3,8 +3,8 @@
 //
 
 #include "scene.h"
-#include "constants.h"
-#include "cudaHelpers.h"
+#include "../constants.h"
+#include "../cudaHelpers.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
@@ -24,7 +24,7 @@ __host__ Scene::Scene(HostMeshInfo &&mesh, int width, int height, Device dev) :
                      customRenderer::getCameraFOV(),
                      static_cast<float>(width) / static_cast<float>(height),
                      customRenderer::getCameraAperture(),
-                     100.f){//(customRenderer::getCameraOrigin() - customRenderer::getCameraLookAt()).norm()){
+                     100000.f){//(customRenderer::getCameraOrigin() - customRenderer::getCameraLookAt()).norm()){
 
 
     if(dev == CPU){

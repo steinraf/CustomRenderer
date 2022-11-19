@@ -13,7 +13,8 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/steinraf/ETH/CG/CustomRenderer/src/camera.cu" "CMakeFiles/Raytracing.dir/src/camera.cu.o" "gcc" "CMakeFiles/Raytracing.dir/src/camera.cu.o.d"
   "/home/steinraf/ETH/CG/CustomRenderer/src/cudaHelpers.cu" "CMakeFiles/Raytracing.dir/src/cudaHelpers.cu.o" "gcc" "CMakeFiles/Raytracing.dir/src/cudaHelpers.cu.o.d"
   "/home/steinraf/ETH/CG/CustomRenderer/src/hittable.cu" "CMakeFiles/Raytracing.dir/src/hittable.cu.o" "gcc" "CMakeFiles/Raytracing.dir/src/hittable.cu.o.d"
-  "/home/steinraf/ETH/CG/CustomRenderer/src/scene.cu" "CMakeFiles/Raytracing.dir/src/scene.cu.o" "gcc" "CMakeFiles/Raytracing.dir/src/scene.cu.o.d"
+  "/home/steinraf/ETH/CG/CustomRenderer/src/scene/scene.cu" "CMakeFiles/Raytracing.dir/src/scene/scene.cu.o" "gcc" "CMakeFiles/Raytracing.dir/src/scene/scene.cu.o.d"
+  "/home/steinraf/ETH/CG/CustomRenderer/src/scene/sceneLoader.cu" "CMakeFiles/Raytracing.dir/src/scene/sceneLoader.cu.o" "gcc" "CMakeFiles/Raytracing.dir/src/scene/sceneLoader.cu.o.d"
   "/home/steinraf/ETH/CG/CustomRenderer/src/utility/meshLoader.cu" "CMakeFiles/Raytracing.dir/src/utility/meshLoader.cu.o" "gcc" "CMakeFiles/Raytracing.dir/src/utility/meshLoader.cu.o.d"
   "/home/steinraf/ETH/CG/CustomRenderer/src/utility/vector.cu" "CMakeFiles/Raytracing.dir/src/utility/vector.cu.o" "gcc" "CMakeFiles/Raytracing.dir/src/utility/vector.cu.o.d"
   )

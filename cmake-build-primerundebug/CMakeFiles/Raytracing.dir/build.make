@@ -97,18 +97,18 @@ CMakeFiles/Raytracing.dir/src/cudaHelpers.cu.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CUDA source to assembly CMakeFiles/Raytracing.dir/src/cudaHelpers.cu.s"
 	$(CMAKE_COMMAND) -E cmake_unimplemented_variable CMAKE_CUDA_CREATE_ASSEMBLY_SOURCE
 
-CMakeFiles/Raytracing.dir/src/scene.cu.o: CMakeFiles/Raytracing.dir/flags.make
-CMakeFiles/Raytracing.dir/src/scene.cu.o: ../src/scene.cu
-CMakeFiles/Raytracing.dir/src/scene.cu.o: CMakeFiles/Raytracing.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerundebug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CUDA object CMakeFiles/Raytracing.dir/src/scene.cu.o"
-	/opt/cuda/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/Raytracing.dir/src/scene.cu.o -MF CMakeFiles/Raytracing.dir/src/scene.cu.o.d -x cu -dc /home/steinraf/ETH/CG/CustomRenderer/src/scene.cu -o CMakeFiles/Raytracing.dir/src/scene.cu.o
+CMakeFiles/Raytracing.dir/src/scene/scene.cu.o: CMakeFiles/Raytracing.dir/flags.make
+CMakeFiles/Raytracing.dir/src/scene/scene.cu.o: ../src/scene/scene.cu
+CMakeFiles/Raytracing.dir/src/scene/scene.cu.o: CMakeFiles/Raytracing.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerundebug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CUDA object CMakeFiles/Raytracing.dir/src/scene/scene.cu.o"
+	/opt/cuda/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/Raytracing.dir/src/scene/scene.cu.o -MF CMakeFiles/Raytracing.dir/src/scene/scene.cu.o.d -x cu -dc /home/steinraf/ETH/CG/CustomRenderer/src/scene/scene.cu -o CMakeFiles/Raytracing.dir/src/scene/scene.cu.o
 
-CMakeFiles/Raytracing.dir/src/scene.cu.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CUDA source to CMakeFiles/Raytracing.dir/src/scene.cu.i"
+CMakeFiles/Raytracing.dir/src/scene/scene.cu.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CUDA source to CMakeFiles/Raytracing.dir/src/scene/scene.cu.i"
 	$(CMAKE_COMMAND) -E cmake_unimplemented_variable CMAKE_CUDA_CREATE_PREPROCESSED_SOURCE
 
-CMakeFiles/Raytracing.dir/src/scene.cu.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CUDA source to assembly CMakeFiles/Raytracing.dir/src/scene.cu.s"
+CMakeFiles/Raytracing.dir/src/scene/scene.cu.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CUDA source to assembly CMakeFiles/Raytracing.dir/src/scene/scene.cu.s"
 	$(CMAKE_COMMAND) -E cmake_unimplemented_variable CMAKE_CUDA_CREATE_ASSEMBLY_SOURCE
 
 CMakeFiles/Raytracing.dir/src/hittable.cu.o: CMakeFiles/Raytracing.dir/flags.make
@@ -181,28 +181,44 @@ CMakeFiles/Raytracing.dir/src/utility/vector.cu.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CUDA source to assembly CMakeFiles/Raytracing.dir/src/utility/vector.cu.s"
 	$(CMAKE_COMMAND) -E cmake_unimplemented_variable CMAKE_CUDA_CREATE_ASSEMBLY_SOURCE
 
+CMakeFiles/Raytracing.dir/src/scene/sceneLoader.cu.o: CMakeFiles/Raytracing.dir/flags.make
+CMakeFiles/Raytracing.dir/src/scene/sceneLoader.cu.o: ../src/scene/sceneLoader.cu
+CMakeFiles/Raytracing.dir/src/scene/sceneLoader.cu.o: CMakeFiles/Raytracing.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerundebug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CUDA object CMakeFiles/Raytracing.dir/src/scene/sceneLoader.cu.o"
+	/opt/cuda/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/Raytracing.dir/src/scene/sceneLoader.cu.o -MF CMakeFiles/Raytracing.dir/src/scene/sceneLoader.cu.o.d -x cu -dc /home/steinraf/ETH/CG/CustomRenderer/src/scene/sceneLoader.cu -o CMakeFiles/Raytracing.dir/src/scene/sceneLoader.cu.o
+
+CMakeFiles/Raytracing.dir/src/scene/sceneLoader.cu.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CUDA source to CMakeFiles/Raytracing.dir/src/scene/sceneLoader.cu.i"
+	$(CMAKE_COMMAND) -E cmake_unimplemented_variable CMAKE_CUDA_CREATE_PREPROCESSED_SOURCE
+
+CMakeFiles/Raytracing.dir/src/scene/sceneLoader.cu.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CUDA source to assembly CMakeFiles/Raytracing.dir/src/scene/sceneLoader.cu.s"
+	$(CMAKE_COMMAND) -E cmake_unimplemented_variable CMAKE_CUDA_CREATE_ASSEMBLY_SOURCE
+
 # Object files for target Raytracing
 Raytracing_OBJECTS = \
 "CMakeFiles/Raytracing.dir/main.cu.o" \
 "CMakeFiles/Raytracing.dir/src/cudaHelpers.cu.o" \
-"CMakeFiles/Raytracing.dir/src/scene.cu.o" \
+"CMakeFiles/Raytracing.dir/src/scene/scene.cu.o" \
 "CMakeFiles/Raytracing.dir/src/hittable.cu.o" \
 "CMakeFiles/Raytracing.dir/src/camera.cu.o" \
 "CMakeFiles/Raytracing.dir/src/utility/meshLoader.cu.o" \
 "CMakeFiles/Raytracing.dir/src/bsdf.cu.o" \
-"CMakeFiles/Raytracing.dir/src/utility/vector.cu.o"
+"CMakeFiles/Raytracing.dir/src/utility/vector.cu.o" \
+"CMakeFiles/Raytracing.dir/src/scene/sceneLoader.cu.o"
 
 # External object files for target Raytracing
 Raytracing_EXTERNAL_OBJECTS =
 
 CMakeFiles/Raytracing.dir/cmake_device_link.o: CMakeFiles/Raytracing.dir/main.cu.o
 CMakeFiles/Raytracing.dir/cmake_device_link.o: CMakeFiles/Raytracing.dir/src/cudaHelpers.cu.o
-CMakeFiles/Raytracing.dir/cmake_device_link.o: CMakeFiles/Raytracing.dir/src/scene.cu.o
+CMakeFiles/Raytracing.dir/cmake_device_link.o: CMakeFiles/Raytracing.dir/src/scene/scene.cu.o
 CMakeFiles/Raytracing.dir/cmake_device_link.o: CMakeFiles/Raytracing.dir/src/hittable.cu.o
 CMakeFiles/Raytracing.dir/cmake_device_link.o: CMakeFiles/Raytracing.dir/src/camera.cu.o
 CMakeFiles/Raytracing.dir/cmake_device_link.o: CMakeFiles/Raytracing.dir/src/utility/meshLoader.cu.o
 CMakeFiles/Raytracing.dir/cmake_device_link.o: CMakeFiles/Raytracing.dir/src/bsdf.cu.o
 CMakeFiles/Raytracing.dir/cmake_device_link.o: CMakeFiles/Raytracing.dir/src/utility/vector.cu.o
+CMakeFiles/Raytracing.dir/cmake_device_link.o: CMakeFiles/Raytracing.dir/src/scene/sceneLoader.cu.o
 CMakeFiles/Raytracing.dir/cmake_device_link.o: CMakeFiles/Raytracing.dir/build.make
 CMakeFiles/Raytracing.dir/cmake_device_link.o: /usr/local/lib/libPNGwriter.a
 CMakeFiles/Raytracing.dir/cmake_device_link.o: libGLAD.a
@@ -210,7 +226,7 @@ CMakeFiles/Raytracing.dir/cmake_device_link.o: /usr/lib/libpng.so
 CMakeFiles/Raytracing.dir/cmake_device_link.o: /usr/lib/libz.so
 CMakeFiles/Raytracing.dir/cmake_device_link.o: /usr/lib/libfreetype.so
 CMakeFiles/Raytracing.dir/cmake_device_link.o: CMakeFiles/Raytracing.dir/dlink.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerundebug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Linking CUDA device code CMakeFiles/Raytracing.dir/cmake_device_link.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerundebug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Linking CUDA device code CMakeFiles/Raytracing.dir/cmake_device_link.o"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/Raytracing.dir/dlink.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -221,24 +237,26 @@ CMakeFiles/Raytracing.dir/build: CMakeFiles/Raytracing.dir/cmake_device_link.o
 Raytracing_OBJECTS = \
 "CMakeFiles/Raytracing.dir/main.cu.o" \
 "CMakeFiles/Raytracing.dir/src/cudaHelpers.cu.o" \
-"CMakeFiles/Raytracing.dir/src/scene.cu.o" \
+"CMakeFiles/Raytracing.dir/src/scene/scene.cu.o" \
 "CMakeFiles/Raytracing.dir/src/hittable.cu.o" \
 "CMakeFiles/Raytracing.dir/src/camera.cu.o" \
 "CMakeFiles/Raytracing.dir/src/utility/meshLoader.cu.o" \
 "CMakeFiles/Raytracing.dir/src/bsdf.cu.o" \
-"CMakeFiles/Raytracing.dir/src/utility/vector.cu.o"
+"CMakeFiles/Raytracing.dir/src/utility/vector.cu.o" \
+"CMakeFiles/Raytracing.dir/src/scene/sceneLoader.cu.o"
 
 # External object files for target Raytracing
 Raytracing_EXTERNAL_OBJECTS =
 
 Raytracing: CMakeFiles/Raytracing.dir/main.cu.o
 Raytracing: CMakeFiles/Raytracing.dir/src/cudaHelpers.cu.o
-Raytracing: CMakeFiles/Raytracing.dir/src/scene.cu.o
+Raytracing: CMakeFiles/Raytracing.dir/src/scene/scene.cu.o
 Raytracing: CMakeFiles/Raytracing.dir/src/hittable.cu.o
 Raytracing: CMakeFiles/Raytracing.dir/src/camera.cu.o
 Raytracing: CMakeFiles/Raytracing.dir/src/utility/meshLoader.cu.o
 Raytracing: CMakeFiles/Raytracing.dir/src/bsdf.cu.o
 Raytracing: CMakeFiles/Raytracing.dir/src/utility/vector.cu.o
+Raytracing: CMakeFiles/Raytracing.dir/src/scene/sceneLoader.cu.o
 Raytracing: CMakeFiles/Raytracing.dir/build.make
 Raytracing: /usr/local/lib/libPNGwriter.a
 Raytracing: libGLAD.a
@@ -247,7 +265,7 @@ Raytracing: /usr/lib/libz.so
 Raytracing: /usr/lib/libfreetype.so
 Raytracing: CMakeFiles/Raytracing.dir/cmake_device_link.o
 Raytracing: CMakeFiles/Raytracing.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerundebug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Linking CXX executable Raytracing"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerundebug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Linking CXX executable Raytracing"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/Raytracing.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

@@ -40,6 +40,8 @@ struct AccelerationNode{
     bool isLeaf = false;
 };
 
+
+
 //Bottom Layer Acceleration structure, holds primitives
 template<typename Primitive>
 class BLAS{
@@ -86,8 +88,8 @@ public:
                 assert(currentNode->left && currentNode->right);
                 NodePtr left = currentNode->left;
                 NodePtr right = currentNode->right;
-                bool continueLeft = left->boundingBox.rayIntersect(r, tMinimum, tMaximum);// && !left->isLeaf;
-                bool continueRight = right->boundingBox.rayIntersect(r, tMinimum, tMaximum);// && !left->isLeaf;
+                bool continueLeft = left->boundingBox.rayIntersect(r, tMinimum, tMaximum);// && !right->isLeaf;
+                bool continueRight = right->boundingBox.rayIntersect(r, tMinimum, tMaximum);// && !right->isLeaf;
 
                 if(!continueLeft && !continueRight){
                     currentNode = stack[--idx];// Pop stack

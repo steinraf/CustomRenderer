@@ -78,8 +78,6 @@ public:
             return true;
         }
 
-        // TODO add proper triangle test
-
 
         return false;
     }

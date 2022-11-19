@@ -130,6 +130,19 @@ GLAD/fast:
 .PHONY : GLAD/fast
 
 #=============================================================================
+# Target rules for targets named pugixml
+
+# Build rule for target.
+pugixml: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 pugixml
+.PHONY : pugixml
+
+# fast build rule for target.
+pugixml/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pugixml.dir/build.make CMakeFiles/pugixml.dir/build
+.PHONY : pugixml/fast
+
+#=============================================================================
 # Target rules for targets named Raytracing
 
 # Build rule for target.
@@ -165,6 +178,30 @@ libs/glad/glad.s: libs/glad/glad.cu.s
 libs/glad/glad.cu.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/GLAD.dir/build.make CMakeFiles/GLAD.dir/libs/glad/glad.cu.s
 .PHONY : libs/glad/glad.cu.s
+
+libs/pugixml/src/pugixml.o: libs/pugixml/src/pugixml.cpp.o
+.PHONY : libs/pugixml/src/pugixml.o
+
+# target to build an object file
+libs/pugixml/src/pugixml.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pugixml.dir/build.make CMakeFiles/pugixml.dir/libs/pugixml/src/pugixml.cpp.o
+.PHONY : libs/pugixml/src/pugixml.cpp.o
+
+libs/pugixml/src/pugixml.i: libs/pugixml/src/pugixml.cpp.i
+.PHONY : libs/pugixml/src/pugixml.i
+
+# target to preprocess a source file
+libs/pugixml/src/pugixml.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pugixml.dir/build.make CMakeFiles/pugixml.dir/libs/pugixml/src/pugixml.cpp.i
+.PHONY : libs/pugixml/src/pugixml.cpp.i
+
+libs/pugixml/src/pugixml.s: libs/pugixml/src/pugixml.cpp.s
+.PHONY : libs/pugixml/src/pugixml.s
+
+# target to generate assembly for a file
+libs/pugixml/src/pugixml.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pugixml.dir/build.make CMakeFiles/pugixml.dir/libs/pugixml/src/pugixml.cpp.s
+.PHONY : libs/pugixml/src/pugixml.cpp.s
 
 main.o: main.cu.o
 .PHONY : main.o
@@ -286,29 +323,53 @@ src/hittable.cu.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Raytracing.dir/build.make CMakeFiles/Raytracing.dir/src/hittable.cu.s
 .PHONY : src/hittable.cu.s
 
-src/scene.o: src/scene.cu.o
-.PHONY : src/scene.o
+src/scene/scene.o: src/scene/scene.cu.o
+.PHONY : src/scene/scene.o
 
 # target to build an object file
-src/scene.cu.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Raytracing.dir/build.make CMakeFiles/Raytracing.dir/src/scene.cu.o
-.PHONY : src/scene.cu.o
+src/scene/scene.cu.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Raytracing.dir/build.make CMakeFiles/Raytracing.dir/src/scene/scene.cu.o
+.PHONY : src/scene/scene.cu.o
 
-src/scene.i: src/scene.cu.i
-.PHONY : src/scene.i
+src/scene/scene.i: src/scene/scene.cu.i
+.PHONY : src/scene/scene.i
 
 # target to preprocess a source file
-src/scene.cu.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Raytracing.dir/build.make CMakeFiles/Raytracing.dir/src/scene.cu.i
-.PHONY : src/scene.cu.i
+src/scene/scene.cu.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Raytracing.dir/build.make CMakeFiles/Raytracing.dir/src/scene/scene.cu.i
+.PHONY : src/scene/scene.cu.i
 
-src/scene.s: src/scene.cu.s
-.PHONY : src/scene.s
+src/scene/scene.s: src/scene/scene.cu.s
+.PHONY : src/scene/scene.s
 
 # target to generate assembly for a file
-src/scene.cu.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Raytracing.dir/build.make CMakeFiles/Raytracing.dir/src/scene.cu.s
-.PHONY : src/scene.cu.s
+src/scene/scene.cu.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Raytracing.dir/build.make CMakeFiles/Raytracing.dir/src/scene/scene.cu.s
+.PHONY : src/scene/scene.cu.s
+
+src/scene/sceneLoader.o: src/scene/sceneLoader.cu.o
+.PHONY : src/scene/sceneLoader.o
+
+# target to build an object file
+src/scene/sceneLoader.cu.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Raytracing.dir/build.make CMakeFiles/Raytracing.dir/src/scene/sceneLoader.cu.o
+.PHONY : src/scene/sceneLoader.cu.o
+
+src/scene/sceneLoader.i: src/scene/sceneLoader.cu.i
+.PHONY : src/scene/sceneLoader.i
+
+# target to preprocess a source file
+src/scene/sceneLoader.cu.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Raytracing.dir/build.make CMakeFiles/Raytracing.dir/src/scene/sceneLoader.cu.i
+.PHONY : src/scene/sceneLoader.cu.i
+
+src/scene/sceneLoader.s: src/scene/sceneLoader.cu.s
+.PHONY : src/scene/sceneLoader.s
+
+# target to generate assembly for a file
+src/scene/sceneLoader.cu.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Raytracing.dir/build.make CMakeFiles/Raytracing.dir/src/scene/sceneLoader.cu.s
+.PHONY : src/scene/sceneLoader.cu.s
 
 src/utility/meshLoader.o: src/utility/meshLoader.cu.o
 .PHONY : src/utility/meshLoader.o
@@ -368,9 +429,13 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... GLAD"
 	@echo "... Raytracing"
+	@echo "... pugixml"
 	@echo "... libs/glad/glad.o"
 	@echo "... libs/glad/glad.i"
 	@echo "... libs/glad/glad.s"
+	@echo "... libs/pugixml/src/pugixml.o"
+	@echo "... libs/pugixml/src/pugixml.i"
+	@echo "... libs/pugixml/src/pugixml.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
@@ -386,9 +451,12 @@ help:
 	@echo "... src/hittable.o"
 	@echo "... src/hittable.i"
 	@echo "... src/hittable.s"
-	@echo "... src/scene.o"
-	@echo "... src/scene.i"
-	@echo "... src/scene.s"
+	@echo "... src/scene/scene.o"
+	@echo "... src/scene/scene.i"
+	@echo "... src/scene/scene.s"
+	@echo "... src/scene/sceneLoader.o"
+	@echo "... src/scene/sceneLoader.i"
+	@echo "... src/scene/sceneLoader.s"
 	@echo "... src/utility/meshLoader.o"
 	@echo "... src/utility/meshLoader.i"
 	@echo "... src/utility/meshLoader.s"

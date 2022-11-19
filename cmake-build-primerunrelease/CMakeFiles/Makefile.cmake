@@ -67,5 +67,6 @@ set(CMAKE_MAKEFILE_PRODUCTS
 # Dependency information for all targets:
 set(CMAKE_DEPEND_INFO_FILES
   "CMakeFiles/GLAD.dir/DependInfo.cmake"
+  "CMakeFiles/pugixml.dir/DependInfo.cmake"
   "CMakeFiles/Raytracing.dir/DependInfo.cmake"
   )

@@ -4,7 +4,7 @@
 # compile CUDA with /opt/cuda/bin/nvcc
 CUDA_DEFINES = 
 
-CUDA_INCLUDES = -I/home/steinraf/ETH/CG/CustomRenderer/libs/stb -I/home/steinraf/ETH/CG/CustomRenderer/includes
+CUDA_INCLUDES = -I/home/steinraf/ETH/CG/CustomRenderer/libs/stb -I/home/steinraf/ETH/CG/CustomRenderer/includes -I/home/steinraf/ETH/CG/CustomRenderer/libs/pugixml/src
 
 CUDA_FLAGS = -extended-lambda  -O3 -DNDEBUG --generate-code=arch=compute_52,code=[compute_52,sm_52]
 

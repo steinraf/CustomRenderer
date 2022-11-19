@@ -21,7 +21,7 @@ private:
     Vector3f origin;
     Vector3f upperLeft;
     Vector3f horizontal, vertical;
-    Vector3f left, up, front;
+    Vector3f right, up, front;
 
     float lensRadius;
 
