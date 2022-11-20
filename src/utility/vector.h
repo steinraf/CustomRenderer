@@ -5,6 +5,9 @@
 #include <iostream>
 #include <cuda/std/cassert>
 #include <thrust/extrema.h>
+#include <sstream>
+#include <charconv>
+#include <iomanip>
 
 namespace CustomRenderer{
     template<typename T>
@@ -25,6 +28,39 @@ public:
     __host__ __device__ constexpr Vector3f(float x, float y, float z) noexcept : data{x, y, z}{}
 
     __host__ __device__ constexpr explicit Vector3f(float v) noexcept: data{v, v, v}{}
+
+    __host__ constexpr explicit Vector3f(const std::string_view &str) : data{0.f, 0.f, 0.f}{
+//        std::stringstream ss(str);
+//        float x, y , z;
+//        ss >> data[0] >> data[1] >> data[2];
+
+        auto checkConversion = [](std::from_chars_result res, float result){
+            auto [ptr, ec] = res;
+            if (ec == std::errc::invalid_argument){
+                throw std::runtime_error("Invalid argument in vector construction from string.");
+            }
+            else if (ec == std::errc::result_out_of_range){
+                throw std::runtime_error("Invalid argument in vector construction from string.");
+            }
+        };
+
+        std::string_view currentString(str);
+
+        checkConversion(std::from_chars(currentString.begin(), currentString.end(), data[0]), data[0]);
+        currentString.remove_prefix(currentString.find(',') + 1);
+        currentString.remove_prefix(currentString.find_first_not_of(" \r\n\t\v\f"));
+
+        checkConversion(std::from_chars(currentString.begin(), currentString.end(), data[1]), data[1]);
+        currentString.remove_prefix(currentString.find(',') + 1);
+        currentString.remove_prefix(currentString.find_first_not_of(" \r\n\t\v\f"));
+
+        checkConversion(std::from_chars(currentString.begin(), currentString.end(), data[2]), data[2]);
+        currentString.remove_prefix(currentString.find(',') + 1);
+        currentString.remove_prefix(currentString.find_first_not_of(" \r\n\t\v\f"));
+
+
+//        std::cout << "Initialized vec with " << data[0] << ' ' << data[1] << ' ' << data[2] << '\n';
+    }
 
     [[nodiscard]] __host__ __device__ constexpr inline float operator[](int i) const noexcept{ return data[i]; }
 

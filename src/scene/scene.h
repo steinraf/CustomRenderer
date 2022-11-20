@@ -8,6 +8,8 @@
 #include <filesystem>
 #include <functional>
 
+#include "sceneLoader.h"
+
 #include "pngwriter.h"
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
@@ -34,8 +36,7 @@ struct PixelInfo{
 
 class Scene{
 public:
-    __host__ explicit Scene(HostMeshInfo &&mesh, int width = 384, int height = 216/*, int numHittables = 10*/,
-                            Device= CPU);
+    __host__ explicit Scene(SceneRepresentation &&sceneRepr, Device= CPU);
 
     __host__ ~Scene();
 
@@ -59,7 +60,8 @@ private:
     const std::string fragmentShaderPath = "/home/steinraf/ETH/CG/CustomRenderer/shaders/fragmentShader.glsl";
     const std::string vertexShaderPath = "/home/steinraf/ETH/CG/CustomRenderer/shaders/vertexShader.glsl";
 
-    HostMeshInfo mesh;
+    SceneRepresentation sceneRepresentation;
+//    HostMeshInfo mesh;
 
     const unsigned int blockSizeX = 16, blockSizeY = 16;
 

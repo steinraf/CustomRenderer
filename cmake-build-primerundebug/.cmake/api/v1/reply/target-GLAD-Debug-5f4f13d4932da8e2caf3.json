@@ -3,7 +3,7 @@
 	"artifacts" : 
 	[
 		{
-			"path" : "libpugixml.a"
+			"path" : "libGLAD.a"
 		}
 	],
 	"backtrace" : 1,
@@ -26,25 +26,25 @@
 			{
 				"command" : 0,
 				"file" : 0,
-				"line" : 13,
+				"line" : 17,
 				"parent" : 0
 			},
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 15,
+				"line" : 14,
 				"parent" : 0
 			},
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 23,
+				"line" : 21,
 				"parent" : 0
 			},
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 24,
+				"line" : 29,
 				"parent" : 0
 			}
 		]
@@ -55,35 +55,35 @@
 			"compileCommandFragments" : 
 			[
 				{
-					"fragment" : "-O3 -funroll-loops -DNO_FREETYPE -D_GLIBCXX_ASSERTIONS -fasynchronous-unwind-tables -fexceptions -fpie -Wl,-pie -fstack-clash-protection -fstack-protector-all -fstack-protector-strong -g -grecord-gcc-switches -fcf-protection -pipe -Wall -Werror -Wextra  -g"
+					"fragment" : "-extended-lambda  -g --generate-code=arch=compute_52,code=[compute_52,sm_52]"
 				},
 				{
-					"fragment" : "-std=gnu++20"
+					"fragment" : "-std=c++17"
 				}
 			],
 			"includes" : 
 			[
 				{
 					"backtrace" : 2,
-					"path" : "/home/steinraf/ETH/CG/CustomRenderer/libs/stb"
+					"path" : "/home/steinraf/ETH/CG/CustomRenderer/libs/pugixml/src"
 				},
 				{
 					"backtrace" : 3,
-					"path" : "/home/steinraf/ETH/CG/CustomRenderer/includes"
+					"path" : "/home/steinraf/ETH/CG/CustomRenderer/libs/stb"
 				},
 				{
 					"backtrace" : 4,
-					"path" : "/home/steinraf/ETH/CG/CustomRenderer/libs/pugixml/src"
+					"path" : "/home/steinraf/ETH/CG/CustomRenderer/includes"
 				}
 			],
-			"language" : "CXX",
+			"language" : "CUDA",
 			"languageStandard" : 
 			{
 				"backtraces" : 
 				[
 					1
 				],
-				"standard" : "20"
+				"standard" : "17"
 			},
 			"sourceIndexes" : 
 			[
@@ -91,9 +91,9 @@
 			]
 		}
 	],
-	"id" : "pugixml::@6890427a1f51a3e7e1df",
-	"name" : "pugixml",
-	"nameOnDisk" : "libpugixml.a",
+	"id" : "GLAD::@6890427a1f51a3e7e1df",
+	"name" : "GLAD",
+	"nameOnDisk" : "libGLAD.a",
 	"paths" : 
 	{
 		"build" : ".",
@@ -114,7 +114,7 @@
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
-			"path" : "libs/pugixml/src/pugixml.cpp",
+			"path" : "libs/glad/glad.cu",
 			"sourceGroupIndex" : 0
 		}
 	],

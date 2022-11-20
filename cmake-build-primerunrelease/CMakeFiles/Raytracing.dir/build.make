@@ -222,6 +222,7 @@ CMakeFiles/Raytracing.dir/cmake_device_link.o: CMakeFiles/Raytracing.dir/src/sce
 CMakeFiles/Raytracing.dir/cmake_device_link.o: CMakeFiles/Raytracing.dir/build.make
 CMakeFiles/Raytracing.dir/cmake_device_link.o: /usr/local/lib/libPNGwriter.a
 CMakeFiles/Raytracing.dir/cmake_device_link.o: libGLAD.a
+CMakeFiles/Raytracing.dir/cmake_device_link.o: libpugixml.a
 CMakeFiles/Raytracing.dir/cmake_device_link.o: /usr/lib/libpng.so
 CMakeFiles/Raytracing.dir/cmake_device_link.o: /usr/lib/libz.so
 CMakeFiles/Raytracing.dir/cmake_device_link.o: /usr/lib/libfreetype.so
@@ -260,6 +261,7 @@ Raytracing: CMakeFiles/Raytracing.dir/src/scene/sceneLoader.cu.o
 Raytracing: CMakeFiles/Raytracing.dir/build.make
 Raytracing: /usr/local/lib/libPNGwriter.a
 Raytracing: libGLAD.a
+Raytracing: libpugixml.a
 Raytracing: /usr/lib/libpng.so
 Raytracing: /usr/lib/libz.so
 Raytracing: /usr/lib/libfreetype.so

@@ -13,16 +13,16 @@
 #include <thread>
 #include <fstream>
 
-__host__ Scene::Scene(HostMeshInfo &&mesh, int width, int height, Device dev) :
-        mesh(mesh), width(width), height(height),
-        imageBufferSize(width * height * sizeof(Vector3f)),
-        blockSize(width / blockSizeX + 1, height / blockSizeY + 1),
+__host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) :
+        sceneRepresentation(sceneRepr), width(sceneRepr.width), height(sceneRepr.height),
+        imageBufferSize(sceneRepr.width * sceneRepr.height * sizeof(Vector3f)),
+        blockSize(sceneRepr.width / blockSizeX + 1, sceneRepr.height / blockSizeY + 1),
         device(dev),
-        deviceCamera(customRenderer::getCameraOrigin(),
-                     customRenderer::getCameraLookAt(),
-                     customRenderer::getCameraUp(),
+        deviceCamera(sceneRepr.origin,
+                     sceneRepr.target,
+                     sceneRepr.up,
                      customRenderer::getCameraFOV(),
-                     static_cast<float>(width) / static_cast<float>(height),
+                     static_cast<float>(sceneRepr.width) / static_cast<float>(sceneRepr.height),
                      customRenderer::getCameraAperture(),
                      100000.f){//(customRenderer::getCameraOrigin() - customRenderer::getCameraLookAt()).norm()){
 
@@ -38,8 +38,6 @@ __host__ Scene::Scene(HostMeshInfo &&mesh, int width, int height, Device dev) :
     }
 
     checkCudaErrors(cudaMalloc((void **) &deviceCurandState, width * height * sizeof(curandState)));
-//    checkCudaErrors(cudaMalloc((void **) &deviceHittables, numHittables * sizeof(Hittable *)));
-//    checkCudaErrors(cudaMalloc((void **) &deviceHittableList, sizeof(HittableList *)));
 
     cudaHelpers::initRng<<<blockSize, threadSize>>>(width, height, deviceCurandState);
     checkCudaErrors(cudaGetLastError());
@@ -50,6 +48,8 @@ __host__ Scene::Scene(HostMeshInfo &&mesh, int width, int height, Device dev) :
     clock_t startGeometryBVH = clock();
 
     thrust::device_vector<uint32_t> deviceMortonCodes;
+
+    auto mesh = loadMesh(sceneRepr.filenames[0]);
 
     std::tie(deviceTriangles, deviceMortonCodes) = meshToGPU(mesh).toTuple();
 

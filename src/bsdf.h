@@ -20,20 +20,20 @@ class BSDF{
 public:
 
     __device__ __host__ constexpr BSDF() noexcept
-        : material(Material::DIFFUSE){
+        : material(Material::DIFFUSE), albedo(1.f){
 
     }
 
-    __device__ __host__ constexpr BSDF(Material mat) noexcept
-        : material(mat){
+    __device__ __host__ constexpr BSDF(Material mat, Color3f albedo=Color3f{1.5f}) noexcept
+        : material(mat), albedo(albedo){
 
     }
 
     __device__ bool scatter(const Ray &rIn, const HitRecord &rec, Vector3f &attenuation, Ray &scattered,
                             Sampler &sampler) const;
 
-private:
+//private:
     Material material;
-    Color3f albedo{0.5f};
+    Color3f albedo;
 
 };

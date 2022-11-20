@@ -53,15 +53,18 @@ int main(int argc, char **argv){
     std::cout << "Parsing obj...\n";
 
 //    std::filesystem::path filePath = "./obj/ajax.obj";
-    std::filesystem::path filePath = "./obj/ajax.obj";
+//    std::filesystem::path filePath = "./obj/ajax.obj";
+    const std::filesystem::path filePath = "./scenes/simple.xml";
 
-    assert(filePath.extension() == ".obj");
+    assert(filePath.extension() == ".exr");
 
 //    for(int i = 0; i < vertices.size(); ++i)
 //        std::cout << vertices[i][2] << ' ';
 
 
     std::cout << "Starting rendering...\n";
+
+//    auto sc = SceneRepresentation{filePath};
 
 
 //    constexpr int k = 10;
@@ -70,7 +73,7 @@ int main(int argc, char **argv){
     Device device = CPU;
 
     constexpr int k = 6; // nori k = 6
-    Scene s(loadMesh(filePath), k * 128, k * 128, device);
+    Scene s(SceneRepresentation(filePath), device);
 
     s.renderCPU();
 //    s.renderGPU();

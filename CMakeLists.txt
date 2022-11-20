@@ -1,15 +1,21 @@
 cmake_minimum_required(VERSION 3.21)
 project(Raytracing LANGUAGES CXX CUDA)
 
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CUDA_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CUDA_CXX_STANDARD 17)
+set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 
 
 set(CMAKE_CXX_FLAGS "-O3 -funroll-loops -DNO_FREETYPE -D_GLIBCXX_ASSERTIONS -fasynchronous-unwind-tables -fexceptions -fpie -Wl,-pie -fstack-clash-protection -fstack-protector-all -fstack-protector-strong -g -grecord-gcc-switches -fcf-protection -pipe -Wall -Werror -Wextra ")
 
 set(CMAKE_CUDA_FLAGS "-extended-lambda ")
 
+include_directories(libs/pugixml/src)
+
+
 add_library(GLAD "libs/glad/glad.cu")
+
 add_library(pugixml STATIC libs/pugixml/src/pugixml.cpp)
 
 include_directories(libs/stb)
@@ -21,7 +27,6 @@ find_package(OpenGL REQUIRED)
 find_package(X11 REQUIRED)
 
 include_directories(${CMAKE_SOURCE_DIR}/includes)
-include_directories(libs/pugixml/src)
 
 
 
@@ -49,11 +54,11 @@ add_executable(Raytracing
         src/acceleration/aabb.h
         src/utility/vector.cu src/scene/sceneLoader.cu src/scene/sceneLoader.h)
 
+add_dependencies(Raytracing pugixml)
 
 
 set_target_properties(Raytracing PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
-add_dependencies(Raytracing pugixml)
 
-target_link_libraries(Raytracing PRIVATE PNGwriter::PNGwriter glfw3 X11 GL GLAD dl pthread ${OPENEXR_LIBRARIES})
+target_link_libraries(Raytracing PRIVATE PNGwriter::PNGwriter glfw3 X11 GL GLAD dl pthread pugixml ${OPENEXR_LIBRARIES})
 

@@ -26,25 +26,25 @@
 			{
 				"command" : 0,
 				"file" : 0,
-				"line" : 13,
+				"line" : 19,
 				"parent" : 0
 			},
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 15,
+				"line" : 14,
 				"parent" : 0
 			},
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 23,
+				"line" : 21,
 				"parent" : 0
 			},
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 24,
+				"line" : 29,
 				"parent" : 0
 			}
 		]
@@ -55,25 +55,25 @@
 			"compileCommandFragments" : 
 			[
 				{
-					"fragment" : "-O3 -funroll-loops -DNO_FREETYPE -D_GLIBCXX_ASSERTIONS -fasynchronous-unwind-tables -fexceptions -fpie -Wl,-pie -fstack-clash-protection -fstack-protector-all -fstack-protector-strong -g -grecord-gcc-switches -fcf-protection -pipe -Wall -Werror -Wextra  -O3 -DNDEBUG"
+					"fragment" : "-O3 -funroll-loops -DNO_FREETYPE -D_GLIBCXX_ASSERTIONS -fasynchronous-unwind-tables -fexceptions -fpie -Wl,-pie -fstack-clash-protection -fstack-protector-all -fstack-protector-strong -g -grecord-gcc-switches -fcf-protection -pipe -Wall -Werror -Wextra  -g"
 				},
 				{
-					"fragment" : "-std=gnu++20"
+					"fragment" : "-std=gnu++17"
 				}
 			],
 			"includes" : 
 			[
 				{
 					"backtrace" : 2,
-					"path" : "/home/steinraf/ETH/CG/CustomRenderer/libs/stb"
+					"path" : "/home/steinraf/ETH/CG/CustomRenderer/libs/pugixml/src"
 				},
 				{
 					"backtrace" : 3,
-					"path" : "/home/steinraf/ETH/CG/CustomRenderer/includes"
+					"path" : "/home/steinraf/ETH/CG/CustomRenderer/libs/stb"
 				},
 				{
 					"backtrace" : 4,
-					"path" : "/home/steinraf/ETH/CG/CustomRenderer/libs/pugixml/src"
+					"path" : "/home/steinraf/ETH/CG/CustomRenderer/includes"
 				}
 			],
 			"language" : "CXX",
@@ -83,7 +83,7 @@
 				[
 					1
 				],
-				"standard" : "20"
+				"standard" : "17"
 			},
 			"sourceIndexes" : 
 			[
