@@ -29,7 +29,7 @@ public:
     }
 
     //Nori Triangle Ray intersect
-    __device__ constexpr bool hit(const Ray &r, float tMin, float tMax, HitRecord &rec) const noexcept {
+    __device__ constexpr bool hit(const Ray &r, HitRecord &rec) const noexcept {
 
 
         /* Find vectors for two edges sharing v[0] */
@@ -70,7 +70,7 @@ public:
         rec.t = edge2.dot(qvec) * inv_det;
 
 
-        if(rec.t >= tMin && rec.t <= tMax){
+        if(rec.t >= r.minDist && rec.t <= r.maxDist){
             rec.position = p0*(1 - u - v) + p1*u + p2*v;//r.atTime(rec.t);
             rec.triangle = this;
 //        rec.bsdf = bsdf;

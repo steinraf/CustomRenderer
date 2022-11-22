@@ -73,29 +73,23 @@ private:
 
     Vector3f *deviceImageBuffer;
     Vector3f *deviceImageBufferDenoised;
-    const size_t imageBufferSize;
+    const size_t imageBufferByteSize;
 
     Vector3f *hostImageBuffer;
     Vector3f *hostImageBufferDenoised;
 
-    thrust::device_vector<Triangle> deviceTriangles;
+//    thrust::device_vector<Triangle> deviceTriangles;
 
-//    Hittable **deviceHittables;
-//    const size_t numHittables;
+    Camera deviceCamera;
 
-    Camera /* ** */deviceCamera;
-
-
-//    HittableList **deviceHittableList;
+    TLAS<Triangle> *triangleAccelerationStructure;
 
 
-
-
-    BLAS<Triangle> *bvh;
+//    BLAS<Triangle> *_bvh;
 
     curandState *deviceCurandState;
 
-    const int width, height;
+//    const int width, height;
 
     GLuint VAO, VBO, EBO, PBO;
 
@@ -106,16 +100,3 @@ private:
     struct cudaGraphicsResource *cudaPBOResource;
 
 };
-
-//struct SceneDescriptor{
-//    std::vector<std::string> meshFilenames;
-//    std::vector<Vector3f> meshPositions;
-//    std::vector<L
-//};
-
-
-class RenderingScene{
-
-    BLAS<Triangle> *bvh;
-};
-

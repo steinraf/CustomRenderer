@@ -1,4 +1,7 @@
 cmake-build-debug
 cmake-build-release
+cmake-build-primerundebug
+cmake-build-primerunrelease
 data/*
 scenes
+

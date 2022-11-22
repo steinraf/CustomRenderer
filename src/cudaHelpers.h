@@ -195,140 +195,6 @@ namespace cudaHelpers{
 
         return root->boundingBox;
 
-//        do {
-//            assert(!currentNode->isLeaf);
-
-        NodePtr left = currentNode->left;
-        NodePtr right = currentNode->right;
-
-        if(left && right){
-            if(left->hasBoundingBox()){
-                if(right->hasBoundingBox()){
-                    for(int tmp = 0; tmp < idx - 1; ++tmp) printf("\t");
-                    printf("Pop : Both filled\n");
-                    currentNode->boundingBox = left->boundingBox + right->boundingBox;
-                    currentNode = stack[--idx];
-                }else{
-                    for(int tmp = 0; tmp < idx + 1; ++tmp) printf("\t");
-                    printf("Push: Right No BB\n");
-                    stack[++idx] = right;
-                    currentNode = right;
-                }
-            }else if(right->hasBoundingBox()){
-                for(int tmp = 0; tmp < idx + 1; ++tmp) printf("\t");
-                printf("Push: Left No BB\n");
-                stack[++idx] = left;
-                currentNode = left;
-            }else{
-                for(int tmp = 0; tmp < idx + 1; ++tmp) printf("\t");
-                printf("Push: Neither BB\n");
-                stack[++idx] = currentNode;
-//                    stack[++idx] = right;
-                currentNode = left;
-            }
-        }else if(left){
-            if(left->hasBoundingBox()){
-                for(int tmp = 0; tmp < idx - 1; ++tmp) printf("\t");
-                printf("Pop : Right Nullptr\n");
-                currentNode->boundingBox = left->boundingBox;
-                currentNode = stack[--idx];
-            }else{
-                for(int tmp = 0; tmp < idx + 1; ++tmp) printf("\t");
-                printf("Push: Right Nullptr\n");
-                stack[++idx] = left;
-                currentNode = left;
-            }
-        }else if(right){
-            if(right->hasBoundingBox()){
-                for(int tmp = 0; tmp < idx - 1; ++tmp) printf("\t");
-                printf("Pop : Left Nullptr\n");
-                currentNode->boundingBox = right->boundingBox;
-                currentNode = stack[--idx];
-            }else{
-                for(int tmp = 0; tmp < idx + 1; ++tmp) printf("\t");
-                printf("Push: Left Nullptr\n");
-                stack[++idx] = right;
-                currentNode = right;
-            }
-        }else{
-            assert(!currentNode->isLeaf);
-            assert(false && "Right and right are nullptr and this is not a leaf");
-            currentNode = stack[--idx];
-        }
-
-
-
-
-//
-//            if(!currentNode->right->isLeaf && !currentNode->right->isLeaf){
-//                if(currentNode->right->boundingBox.isEmpty()){
-//                    for(int tmp = 0; tmp < idx+1; ++tmp) printf("\t");
-//                    printf("Push: Left  empty\n");
-//                    stack[++idx] = currentNode;
-//                    currentNode = currentNode->right;
-//                } else if(currentNode->right->boundingBox.isEmpty()){
-//                    for(int tmp = 0; tmp < idx+1; ++tmp) printf("\t");
-//                    printf("Push: Right empty\n");
-//                    stack[++idx] = currentNode;
-//                    currentNode = currentNode->right;
-//                } else{
-//                    for(int tmp = 0; tmp < idx-1; ++tmp) printf("\t");
-//                    printf("Pop : Both  full\n");
-//                    currentNode->boundingBox = currentNode->right->boundingBox + currentNode->right->boundingBox;
-//                    currentNode = stack[--idx];
-//                }
-//            } else if (currentNode->right->isLeaf && !currentNode->right->isLeaf){
-//                for(int tmp = 0; tmp < idx+1; ++tmp) printf("\t");
-//                printf("Push: Left  Leaf\n");
-//                stack[++idx] = currentNode;
-//                currentNode = currentNode->right;
-//            } else if (!currentNode->right->isLeaf &&currentNode->right->isLeaf){
-//                for(int tmp = 0; tmp < idx+1; ++tmp) printf("\t");
-//                printf("Push: Right Leaf\n");
-//                stack[++idx] = currentNode;
-//                currentNode = currentNode->right;
-//            } else {
-//                for(int tmp = 0; tmp < idx-1; ++tmp) printf("\t");
-//                printf("Pop : Both  Leaf\n");
-//                currentNode->boundingBox = currentNode->right->boundingBox + currentNode->right->boundingBox;
-//                currentNode = stack[--idx];
-//            }
-//            assert(idx < stackSize);
-//        } while(idx >= 0);
-//
-//        assert(root);
-//
-//        printf("Started recursion... %p \n", root);
-//
-//
-//        if(root->isLeaf){
-//            printf("Found Leaf...\n");
-//            assert(root->primitive);
-//            root->boundingBox = root->primitive->boundingBox;
-//            printf("Got Leaf AABB %f\n", root->boundingBox.min[0]);
-//        }else{
-////            printf("Diverging Path...\n");
-//            assert(root->right && root->right);
-//
-//            printf("Diverging Path %p...\n", root);
-//
-//            AABB leftAABB = getBoundingBox(root->right);
-//
-//            printf("Got right AABB %f\n", leftAABB.min[0]);
-//            AABB rightAABB = getBoundingBox(root->right);
-//
-//
-//            root->boundingBox = leftAABB + rightAABB;
-//            printf("Completed Path...\n");
-//        }
-
-
-//        printf("Computed BB (%f, %f, %f) -> (%f, %f, %f)",
-//               root->boundingBox.min[0], root->boundingBox.min[1], root->boundingBox.min[2],
-//               root->boundingBox.max[0], root->boundingBox.max[1], root->boundingBox.max[2]);
-
-        return root->boundingBox;
-
     }
 
     template<typename Primitive>
@@ -337,7 +203,7 @@ namespace cudaHelpers{
         if(!cudaHelpers::initIndices(i, j, pixelIndex, 1, 1)) return;
 
 //        for(int tmp = 0; tmp < 2*numPrimitives-1; ++tmp){
-//            printf("%i, (%p, %p, %p, %p, %d)\n", tmp, bvhNodes + tmp, bvhNodes[tmp].right, bvhNodes[tmp].right, bvhNodes[tmp].primitive, bvhNodes[tmp].isLeaf);
+//            printf("%i, (%p, %p, %p, %p, %d)\n", tmp, bvhNodes + tmp, bvhNodes[tmp].right, bvhNodes[tmp].right, bvhNodes[tmp].triangle, bvhNodes[tmp].isLeaf);
 //        }
 
 //        printf("Starting BLAS BB Computation...\n");
@@ -346,16 +212,11 @@ namespace cudaHelpers{
 //        printf("Root %p -> %p -> %p \n", bvhNodes, bvhNodes + 544566 - 1, bvhNodes + (2 * 544566 - 1));
         const AABB &totalBoundingBox = getBoundingBox(&bvhNodes[0]);
 
-//        printf("Total bounding box is (%f, %f, %f) -> (%f, %f, %f)\n",
-//               totalBoundingBox.min[0], totalBoundingBox.min[1], totalBoundingBox.min[2],
-//               totalBoundingBox.max[0], totalBoundingBox.max[1], totalBoundingBox.max[2]);
+        printf("\tTotal bounding box is (%f, %f, %f) -> (%f, %f, %f)\n",
+               totalBoundingBox.min[0], totalBoundingBox.min[1], totalBoundingBox.min[2],
+               totalBoundingBox.max[0], totalBoundingBox.max[1], totalBoundingBox.max[2]);
 
 
-#ifdef NDEBUG
-        for(int idx = numPrimitives - 1; idx < 2 * numPrimitives - 1; ++idx){
-            assert(bvhNodes[idx].isPointedTo);
-        }
-#endif
     }
 
     template<typename Primitive>
@@ -366,15 +227,29 @@ namespace cudaHelpers{
         *bvh = BLAS<Primitive>(bvhTotalNodes);
     }
 
+    template<typename Primitive>
+    __global__ void
+//    constructTLAS(AccelerationNode<Blas<Primitive>> *tlas, Blas<Primitive> *blas, int numMeshes){
+    constructTLAS(TLAS<Primitive> *tlas, BLAS<Primitive> **blas, int numMeshes){
+
+        int i, j, pixelIndex;
+        if(!cudaHelpers::initIndices(i, j, pixelIndex, 1, 1)) return;
+
+        *tlas = TLAS(blas, numMeshes);
+
+
+
+    }
+
     __global__ void freeVariables(int width, int height);
 
 
     template<typename Primitive>
-    __device__ Color3f getColor(const Ray &r, BLAS<Primitive> *bvh, int maxRayDepth, Sampler &sampler){
+    __device__ Color3f getColor(const Ray &r, TLAS<Primitive> *tlas, int maxRayDepth, Sampler &sampler){
 
         HitRecord record;
 
-        if(!bvh->hit(r, record))
+        if(!tlas->hit(r, record))
             return Color3f{0.f};
 
         return record.normal.absValues();
@@ -385,7 +260,7 @@ namespace cudaHelpers{
 //        Color3f currentAttenuation{1.f};
 //
 //        for(int depth = 0; depth < maxRayDepth; ++depth){
-//            if(bvh->hit(currentRay, FLT_EPSILON, cuda::std::numeric_limits<float>::infinity(), record)){
+//            if(tlas->hit(currentRay, FLT_EPSILON, cuda::std::numeric_limits<float>::infinity(), record)){
 //                if(record.triangle->bsdf.scatter(currentRay, record, attenuation, scattered, sampler)){
 //                    currentRay = scattered;
 ////                    currentAttenuation *= attenuation;
@@ -403,14 +278,14 @@ namespace cudaHelpers{
 //            }
 //        }
 
-        if(!bvh->hit(r, record))
+        if(!tlas->hit(r, record))
             return Color3f{1.f};
 
         const Vector3f scatter = Warp::sampleUniformHemisphere(sampler, record.normal);
 
 
 
-        if(!bvh->hit({record.position, scatter, FLT_EPSILON, 10}, record))
+        if(!tlas->hit({record.position, scatter, FLT_EPSILON, 10}, record))
             return Color3f{1.f};
 
 
@@ -422,7 +297,7 @@ namespace cudaHelpers{
     __global__ void denoise(Vector3f *input, Vector3f *output, int width, int height);
 
     template<typename Primitive>
-    __global__ void render(Vector3f *output, Camera cam, BLAS<Primitive> *bvh, int width, int height,
+    __global__ void render(Vector3f *output, Camera cam, TLAS<Primitive> *tlas, int width, int height, int numSubsamples,
                            curandState *globalRandState){
         int i, j, pixelIndex;
         if(!initIndices(i, j, pixelIndex, width, height)) return;
@@ -432,7 +307,7 @@ namespace cudaHelpers{
 //
 //            auto r = Ray(customRenderer::getCameraOrigin(), customRenderer::getCameraLookAt() - customRenderer::getCameraOrigin());
 //            HitRecord h;
-//            bool didHit = bvh->hit(r, FLT_EPSILON, INFINITY, h);
+//            bool didHit = tlas->hit(r, FLT_EPSILON, INFINITY, h);
 //            printf("Testing Hit: %d \n", didHit);
 //            output[pixelIndex] = Vector3f{1.f};
 //            return;
@@ -440,7 +315,6 @@ namespace cudaHelpers{
 //            output[pixelIndex] = Vector3f{0.f};
 //            return;
 //        }
-
 
         auto sampler = Sampler(&globalRandState[pixelIndex]);
 
@@ -451,7 +325,6 @@ namespace cudaHelpers{
         const auto heightFloat = static_cast<float>(height);
 
         const int maxRayDepth = customRenderer::getMaxRayDepth();
-        const int numSubsamples = customRenderer::getNumSubsamples();
 
         Color3f col{0.0f};
 
@@ -461,16 +334,8 @@ namespace cudaHelpers{
 
             const auto ray = cam.getRay(s, t, sampler);
 
-            col += getColor(ray, bvh, maxRayDepth, sampler);
+            col += getColor(ray, tlas, maxRayDepth, sampler);
         }
-
-//        constexpr float scale = 1.f ;
-
-//        col = {
-//                sqrt(col[0] * scale),
-//                sqrt(col[1] * scale),
-//                sqrt(col[2] * scale)
-//        };
 
         col /= numSubsamples;
 

@@ -33,7 +33,7 @@ struct HostMeshInfo{
 };
 
 struct DeviceMeshInfo{
-    thrust::device_vector<Triangle> triangles;
+    Triangle *triangles;
     thrust::device_vector<uint32_t> mortonCodes;
 
     [[nodiscard]] auto toTuple() const noexcept{

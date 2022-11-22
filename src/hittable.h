@@ -8,12 +8,11 @@
 #include "utility/ray.h"
 
 
-
 struct HitRecord{
     Vector3f position;
     Vector3f normal;
 
-    class Triangle const *triangle;
+    const class Triangle *triangle;
 
     Vector2f uv;
 

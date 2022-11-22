@@ -145,7 +145,12 @@ DeviceMeshInfo meshToGPU(const HostMeshInfo &mesh) noexcept {
         };
     }
 
-    thrust::device_vector<Triangle> deviceTriangles(hostTriangles);
+    Triangle *deviceTrianglePtr;
+    checkCudaErrors(cudaMalloc(&deviceTrianglePtr, numTriangles * sizeof(Triangle)));
+    checkCudaErrors(cudaMemcpy(deviceTrianglePtr, hostTriangles.data(), numTriangles *sizeof(Triangle), cudaMemcpyHostToDevice));
+
+    auto tDevTriaPtr = thrust::device_pointer_cast(deviceTrianglePtr);
+    thrust::device_vector<Triangle> deviceTriangles(tDevTriaPtr, tDevTriaPtr + numTriangles);
 
 
     TriaToAABB triangleToAABB;
@@ -173,5 +178,5 @@ DeviceMeshInfo meshToGPU(const HostMeshInfo &mesh) noexcept {
     thrust::sort_by_key(mortonCodes.begin(), mortonCodes.end(), deviceTriangles.begin());
     //TODO maybe use radix sort instead of default sort
 
-    return {deviceTriangles, mortonCodes};
+    return {deviceTrianglePtr, mortonCodes};
 }

@@ -14,8 +14,8 @@
 #include <fstream>
 
 __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) :
-        sceneRepresentation(sceneRepr), width(sceneRepr.width), height(sceneRepr.height),
-        imageBufferSize(sceneRepr.width * sceneRepr.height * sizeof(Vector3f)),
+        sceneRepresentation(sceneRepr),
+        imageBufferByteSize(sceneRepr.width * sceneRepr.height * sizeof(Vector3f)),
         blockSize(sceneRepr.width / blockSizeX + 1, sceneRepr.height / blockSizeY + 1),
         device(dev),
         deviceCamera(sceneRepr.origin,
@@ -28,96 +28,130 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) :
 
 
     if(dev == CPU){
-        checkCudaErrors(cudaMalloc((void **) &deviceImageBuffer, imageBufferSize));
-        checkCudaErrors(cudaMalloc((void **) &deviceImageBufferDenoised, imageBufferSize));
+        checkCudaErrors(cudaMalloc((void **) &deviceImageBuffer, imageBufferByteSize));
+        checkCudaErrors(cudaMalloc((void **) &deviceImageBufferDenoised, imageBufferByteSize));
     }else{
 
-        checkCudaErrors(cudaMalloc((void **) &deviceImageBuffer, imageBufferSize));
+        checkCudaErrors(cudaMalloc((void **) &deviceImageBuffer, imageBufferByteSize));
 
         initOpenGL();
     }
 
-    checkCudaErrors(cudaMalloc((void **) &deviceCurandState, width * height * sizeof(curandState)));
+    checkCudaErrors(cudaMalloc((void **) &deviceCurandState, sceneRepr.width * sceneRepr.height * sizeof(curandState)));
 
-    cudaHelpers::initRng<<<blockSize, threadSize>>>(width, height, deviceCurandState);
+    cudaHelpers::initRng<<<blockSize, threadSize>>>(sceneRepr.width, sceneRepr.height, deviceCurandState);
     checkCudaErrors(cudaGetLastError());
     // No need to sync because can run independently
 //    checkCudaErrors(cudaDeviceSynchronize());
 
+    std::vector<BLAS<Triangle> *> hostBlasVector;
 
     clock_t startGeometryBVH = clock();
 
-    thrust::device_vector<uint32_t> deviceMortonCodes;
+    for(auto & filename : sceneRepr.filenames){
 
-    auto mesh = loadMesh(sceneRepr.filenames[0]);
+        BLAS<Triangle> *bvh;
 
-    std::tie(deviceTriangles, deviceMortonCodes) = meshToGPU(mesh).toTuple();
+        Triangle *deviceTriangles;
 
-    const int numTriangles = static_cast<int>(mesh.normalsIndices.first.size());
+        thrust::device_vector<uint32_t> deviceMortonCodes;
 
-    std::cout << "Loading Geometry took "
+        auto mesh = loadMesh(filename);
+
+        std::tie(deviceTriangles, deviceMortonCodes) = meshToGPU(mesh).toTuple();
+
+        const int numTriangles = static_cast<int>(mesh.normalsIndices.first.size());
+
+        std::cout << "\tLoading Geometry took "
+                  << ((double) (clock() - startGeometryBVH)) / CLOCKS_PER_SEC
+                  << " seconds.\n";
+
+        std::cout << "\tManaging " << numTriangles << " triangles.\n";
+
+        clock_t bvhConstructStart = clock();
+
+        AccelerationNode<Triangle> *bvhTotalNodes;
+        checkCudaErrors(cudaMalloc((void **) &bvhTotalNodes,
+                                   sizeof(AccelerationNode<Triangle>) * (2 * numTriangles - 1))); //n-1 internal, n leaf
+        checkCudaErrors(cudaMalloc((void **) &bvh, sizeof(BLAS<Triangle> *)));
+
+        cudaHelpers::constructBVH<<<(numTriangles + 1024 - 1) /
+                                    1024, 1024>>>(bvhTotalNodes, deviceTriangles, deviceMortonCodes.data().get(), numTriangles);
+
+
+        checkCudaErrors(cudaGetLastError());
+        checkCudaErrors(cudaDeviceSynchronize());
+
+        std::cout << "\tBLAS construction for " << filename << " took "
+                  << ((double) (clock() - bvhConstructStart)) / CLOCKS_PER_SEC
+                  << " seconds.\n";
+
+        clock_t bvhBoundingBox = clock();
+
+        cudaHelpers::computeBVHBoundingBoxes<<<1, 1>>>(bvhTotalNodes, numTriangles);
+
+        checkCudaErrors(cudaGetLastError());
+        checkCudaErrors(cudaDeviceSynchronize());
+
+        std::cout << "\tBLAS boundingBox Compute for " << filename << " took "
+                  << ((double) (clock() - bvhBoundingBox)) / CLOCKS_PER_SEC
+                  << " seconds.\n";
+
+        clock_t initBVHTime = clock();
+
+        cudaHelpers::initBVH<<<1, 1>>>(bvh, bvhTotalNodes);
+
+        checkCudaErrors(cudaGetLastError());
+        checkCudaErrors(cudaDeviceSynchronize());
+
+        std::cout << "\tBLAS init for " << filename << " took "
+                  << ((double) (clock() - initBVHTime)) / CLOCKS_PER_SEC
+                  << " seconds.\n";
+
+
+        hostBlasVector.push_back(bvh);
+    }
+
+
+    const auto numMeshes = sceneRepresentation.filenames.size();
+
+
+    AccelerationNode<BLAS<Triangle>> *blasNodes;
+    checkCudaErrors(cudaMalloc((void **) &blasNodes,
+                               sizeof(AccelerationNode<BLAS<Triangle>>) * (2 * numMeshes - 1))); //n-1 internal, n leaf
+    checkCudaErrors(cudaMalloc((void **) &triangleAccelerationStructure, sizeof(BLAS<Triangle> *)));
+
+
+    BLAS<Triangle> **deviceBlasArr;
+    auto tlasNumBytes = sizeof(BLAS<Triangle> *) * hostBlasVector.size();
+
+    checkCudaErrors(cudaMalloc((void ***) &deviceBlasArr, tlasNumBytes));
+    checkCudaErrors(cudaMemcpy(deviceBlasArr, hostBlasVector.data(), tlasNumBytes, cudaMemcpyHostToDevice));
+//    cudaHelpers::constructTLAS<<<1, 1>>>(blasNodes, hostBlasVector[0], numMeshes);
+    cudaHelpers::constructTLAS<<<1, 1>>>(triangleAccelerationStructure, deviceBlasArr, numMeshes);
+
+
+
+
+
+    std::cout << "Loading Geometry, BLAS and TLAS construction took "
               << ((double) (clock() - startGeometryBVH)) / CLOCKS_PER_SEC
               << " seconds.\n";
 
-    std::cout << "Managing " << numTriangles << " triangles.\n";
-
-    clock_t bvhConstructStart = clock();
-
-    AccelerationNode<Triangle> *bvhTotalNodes;
-    checkCudaErrors(cudaMalloc((void **) &bvhTotalNodes,
-                               sizeof(AccelerationNode<Triangle>) * (2 * numTriangles - 1))); //n-1 internal, n leaf
-    checkCudaErrors(cudaMalloc((void **) &bvh, sizeof(BLAS<Triangle> *)));
-
-//    printf("BLAS has allocation range of (%p, %p)\n", bvhTotalNodes, bvhTotalNodes + (2 * numTriangles - 1));
-
-    Triangle *deviceTrianglePtr = deviceTriangles.data().get();
 
 
-    cudaHelpers::constructBVH<<<(numTriangles + 1024 - 1) /
-                                1024, 1024>>>(bvhTotalNodes, deviceTrianglePtr, deviceMortonCodes.data().get(), numTriangles);
 
 
-    checkCudaErrors(cudaGetLastError());
-    checkCudaErrors(cudaDeviceSynchronize());
-
-    std::cout << "BLAS construction took "
-              << ((double) (clock() - bvhConstructStart)) / CLOCKS_PER_SEC
-              << " seconds.\n";
-
-    clock_t bvhBoundingBox = clock();
-
-    cudaHelpers::computeBVHBoundingBoxes<<<1, 1>>>(bvhTotalNodes, numTriangles);
-
-    checkCudaErrors(cudaGetLastError());
-    checkCudaErrors(cudaDeviceSynchronize());
-
-    std::cout << "BLAS boundingBox Compute took "
-              << ((double) (clock() - bvhBoundingBox)) / CLOCKS_PER_SEC
-              << " seconds.\n";
-
-    clock_t initBVHTime = clock();
-
-    cudaHelpers::initBVH<<<1, 1>>>(bvh, bvhTotalNodes);
-
-    checkCudaErrors(cudaGetLastError());
-    checkCudaErrors(cudaDeviceSynchronize());
-
-    std::cout << "BLAS init took "
-              << ((double) (clock() - initBVHTime)) / CLOCKS_PER_SEC
-              << " seconds.\n";
-
-    std::cout << "Loading Geometry and BLAS construction took "
-              << ((double) (clock() - startGeometryBVH)) / CLOCKS_PER_SEC
-              << " seconds.\n";
 
 
-    hostImageBuffer = new Vector3f[imageBufferSize];
-    hostImageBufferDenoised = new Vector3f[imageBufferSize];
+    hostImageBuffer = new Vector3f[imageBufferByteSize];
+    hostImageBufferDenoised = new Vector3f[imageBufferByteSize];
 
 }
 
 __host__ Scene::~Scene(){
 
+    //TODO dealloc everything!
 
     delete[] hostImageBuffer;
     delete[] hostImageBufferDenoised;
@@ -129,10 +163,10 @@ __host__ Scene::~Scene(){
 //        glDeleteBuffers(1, &VBO);
 //        glDeleteBuffers(1, &EBO);
     }else{
-        cudaGraphicsUnmapResources(1, &cudaPBOResource, 0);
+        cudaGraphicsUnmapResources(1, &cudaPBOResource, nullptr);
     }
 //    glfwTerminate();
-    cudaHelpers::freeVariables<<<blockSize, threadSize>>>(width, height);
+    cudaHelpers::freeVariables<<<blockSize, threadSize>>>(sceneRepresentation.width, sceneRepresentation.height);
 }
 
 
@@ -142,7 +176,7 @@ void Scene::render(){
     std::cout << "Starting render...\n";
 
 
-    cudaHelpers::render<<<blockSize, threadSize>>>(deviceImageBuffer, deviceCamera, bvh/*deviceHittableList*/, width, height, deviceCurandState);
+    cudaHelpers::render<<<blockSize, threadSize>>>(deviceImageBuffer, deviceCamera, triangleAccelerationStructure, sceneRepresentation.width, sceneRepresentation.height, sceneRepresentation.samplePerPixel, deviceCurandState);
     checkCudaErrors(cudaGetLastError());
 
     std::cout << "Starting draw thread...\n";
@@ -160,12 +194,12 @@ void Scene::render(){
 
 
     std::cout << "Starting denoise...\n";
-    checkCudaErrors(cudaMemcpy(hostImageBuffer, deviceImageBuffer, imageBufferSize, cudaMemcpyDeviceToHost));
-    cudaHelpers::denoise<<<blockSize, threadSize>>>(deviceImageBuffer, deviceImageBufferDenoised, width, height);
+    checkCudaErrors(cudaMemcpy(hostImageBuffer, deviceImageBuffer, imageBufferByteSize, cudaMemcpyDeviceToHost));
+    cudaHelpers::denoise<<<blockSize, threadSize>>>(deviceImageBuffer, deviceImageBufferDenoised, sceneRepresentation.width, sceneRepresentation.height);
     checkCudaErrors(cudaDeviceSynchronize());
 
     checkCudaErrors(
-            cudaMemcpy(hostImageBufferDenoised, deviceImageBufferDenoised, imageBufferSize, cudaMemcpyDeviceToHost));
+            cudaMemcpy(hostImageBufferDenoised, deviceImageBufferDenoised, imageBufferByteSize, cudaMemcpyDeviceToHost));
     checkCudaErrors(cudaDeviceSynchronize());
 
 
@@ -214,12 +248,12 @@ __host__ void Scene::renderCPU(){
 
 //    stbi_set_flip_vertically_on_load(true);
 
-    const bool didHDR = stbi_write_hdr(hdrPath.c_str(), width, height, 3, (float *)hostImageBuffer);
+    const bool didHDR = stbi_write_hdr(hdrPath.c_str(), sceneRepresentation.width, sceneRepresentation.height, 3, (float *)hostImageBuffer);
     assert(didHDR);
 
 
-    pngwriter png(width, height, 1., pngPath.c_str());
-    pngwriter pngDenoised(width, height, 1., pngPathDenoised.c_str());
+    pngwriter png(sceneRepresentation.width, sceneRepresentation.height, 1., pngPath.c_str());
+    pngwriter pngDenoised(sceneRepresentation.width, sceneRepresentation.height, 1., pngPathDenoised.c_str());
 
     auto gammaCorrect = [](float value){
         if (value <= 0.0031308f) return std::clamp(12.92f * value, 0.f, 1.f);
@@ -228,14 +262,14 @@ __host__ void Scene::renderCPU(){
 
 
 //#pragma omp parallel for
-    for(int j = 0; j < height; j++){
-        for(int i = 0; i < width; i++){
-            const int idx = j * width + i;
-            png.plot(i + 1, height - j,
+    for(int j = 0; j < sceneRepresentation.height; j++){
+        for(int i = 0; i < sceneRepresentation.width; i++){
+            const int idx = j * sceneRepresentation.width + i;
+            png.plot(i + 1, sceneRepresentation.height - j,
                      gammaCorrect(hostImageBuffer[idx][0]),
                      gammaCorrect(hostImageBuffer[idx][1]),
                      gammaCorrect(hostImageBuffer[idx][2]));
-            pngDenoised.plot(i + 1, height - j,
+            pngDenoised.plot(i + 1, sceneRepresentation.height - j,
                              hostImageBufferDenoised[idx][0],
                              hostImageBufferDenoised[idx][1],
                              hostImageBufferDenoised[idx][2]);
@@ -252,7 +286,7 @@ __host__ void Scene::initOpenGL(){
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    window = glfwCreateWindow(width, height, "Raytracing", NULL, NULL);
+    window = glfwCreateWindow(sceneRepresentation.width, sceneRepresentation.height, "Raytracing", NULL, NULL);
     if(!window){
         std::cerr << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
@@ -281,7 +315,7 @@ __host__ void Scene::initOpenGL(){
 
             glGenBuffers(1, &PBO);
             glBindBuffer(GL_PIXEL_UNPACK_BUFFER, PBO);
-            glBufferData(GL_PIXEL_UNPACK_BUFFER, sizeof(Vector3f) * width * height, nullptr, GL_STREAM_DRAW);
+            glBufferData(GL_PIXEL_UNPACK_BUFFER, sizeof(Vector3f) * sceneRepresentation.width * sceneRepresentation.height, nullptr, GL_STREAM_DRAW);
             glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 
             //    glGenTextures(1, &tex);
@@ -345,7 +379,7 @@ __host__ void Scene::OpenGLDraw(Vector3f *deviceVector, volatile bool &isRenderi
 
         glUseProgram(shaderID);
         glBindVertexArray(VAO);
-//        checkCudaErrors(cudaMemcpy(hostImageBuffer, deviceImageBuffer, imageBufferSize, cudaMemcpyDeviceToHost));
+//        checkCudaErrors(cudaMemcpy(hostImageBuffer, deviceImageBuffer, imageBufferByteSize, cudaMemcpyDeviceToHost));
 
 //        std::cout << deviceImageBuffer[0] << '\n';
         //        glBufferData(GL_ARRAY_BUFFER, 2 * width * height * sizeof(Vector3f), NULL, GL_STATIC_DRAW);
