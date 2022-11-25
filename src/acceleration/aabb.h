@@ -55,8 +55,8 @@ struct AABB{
                     cuda::std::swap(t1, t2);
                 }
 
-                nearT = thrust::max(t1, nearT);
-                farT = thrust::min(t2, farT);
+                nearT = CustomRenderer::max(t1, nearT);
+                farT = CustomRenderer::min(t2, farT);
 
                 if(nearT > farT)
                     return false;
@@ -75,7 +75,7 @@ struct AABB{
         return min == Vector3f(INFINITY) && max == Vector3f(-INFINITY);
     }
 
-    __device__ constexpr AABB operator+(const AABB &other) const noexcept {
+    [[nodiscard]] __device__ constexpr AABB operator+(const AABB &other) const noexcept {
         return {Vector3f{-FLT_EPSILON} + Vector3f{   CustomRenderer::min(min[0], other.min[0]),
                                                             CustomRenderer::min(min[1], other.min[1]),
                                                             CustomRenderer::min(min[2], other.min[2])},

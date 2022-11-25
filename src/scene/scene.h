@@ -55,7 +55,7 @@ private:
 
     __host__ void loadShader();
 
-    __host__ void checkShaderCompileError(unsigned int shader, std::string type) const;
+    __host__ static void checkShaderCompileError(unsigned int shader, const std::string &type) ;
 
     const std::string fragmentShaderPath = "/home/steinraf/ETH/CG/CustomRenderer/shaders/fragmentShader.glsl";
     const std::string vertexShaderPath = "/home/steinraf/ETH/CG/CustomRenderer/shaders/vertexShader.glsl";
@@ -78,18 +78,16 @@ private:
     Vector3f *hostImageBuffer;
     Vector3f *hostImageBufferDenoised;
 
-//    thrust::device_vector<Triangle> deviceTriangles;
+    std::vector<thrust::device_vector<Triangle>> hostDeviceTriangleVec;
+    std::vector<thrust::device_vector<float>> hostDeviceCDF;
+    std::vector<float> totalArea;
 
     Camera deviceCamera;
 
+
     TLAS<Triangle> *triangleAccelerationStructure;
 
-
-//    BLAS<Triangle> *_bvh;
-
     curandState *deviceCurandState;
-
-//    const int width, height;
 
     GLuint VAO, VBO, EBO, PBO;
 
@@ -100,3 +98,5 @@ private:
     struct cudaGraphicsResource *cudaPBOResource;
 
 };
+
+

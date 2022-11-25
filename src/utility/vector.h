@@ -1,5 +1,7 @@
 #pragma once
 
+#define EPSILON 1e-4
+
 #include <cmath>
 #include <cstdlib>
 #include <iostream>

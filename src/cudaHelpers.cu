@@ -15,7 +15,7 @@
 namespace cudaHelpers{
 
 
-    __host__ void check_cuda(cudaError_t result, char const *const func, const char *const file, int line){
+    __host__ void check_cuda(cudaError_t result, char const *const func, const char *const file, int line) noexcept(false){
         if(result){
             std::cerr << "CUDA error = " << static_cast<unsigned int>(result) << " at " <<
                       file << ":" << line << " '" << func << "' \n";
@@ -50,7 +50,7 @@ namespace cudaHelpers{
 
         auto between = [](int val, int low, int high){ return val >= low && val < high; };
 
-        const int range = 2;
+        constexpr int range = 2;
 
 
         const float filter[5][5] = {
@@ -61,6 +61,15 @@ namespace cudaHelpers{
                 {0.00048091, 0.00501119, 0.01094545, 0.00501119, 0.00048091},
         };
 
+
+//        const float filter[5][5] = {
+//                {1.f, 1.f, 1.f, 1.f, 1.f},
+//                {1.f, 1.f, 1.f, 1.f, 1.f},
+//                {1.f, 1.f, 1.f, 1.f, 1.f},
+//                {1.f, 1.f, 1.f, 1.f, 1.f},
+//                {1.f, 1.f, 1.f, 1.f, 1.f}
+//        };
+
         for(int a = -range; a <= range; ++a){
             for(int b = -range; b <= range; ++b){
                 if(between(i + a, 0, width) && between(j + b, 0, height)){
@@ -70,7 +79,7 @@ namespace cudaHelpers{
             }
         }
 
-        output[pixelIndex] = tmp.clamp(0.f, 1.f); //(input[pixelIndex] + tmp/(count))/2.0;
+        output[pixelIndex] = input[pixelIndex];
     }
 
 
@@ -93,7 +102,7 @@ namespace cudaHelpers{
 
         do{
             step = (step + 1) >> 1; // exponential decrease
-            const int new_split = split + step; // proposed new position
+            const int new_split = split + step; // proposed new p
 
             if(new_split < last){
                 const int split_prefix = delta(

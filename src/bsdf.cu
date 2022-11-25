@@ -5,16 +5,17 @@
 #include "bsdf.h"
 
 __device__ bool
-BSDF::scatter(const Ray &rIn, const HitRecord &rec, Vector3f &attenuation, Ray &scattered, Sampler &sampler) const{
+BSDF::scatter(const Ray &rIn, const Intersection &rec, Vector3f &attenuation, Ray &scattered, Sampler &sampler) const{
 
-    const Vector3f scatter = Warp::squareToCosineHemisphere(sampler.getSample2D());
+    switch(material){
+        break;case Material::DIFFUSE:
+            const Vector3f scatter = Warp::squareToCosineHemisphere(sampler.getSample2D());
 
-    const Vector3f target = rec.position + scatter;
+            const Vector3f target = rec.p + scatter;
 
-    scattered = Ray(rec.position, target - rec.position);
-    attenuation = albedo;
+            scattered = Ray(rec.p, target - rec.p);
+            attenuation = albedo;
 
-    return true;
-
-//    return false;
+            return true;
+    }
 }

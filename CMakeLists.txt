@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(Raytracing LANGUAGES CXX CUDA)
+project(CustomRenderer LANGUAGES CXX CUDA)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -30,7 +30,7 @@ include_directories(${CMAKE_SOURCE_DIR}/includes)
 
 
 
-add_executable(Raytracing
+add_executable(CustomRenderer
         main.cu
         src/utility/vector.h
         src/cudaHelpers.cu
@@ -38,7 +38,6 @@ add_executable(Raytracing
         src/scene/scene.cu
         src/scene/scene.h
         src/utility/ray.h
-        src/hittable.cu
         src/hittable.h
         src/camera.cu
         src/camera.h
@@ -54,11 +53,11 @@ add_executable(Raytracing
         src/acceleration/aabb.h
         src/utility/vector.cu src/scene/sceneLoader.cu src/scene/sceneLoader.h)
 
-add_dependencies(Raytracing pugixml)
+add_dependencies(CustomRenderer pugixml)
 
 
-set_target_properties(Raytracing PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+set_target_properties(CustomRenderer PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 
-target_link_libraries(Raytracing PRIVATE PNGwriter::PNGwriter glfw3 X11 GL GLAD dl pthread pugixml ${OPENEXR_LIBRARIES})
+target_link_libraries(CustomRenderer PRIVATE PNGwriter::PNGwriter glfw3 X11 GL GLAD dl pthread pugixml ${OPENEXR_LIBRARIES})
 

@@ -5,8 +5,8 @@
 #include "meshLoader.h"
 #include "vector.h"
 #include "../cudaHelpers.h"
-
-HostMeshInfo loadMesh(const std::filesystem::path &filePath){
+#include <thrust/transform_scan.h>
+HostMeshInfo loadMesh(const std::filesystem::path &filePath) noexcept(false){
 
     std::cout << "Reading mesh " + filePath.filename().string() + " ...\n";
     std::ifstream file(filePath, std::ios::in);
@@ -33,25 +33,24 @@ HostMeshInfo loadMesh(const std::filesystem::path &filePath){
     thrust::host_vector<int> normalIndices3;
 
 
-//    thrust::host_vector<FaceElement> faces;
-
     while(std::getline(file, lineString)){
         std::istringstream line{lineString};
         std::string start;
 
         line >> start;
 
-//        std::cout << "Read line: " << lineString << '\n';
-
         if(start == "v"){
             float x, y, z;
             line >> x >> y >> z;
             vertices.push_back({x, y, z});
+//            std::cout << filePath << ", found coord x y z " << x << ' ' << y << ' ' << z << '\n';
+
 
         }else if(start == "vt"){
             float u, v, w;
             line >> u >> v >> w;
             textures.push_back({u, v});
+//            std::cout << filePath << ", found texture u v w " << u << ' ' << v << ' ' << w << '\n';
         }else if(start == "vn"){
             float x, y, z;
             line >> x >> y >> z;
@@ -64,8 +63,8 @@ HostMeshInfo loadMesh(const std::filesystem::path &filePath){
             std::istringstream s1(e1), s2(e2), s3(e3);
 
             int v1, v2, v3,
-                    t1, t2, t3,
-                    n1, n2, n3;
+                t1, t2, t3,
+                n1, n2, n3;
 
             char delim;
 
@@ -145,21 +144,29 @@ DeviceMeshInfo meshToGPU(const HostMeshInfo &mesh) noexcept {
         };
     }
 
-    Triangle *deviceTrianglePtr;
-    checkCudaErrors(cudaMalloc(&deviceTrianglePtr, numTriangles * sizeof(Triangle)));
-    checkCudaErrors(cudaMemcpy(deviceTrianglePtr, hostTriangles.data(), numTriangles *sizeof(Triangle), cudaMemcpyHostToDevice));
-
-    auto tDevTriaPtr = thrust::device_pointer_cast(deviceTrianglePtr);
-    thrust::device_vector<Triangle> deviceTriangles(tDevTriaPtr, tDevTriaPtr + numTriangles);
+    thrust::device_vector<Triangle> deviceTriangles(hostTriangles);
 
 
     TriaToAABB triangleToAABB;
     AABB aabb{};
     AABBAdder aabbAddition;
 
+    TriaToArea triangleToArea;
+
 
     AABB maxBoundingBox = thrust::transform_reduce(deviceTriangles.begin(), deviceTriangles.end(),
                                                    triangleToAABB, aabb, aabbAddition);
+
+    float totalTriaArea = thrust::transform_reduce(deviceTriangles.begin(), deviceTriangles.end(),
+                                                  triangleToArea, 0.f, thrust::plus<float>());
+
+    TriangleToCDF triangleToCdf(totalTriaArea);
+    thrust::device_vector<float> areaCDF(numTriangles);
+
+    thrust::transform_inclusive_scan(deviceTriangles.begin(), deviceTriangles.end(),
+                                     areaCDF.begin(), triangleToCdf, thrust::plus<float>());
+
+    printf("\tTotal area of all triangles is %f\n", totalTriaArea);
 
     //TODO maybe try to only compute total BB once (but morton codes require normalize with BB)
 
@@ -178,5 +185,5 @@ DeviceMeshInfo meshToGPU(const HostMeshInfo &mesh) noexcept {
     thrust::sort_by_key(mortonCodes.begin(), mortonCodes.end(), deviceTriangles.begin());
     //TODO maybe use radix sort instead of default sort
 
-    return {deviceTrianglePtr, mortonCodes};
+    return {deviceTriangles, mortonCodes, areaCDF, totalTriaArea};
 }

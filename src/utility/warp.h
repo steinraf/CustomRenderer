@@ -2,6 +2,8 @@
 // Created by steinraf on 21/10/22.
 //
 
+
+
 #pragma once
 
 #include "vector.h"
@@ -90,7 +92,7 @@ namespace Warp{
     }
 
     [[nodiscard]] __device__ constexpr float squareToUniformSpherePdf(const Vector3f &v) {
-        return static_cast<float>((v.squaredNorm() - 1.f) < 1e-6f) * M_1_PIf / 4.f;
+        return static_cast<float>((v.squaredNorm() - 1.f) < EPSILON) * M_1_PIf / 4.f;
     }
 
     [[nodiscard]] __device__ constexpr Vector3f squareToUniformHemisphere(const Vector2f &sample) {

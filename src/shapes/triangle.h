@@ -29,7 +29,7 @@ public:
     }
 
     //Nori Triangle Ray intersect
-    __device__ constexpr bool hit(const Ray &r, HitRecord &rec) const noexcept {
+    __device__ constexpr bool rayIntersect(const Ray &r, Intersection &rec) const noexcept {
 
 
         /* Find vectors for two edges sharing v[0] */
@@ -42,7 +42,7 @@ public:
         float det = edge1.dot(pvec);
 
 
-        if(det > -1e-8f && det < 1e-8f){
+        if(det > -EPSILON && det < EPSILON){
             return false;
         }
 
@@ -71,20 +71,44 @@ public:
 
 
         if(rec.t >= r.minDist && rec.t <= r.maxDist){
-            rec.position = p0*(1 - u - v) + p1*u + p2*v;//r.atTime(rec.t);
+//            rec.p = p0 * (1 - u - v) + p1 * u + p2 * v; //r.atTime(rec.t);
+            rec.p = p0 * u + p1 * v + p2 * (1 - u - v); //r.atTime(rec.t);
+            rec.n = n0 * (1 - u - v) + n1 * u + n2 * v;
+//            rec.n = n0 * u + n1 * v+ n2 * (1 - u - v);
+//            if(r.getDirection().dot(rec.n) >= 0)
+//                rec.n *= -1;
             rec.triangle = this;
+            rec.uv = {u, v};
+
 //        rec.bsdf = bsdf;
-            rec.setFaceNormal(r, n0 * (1 - u - v) + n1 * u + n2 * v);
             return true;
         }
-
 
         return false;
     }
 
-    __device__ constexpr void setHitInformation(const Ray &ray, HitRecord rec) const {
-        //TODO set precise hit Info here
-//        const Vector3f barycentric = {1-rec.uv};
+    __device__ constexpr void setHitInformation(const Ray &ray, Intersection its) const {
+        //TODO set precise rayIntersect Info here
+
+        return;
+
+        float u = its.uv[0];
+        float v = its.uv[1];
+
+        Vector3f bary{1 - u - v, u, v};
+
+        its.p = bary[0] * p0 + bary[1] * p1 + bary[2] * p2;
+        its.n = bary[0] * n0 + bary[1] * n1 + bary[2] * n2;
+
+        //TODO compute proper texture coords
+
+        its.triangle = this;
+//        its.setFaceNormal(ray, n0 * (1 - u - v) + n1 * u + n2 * v);
+
+    }
+
+    __host__ __device__ constexpr inline float getArea() const noexcept{
+        return 0.5f * (p1 - p0).cross(p2-p0).norm();
     }
 
     BSDF bsdf;

@@ -17,7 +17,7 @@
 
 
 struct SceneRepresentation{
-    explicit SceneRepresentation(const std::filesystem::path &file) {
+    explicit SceneRepresentation(const std::filesystem::path &file) noexcept(false){
         pugi::xml_document doc;
         pugi::xml_parse_result result = doc.load_file(file.c_str());
 
@@ -142,13 +142,13 @@ struct SceneRepresentation{
         }
     }
 
-    [[nodiscard]] Vector3f inline getVector3f(const pugi::xml_node &node, const std::string &name, const std::string &indents=""){
+    [[nodiscard]] Vector3f inline getVector3f(const pugi::xml_node &node, const std::string &name, const std::string &indents="") const noexcept{
         const std::string targetS = getString(node.attribute(name.c_str()));
         std::cout << indents << name << ": {" << targetS << "}\n";
         return Vector3f{targetS};
     }
 
-    [[nodiscard]] std::string getString(const pugi::xml_attribute& attrib){
+    [[nodiscard]] std::string getString(const pugi::xml_attribute& attrib) const noexcept{
         if(attrib.value()[0] == '$')
             return map.at(std::string(attrib.value()).substr(1));
 
@@ -163,9 +163,3 @@ struct SceneRepresentation{
     std::vector<BSDF> bsdfs;
     int width, height;
 };
-
-
-//[[nodiscard]] SceneRepresentation loadScene(const std::string &filename){
-//
-//    return SceneRepresentation{filename};
-//}

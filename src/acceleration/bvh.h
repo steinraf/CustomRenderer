@@ -24,8 +24,6 @@ struct AccelerationNode{
             assert(left != nullptr);
             assert(right != nullptr);
         }
-
-
     }
 
     [[nodiscard]] __device__ inline constexpr bool hasBoundingBox() const noexcept{
@@ -50,28 +48,22 @@ private:
     typedef Node *NodePtr;
 
     NodePtr root;
+
+    float *cdf;
+    size_t numPrimitives;
+
 public:
 
-    __device__ constexpr explicit BLAS(AccelerationNode<Primitive> *bvhTotalNodes) noexcept
-            : root(bvhTotalNodes){
+    __device__ constexpr explicit BLAS(AccelerationNode<Primitive> *bvhTotalNodes, float *cdf, size_t numPrimitives) noexcept
+            : root(bvhTotalNodes), cdf(cdf), numPrimitives(numPrimitives){
 
-//        printf("BLAS_CONSTRUCTOR: Total bounding box is (%f, %f, %f) -> (%f, %f, %f)\n",
-//               root->boundingBox.min[0], root->boundingBox.min[1], root->boundingBox.min[2],
-//               root->boundingBox.max[0], root->boundingBox.max[1], root->boundingBox.max[2]);
-
-    }
-
-    __device__ AABB getBoundingBox() const{
-        return root->boundingBox;
     }
 
 //TODO make generic over primitives
 //TODO add shadow Rays
-    [[nodiscard]] __device__ bool hit(const Ray &_r, HitRecord &rec) const noexcept{
-
-        Ray ray = _r;
-
-        HitRecord record;
+    [[nodiscard]] __device__ bool rayIntersect(const Ray &_r, Intersection &itsOut) const noexcept{
+        Ray r = _r;
+        Intersection itsTmp;
         bool hasHit = false;
 
         constexpr int stackSize = 256;
@@ -80,30 +72,26 @@ public:
 
         NodePtr currentNode = root;
 
-
-        if(!root->boundingBox.rayIntersect(ray))
+        if(!root->boundingBox.rayIntersect(r))
             return false;
-
-//        printf("Hit BB\n");
 
         do{
             assert(idx < stackSize);
 
             if(currentNode->isLeaf){
-                if(currentNode->primitive->hit(ray, record)){
+                if(currentNode->primitive->rayIntersect(r, itsTmp)){
                     hasHit = true;
-                    ray.maxDist = record.t;
-                    rec = record;
-                    record.triangle = currentNode->primitive;
-//                    printf("Hit BLAS\n");
+                    r.maxDist = itsTmp.t;
+                    itsOut = itsTmp;
+                    itsTmp.triangle = currentNode->primitive;
                 }
                 currentNode = stack[--idx];
             }else{
                 assert(currentNode->left && currentNode->right);
                 NodePtr left = currentNode->left;
                 NodePtr right = currentNode->right;
-                bool continueLeft = left->boundingBox.rayIntersect(ray);
-                bool continueRight = right->boundingBox.rayIntersect(ray);
+                bool continueLeft = left->boundingBox.rayIntersect(r);// && !right->isLeaf;
+                bool continueRight = right->boundingBox.rayIntersect(r);// && !right->isLeaf;
 
                 if(!continueLeft && !continueRight){
                     currentNode = stack[--idx];// Pop stack
@@ -118,127 +106,49 @@ public:
         }while(idx >= 0);
 
         if(hasHit)
-            record.triangle->setHitInformation(ray, rec);
+            itsTmp.triangle->setHitInformation(r, itsOut);
 
 
         return hasHit;
     }
 
 
+
 };
 
-//Top Layer Acceleration Structure, holds BLAS'
+//TODO make logarithmic traversal as well
+//Top Layer Acceleration structure, holds BLAS<Primitive>
 template<typename Primitive>
-struct TLAS{
+class TLAS{
 private:
-    typedef AccelerationNode<BLAS<Primitive>> Node;
-    typedef Node *NodePtr;
-
-    NodePtr root;
-
     BLAS<Primitive> **blasArr;
-    int numBlas;
+    int numBLAS;
 public:
+    __device__ constexpr TLAS(BLAS<Primitive> **blasArr, int numBLAS) noexcept
+        : blasArr(blasArr), numBLAS(numBLAS){
 
-    __device__ constexpr explicit TLAS(BLAS<Primitive> **blasArr, int numBlas) noexcept
-        :blasArr(blasArr), numBlas(numBlas){
 
     }
 
-    __device__ constexpr explicit TLAS(AccelerationNode<BLAS<Primitive>> *bvhTotalNodes) noexcept
-            : root(bvhTotalNodes){
-
-    }
-
-    //TODO make generic over primitives
-    //TODO add shadow Rays
-    [[nodiscard]] __device__ bool hit(const Ray &_r, HitRecord &rec) const noexcept{
-
-
-
-        Ray ray = _r;
-        HitRecord record;
-
+    [[nodiscard]] __device__ bool rayIntersect(const Ray &_r, Intersection &rec) const noexcept{
+        Ray r = _r;
+        Intersection record;
         bool hasHit = false;
 
-
-        for(int i = 0; i < numBlas; ++i){
-
-//            const AABB &totalBoundingBox = blasArr[i].getBoundingBox();
-
-//            printf("Total bounding box %i is (%f, %f, %f) -> (%f, %f, %f)\n", i,
-//                   totalBoundingBox.min[0], totalBoundingBox.min[1], totalBoundingBox.min[2],
-//                   totalBoundingBox.max[0], totalBoundingBox.max[1], totalBoundingBox.max[2]);
-            if(blasArr[0]->hit(ray, record)){
+        for(int i = 0; i < numBLAS; ++i){
+            if(blasArr[i]->rayIntersect(r, record)){
                 hasHit = true;
-                ray.maxDist = record.t;
-                //TODO check whether Triangle is set by BLAS
-                rec = record;
-//                printf("Hit TLAS\n");
+                r.maxDist = record.t;
             }
         }
 
+        rec = record;
         return hasHit;
 
-
-
-
-//        Ray ray = _r;
-//
-//        HitRecord record;
-//        bool hasHit = false;
-//
-//        //TODO make log(numTriangles)
-//        constexpr int stackSize = 32;
-//        NodePtr stack[stackSize];
-//        int idx = 0;
-//
-//        NodePtr currentNode = root;
-//
-//
-//        if(!root->boundingBox.rayIntersect(ray))
-//            return false;
-//
-//        do{
-//            assert(idx < stackSize);
-//
-//            if(currentNode->isLeaf){
-//                if(currentNode->primitive->hit(ray, record)){
-//                    hasHit = true;
-//                    ray.maxDist = record.t;
-//                    //TODO check whether Triangle is set by BLAS
-//                    rec = record;
-//                }
-//                currentNode = stack[--idx];
-//            }else{
-//                assert(currentNode->left && currentNode->right);
-//                NodePtr left = currentNode->left;
-//                NodePtr right = currentNode->right;
-//                assert(left);
-//                assert(right);
-//                bool continueLeft = left->boundingBox.rayIntersect(ray);
-//                bool continueRight = right->boundingBox.rayIntersect(ray);
-//
-//                if(!continueLeft && !continueRight){
-//                    currentNode = stack[--idx];// Pop stack
-//                }else{
-//                    currentNode = continueLeft ? left : right;
-//
-//                    if(continueLeft && continueRight){
-//                        stack[idx++] = right;// Push stack
-//                    }
-//                }
-//            }
-//        }while(idx >= 0);
-//
-//        if(hasHit)
-//            record.triangle->setHitInformation(ray, rec);
-//
-//
-//        return hasHit;
     }
 
 
 };
+
 
 

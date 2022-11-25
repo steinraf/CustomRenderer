@@ -7,21 +7,17 @@
 
 
 int main(int argc, char **argv){
-
-
     std::cout << "Parsing obj...\n";
 
-    const std::filesystem::path filePath = "./scenes/simple.xml";
+//    const std::filesystem::path filePath = "./scenes/simple.xml";
+    const std::filesystem::path filePath = "./scenes/clocks.xml";
+
 
     assert(filePath.extension() == ".xml");
 
-
     std::cout << "Starting rendering...\n";
 
-
-    Device device = CPU;
-
-    Scene s(SceneRepresentation(filePath), device);
+    Scene s(SceneRepresentation(filePath), Device::CPU);
 
     s.renderCPU();
 //    s.renderGPU();
@@ -30,6 +26,7 @@ int main(int argc, char **argv){
 
 
     std::cout << "Drew image to file\n";
+
 
 //    cudaDeviceReset();
 

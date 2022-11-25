@@ -8,25 +8,26 @@
 #include "utility/ray.h"
 
 
-struct HitRecord{
-    Vector3f position;
-    Vector3f normal;
 
-    const class Triangle *triangle;
+struct Intersection{
+    Vector3f p;
+    Vector3f n;
+
+    class Triangle const *triangle;
 
     Vector2f uv;
 
     float t;
     bool frontFace;
 
-    __device__ inline void setFaceNormal(const Ray &r, const Vector3f &outwardNormal){
-        frontFace = r.getDirection().dot(outwardNormal) < 0;
-        normal = frontFace ? outwardNormal : -outwardNormal;
-    }
+//    __device__ inline void constexpr setFaceNormal(const Ray &r, const Vector3f &outwardNormal) noexcept{
+//        frontFace = r.getDirection().dot(outwardNormal) < 0;
+//        n = frontFace ? outwardNormal : -outwardNormal;
+//    }
 
 
 
-    //TODO hit records need to set in the shape class, and not just with ray.at(t) because of numerical
+    //TODO rayIntersect records need to set in the shape class, and not just with ray.at(t) because of numerical
     //instabilities
 
     //TODO add textures?

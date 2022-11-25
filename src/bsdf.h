@@ -29,7 +29,7 @@ public:
 
     }
 
-    __device__ bool scatter(const Ray &rIn, const HitRecord &rec, Vector3f &attenuation, Ray &scattered,
+    __device__ bool scatter(const Ray &rIn, const Intersection &rec, Vector3f &attenuation, Ray &scattered,
                             Sampler &sampler) const;
 
 //private:

@@ -10,7 +10,7 @@
 //#include "utility/vector.h"
 #include "utility/ray.h"
 #include "camera.h"
-#include "utility/meshLoader.h"
+//#include "utility/meshLoader.h"
 #include "acceleration/bvh.h"
 #include "constants.h"
 #include <cuda/std/limits>
@@ -136,14 +136,17 @@ namespace cudaHelpers{
                 childA,
                 childB,
                 nullptr,
-                (childA->isLeaf && childB->isLeaf) ? childA->boundingBox + childB->boundingBox : AABB{},
+                /*(childA && childB && childA->isLeaf && childB->isLeaf) ? childA->boundingBox + childB->boundingBox : */AABB{}, //somehow this optimization does not always work :oof:
                 false,
         };
+
+//        if(i == 0)
+//            printf("children of %p are %p and %p", bvhNodes[i], childA, childB);
 
     }
 
     template<typename Primitive>
-    __device__ AABB getBoundingBox(AccelerationNode<Primitive> *root, int indentLevel = 1){
+    __device__ AABB getBoundingBox(AccelerationNode<Primitive> *root){
 
         typedef AccelerationNode<Primitive> *NodePtr;
 
@@ -154,7 +157,7 @@ namespace cudaHelpers{
 
         assert(root);
 
-        NodePtr currentNode = root;
+        NodePtr currentNode;
 
         do{
 
@@ -170,11 +173,23 @@ namespace cudaHelpers{
 
             assert(left && right);
 
+
+//            printf("Left bounding box (%f, %f, %f) -> (%f, %f, %f)\n",
+//                   left->boundingBox.min[0], left->boundingBox.min[1], left->boundingBox.min[2],
+//                   left->boundingBox.max[0], left->boundingBox.max[1], left->boundingBox.max[2]);
+//
+//            printf("Right bounding box (%f, %f, %f) -> (%f, %f, %f)\n",
+//                   right->boundingBox.min[0], right->boundingBox.min[1], right->boundingBox.min[2],
+//                   right->boundingBox.max[0], right->boundingBox.max[1], right->boundingBox.max[2]);
+
             if(left->hasBoundingBox() && right->hasBoundingBox()){
 //                for(int tmp = 0; tmp < idx; ++tmp) printf("\t");
 //                printf("oB %p\n", currentNode);
                 assert(!left->boundingBox.isEmpty() && !right->boundingBox.isEmpty());
                 currentNode->boundingBox = left->boundingBox + right->boundingBox;
+//                printf("New bounding box (%f, %f, %f) -> (%f, %f, %f)\n",
+//                       currentNode->boundingBox.min[0], currentNode->boundingBox.min[1], currentNode->boundingBox.min[2],
+//                       currentNode->boundingBox.max[0], currentNode->boundingBox.max[1], currentNode->boundingBox.max[2]);
                 --idx;
             }else if(right->hasBoundingBox()){
 //                for(int tmp = 0; tmp < idx; ++tmp) printf("\t");
@@ -203,7 +218,7 @@ namespace cudaHelpers{
         if(!cudaHelpers::initIndices(i, j, pixelIndex, 1, 1)) return;
 
 //        for(int tmp = 0; tmp < 2*numPrimitives-1; ++tmp){
-//            printf("%i, (%p, %p, %p, %p, %d)\n", tmp, bvhNodes + tmp, bvhNodes[tmp].right, bvhNodes[tmp].right, bvhNodes[tmp].triangle, bvhNodes[tmp].isLeaf);
+//            printf("%i, (%p, %p, %p, %p, %d)\n", tmp, bvhNodes + tmp, bvhNodes[tmp].right, bvhNodes[tmp].right, bvhNodes[tmp].primitive, bvhNodes[tmp].isLeaf);
 //        }
 
 //        printf("Starting BLAS BB Computation...\n");
@@ -216,43 +231,61 @@ namespace cudaHelpers{
                totalBoundingBox.min[0], totalBoundingBox.min[1], totalBoundingBox.min[2],
                totalBoundingBox.max[0], totalBoundingBox.max[1], totalBoundingBox.max[2]);
 
-
     }
 
     template<typename Primitive>
-    __global__ void initBVH(BLAS<Primitive> *bvh, AccelerationNode<Primitive> *bvhTotalNodes){
+    __global__ void initBVH(BLAS<Primitive> *bvh, AccelerationNode<Primitive> *bvhTotalNodes, float *cdf, size_t numPrimitives){
         int i, j, pixelIndex;
         if(!cudaHelpers::initIndices(i, j, pixelIndex, 1, 1)) return;
 
-        *bvh = BLAS<Primitive>(bvhTotalNodes);
-    }
-
-    template<typename Primitive>
-    __global__ void
-//    constructTLAS(AccelerationNode<Blas<Primitive>> *tlas, Blas<Primitive> *blas, int numMeshes){
-    constructTLAS(TLAS<Primitive> *tlas, BLAS<Primitive> **blas, int numMeshes){
-
-        int i, j, pixelIndex;
-        if(!cudaHelpers::initIndices(i, j, pixelIndex, 1, 1)) return;
-
-        *tlas = TLAS(blas, numMeshes);
-
-
-
+        *bvh = BLAS<Primitive>(bvhTotalNodes, cdf, numPrimitives);
     }
 
     __global__ void freeVariables(int width, int height);
 
 
     template<typename Primitive>
-    __device__ Color3f getColor(const Ray &r, TLAS<Primitive> *tlas, int maxRayDepth, Sampler &sampler){
+    __device__ Color3f getColor(const Ray &ray, TLAS<Primitive> *scene, int maxRayDepth, Sampler &sampler){
 
-        HitRecord record;
+        Intersection its;
 
-        if(!tlas->hit(r, record))
+        if(!scene->rayIntersect(ray, its))
             return Color3f{0.f};
 
-        return record.normal.absValues();
+//
+        return its.n.absValues();
+
+//        printf("UV's are (%f, %f)\n", its.uv[0], its.uv[1]);
+
+
+        Vector2f m_scale{0.5f, 0.5f}, m_delta{0.f, 0.f};
+        Color3f m_value1{1.f}, m_value2{0.f};
+
+        Vector2f p = its.uv/m_scale - m_delta;
+
+        auto a = static_cast<int>(floorf(p[0]));
+        auto b = static_cast<int>(floorf(p[1]));
+
+        auto mod = [](int a, int b){
+            const int r = a % b;
+            return (r < 0) ? r + b : r;
+        };
+
+        if (mod(a + b, 2) == 0.f)
+            return m_value1;
+
+        return m_value2;
+
+
+
+//        const Vector3f scatter = Warp::sampleUniformHemisphere(sampler, its.n);
+//
+//
+//        if(!scene->rayIntersect({its.p, scatter, EPSILON, 1000}, its))
+//            return Color3f{1.f};
+//
+//
+//        return Color3f{0.f};
 
 //        Ray scattered;
 //        Color3f attenuation;
@@ -260,11 +293,11 @@ namespace cudaHelpers{
 //        Color3f currentAttenuation{1.f};
 //
 //        for(int depth = 0; depth < maxRayDepth; ++depth){
-//            if(tlas->hit(currentRay, FLT_EPSILON, cuda::std::numeric_limits<float>::infinity(), record)){
+//            if(bvh->rayIntersect(currentRay, FLT_EPSILON, cuda::std::numeric_limits<float>::infinity(), record)){
 //                if(record.triangle->bsdf.scatter(currentRay, record, attenuation, scattered, sampler)){
 //                    currentRay = scattered;
 ////                    currentAttenuation *= attenuation;
-////                    return record.normal;// * 255.99;
+////                    return record.n;// * 255.99;
 //                }else{
 //                    return Color3f{0.f};
 //                }
@@ -278,20 +311,31 @@ namespace cudaHelpers{
 //            }
 //        }
 
-        if(!tlas->hit(r, record))
-            return Color3f{1.f};
-
-        const Vector3f scatter = Warp::sampleUniformHemisphere(sampler, record.normal);
 
 
+    }
 
-        if(!tlas->hit({record.position, scatter, FLT_EPSILON, 10}, record))
-            return Color3f{1.f};
+    template<typename Primitive>
+    __global__ void
+//    constructTLAS(AccelerationNode<Blas<Primitive>> *tlas, Blas<Primitive> *blas, int numMeshes){
+    constructTLAS(TLAS<Primitive> *tlas, BLAS<Primitive> **blas, size_t numMeshes){
 
+        int i, j, pixelIndex;
+        if(!cudaHelpers::initIndices(i, j, pixelIndex, 1, 1)) return;
 
+        *tlas = TLAS(blas, numMeshes);
 
-        return Color3f{0.f};
+    }
 
+    template<typename T>
+    [[nodiscard]] __host__ T *hostVecToDeviceRawPtr(std::vector<T> hostVec) noexcept(false){
+        T *deviceVec;
+        auto numBytes = sizeof(T) * hostVec.size();
+
+        checkCudaErrors(cudaMalloc(&deviceVec, numBytes));
+        checkCudaErrors(cudaMemcpy(deviceVec, hostVec.data(), numBytes, cudaMemcpyHostToDevice));
+
+        return deviceVec;
     }
 
     __global__ void denoise(Vector3f *input, Vector3f *output, int width, int height);
@@ -306,8 +350,8 @@ namespace cudaHelpers{
 //            printf("Testing Hit: \n");
 //
 //            auto r = Ray(customRenderer::getCameraOrigin(), customRenderer::getCameraLookAt() - customRenderer::getCameraOrigin());
-//            HitRecord h;
-//            bool didHit = tlas->hit(r, FLT_EPSILON, INFINITY, h);
+//            Intersection h;
+//            bool didHit = bvh->rayIntersect(r, FLT_EPSILON, INFINITY, h);
 //            printf("Testing Hit: %d \n", didHit);
 //            output[pixelIndex] = Vector3f{1.f};
 //            return;
@@ -315,6 +359,7 @@ namespace cudaHelpers{
 //            output[pixelIndex] = Vector3f{0.f};
 //            return;
 //        }
+
 
         auto sampler = Sampler(&globalRandState[pixelIndex]);
 
@@ -337,7 +382,8 @@ namespace cudaHelpers{
             col += getColor(ray, tlas, maxRayDepth, sampler);
         }
 
-        col /= numSubsamples;
+
+        col /= static_cast<float>(numSubsamples);
 
         output[pixelIndex] = col;
 

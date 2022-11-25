@@ -33,11 +33,13 @@ struct HostMeshInfo{
 };
 
 struct DeviceMeshInfo{
-    Triangle *triangles;
+    thrust::device_vector<Triangle> triangles;
     thrust::device_vector<uint32_t> mortonCodes;
+    thrust::device_vector<float> areaCDF;
+    float totalArea;
 
     [[nodiscard]] auto toTuple() const noexcept{
-        return std::tuple{triangles, mortonCodes};
+        return std::tuple{triangles, mortonCodes, areaCDF, totalArea};
     }
 
 };
@@ -53,14 +55,36 @@ struct TriaToAABB{
     }
 };
 
+
+
 struct AABBAdder{
     __device__ constexpr AABB operator()(const AABB &a1, const AABB &a2) const noexcept{
         return a1 + a2;
     }
 };
 
+struct TriaToArea{
+    __host__ __device__ constexpr float operator()(const Triangle &tria) const noexcept {
+        return tria.getArea();
+    }
+};
+
+struct TriangleToCDF{
+private:
+    float totalArea;
+public:
+    __device__ __host__ explicit TriangleToCDF(float totalArea) noexcept
+        :totalArea(totalArea){
+
+    }
+
+    __host__ __device__ constexpr float operator()(const Triangle &tria) const noexcept {
+        return tria.getArea()/totalArea;
+    }
+};
+
 struct TriangleToMortonCode{
-    __device__ __host__ explicit TriangleToMortonCode(const AABB &ref)
+    __device__ __host__ explicit TriangleToMortonCode(const AABB &ref) noexcept
         : lower(ref.min), dims(ref.max - ref.min){
 
     }
@@ -91,5 +115,80 @@ struct TriangleToMortonCode{
 private:
     Vector3f lower, dims;
 };
+
+template<typename Primitive>
+__host__ BLAS<Primitive> * getMeshFromFile(const std::string &filename, thrust::device_vector<Primitive> &deviceTrias,
+                                            thrust::device_vector<float> areaCDF, float &totalArea){
+    clock_t startGeometryBVH = clock();
+
+    auto mesh = loadMesh(filename);
+    auto[deviceTriangles, deviceMortonCodes, deviceCDF, area] = meshToGPU(mesh).toTuple();
+    totalArea = area;
+    Primitive *deviceTriaPtr = deviceTriangles.data().get();
+
+    const size_t numTriangles = mesh.vertexIndices.first.size();
+
+    std::cout << "\tLoading Geometry took "
+              << ((double) (clock() - startGeometryBVH)) / CLOCKS_PER_SEC
+              << " seconds.\n";
+
+    std::cout << "\tManaging " << numTriangles << " triangles.\n";
+
+    clock_t bvhConstructStart = clock();
+
+    BLAS<Primitive> *bvh;
+
+    AccelerationNode<Primitive> *bvhTotalNodes;
+    checkCudaErrors(cudaMalloc((void **) &bvhTotalNodes,
+                               sizeof(AccelerationNode<Primitive>) * (2 * numTriangles - 1))); //n-1 internal, n leaf
+    checkCudaErrors(cudaMalloc((void **) &bvh, sizeof(BLAS<Primitive> *)));
+
+    //    printf("BLAS has allocation range of (%p, %p)\n", bvhTotalNodes, bvhTotalNodes + (2 * numTriangles - 1));
+
+
+
+    cudaHelpers::constructBVH<<<(numTriangles + 1024 - 1) /
+                                1024, 1024>>>(bvhTotalNodes, deviceTriaPtr, deviceMortonCodes.data().get(), numTriangles);
+
+
+    checkCudaErrors(cudaGetLastError());
+    checkCudaErrors(cudaDeviceSynchronize());
+
+    std::cout << "\tBLAS construction took "
+              << ((double) (clock() - bvhConstructStart)) / CLOCKS_PER_SEC
+              << " seconds.\n";
+
+    clock_t bvhBoundingBox = clock();
+
+    cudaHelpers::computeBVHBoundingBoxes<<<1, 1>>>(bvhTotalNodes, numTriangles);
+
+    checkCudaErrors(cudaGetLastError());
+    checkCudaErrors(cudaDeviceSynchronize());
+
+    std::cout << "\tBLAS boundingBox Compute took "
+              << ((double) (clock() - bvhBoundingBox)) / CLOCKS_PER_SEC
+              << " seconds.\n";
+
+    clock_t initBVHTime = clock();
+
+    cudaHelpers::initBVH<<<1, 1>>>(bvh, bvhTotalNodes, deviceCDF.data().get(), numTriangles);
+
+    checkCudaErrors(cudaGetLastError());
+    checkCudaErrors(cudaDeviceSynchronize());
+
+    std::cout << "\tBLAS init took "
+              << ((double) (clock() - initBVHTime)) / CLOCKS_PER_SEC
+              << " seconds.\n";
+
+    std::cout << "\tLoading Geometry and BLAS construction took "
+              << ((double) (clock() - startGeometryBVH)) / CLOCKS_PER_SEC
+              << " seconds.\n";
+
+    deviceTrias = std::move(deviceTriangles);
+    areaCDF = std::move(deviceCDF);
+
+    return bvh;
+};
+
 
 

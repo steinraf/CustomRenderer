@@ -1,4 +1,0 @@
-/home/steinraf/.local/share/JetBrains/Toolbox/apps/CLion/ch-0/221.5080.224/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Release -G "CodeBlocks - Unix Makefiles" -S /home/steinraf/ETH/CG/CustomRenderer -B /home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease
--- Configuring done
--- Generating done
--- Build files have been written to: /home/steinraf/ETH/CG/CustomRenderer/cmake-build-primerunrelease

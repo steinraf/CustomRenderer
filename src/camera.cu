@@ -34,6 +34,10 @@ __device__ __host__ Camera::Camera(Vector3f origin, Vector3f lookAt, Vector3f _u
 }
 
 __device__ Ray Camera::getRay(float s, float t, Sampler &sampler) const{
+
+    //sample = ((0.5x, -0.5*aspect*y, 1z) + (1.0, -1.0f/aspect, 0.f) * perspective).inverse()
+
+
     const Vector2f randomDisk = lensRadius * Warp::squareToUniformDisk(sampler.getSample2D());
     const Vector3f offset = right * randomDisk[0] + up * randomDisk[1];
 
