@@ -160,6 +160,9 @@ __host__ void Scene::renderCPU(){
 
     std::cout << "Writing resulting image to disk...\n";
 
+    if(!std::filesystem::exists("./data"))
+        std::filesystem::create_directory("./data");
+
     const std::string pngPath = "./data/image.png";
     const std::string pngPathDenoised = "./data/imageDenoised.png";
 
