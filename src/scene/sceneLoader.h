@@ -22,6 +22,8 @@ struct SceneRepresentation{
         pugi::xml_parse_result result = doc.load_file(file.c_str());
 
 
+
+
         if (!result){
             std::cout << "XML [" << file.string() << "] parsed with errors\n";
             std::cout << "Error description: " << result.description() << "\n";
@@ -35,6 +37,18 @@ struct SceneRepresentation{
         if(std::string(root.name()) != "scene"){
             throw std::runtime_error("Unrecognized XML file root\n");
         }
+
+
+
+//        std::vector<Vector3f> translate{},
+//                scale{},
+//                rotateAxis{};
+//        std::vector<float> rotateAngle{};
+//
+//        for(int i = 0; i < translate.size(); ++i){
+//            Affine3f{{rotateAxis[i], rotateAngle[i]}, translate[i]}
+//                *Affine3f{Matrix3f::fromDiag(scale[i]), Vector3f{0.f}};
+//        }
 
         for(const auto& node : root.children()){
 
@@ -65,9 +79,15 @@ struct SceneRepresentation{
 
                 for(const auto& child : node.children()){
                     const std::string &childName = child.name();
-                    if(childName == "transform"){
+                    if(childName == "float"){
+                        if(getString(child.attribute("name")) == "fov"){
+                            fov = std::stof(getString(child.attribute("value")));
+                        }else{
+                            throw std::runtime_error("Unrecognized sensor float option " + getString(child.attribute("name")));
+                        }
+                    }else if(childName == "transform"){
                         std::cout << "\t\t" << "Transform: \n";
-                        const auto lookAt = child.child("lookat");
+                        auto lookAt = child.child("lookat");
                         target = getVector3f(lookAt, "target", "\t\t\t");
                         origin = getVector3f(lookAt, "origin", "\t\t\t");
                         up = getVector3f(lookAt, "up", "\t\t\t");
@@ -116,35 +136,65 @@ struct SceneRepresentation{
                 if(getString(node.attribute("type")) != "obj")
                     throw std::runtime_error("Error while parsing shape. Only .obj files are supported.");
 
+                meshTransforms.emplace_back();
+//                if(transform){
+//
+//                }
+
                 for(const auto& child : node.children()){
                     const std::string &childName = child.name();
                     if(childName == "string"){
                         filenames.push_back(getString(child.attribute("value")));
                         std::cout << "\t\tFilename: " << filenames[filenames.size()-1] << '\n';
                     }else if(childName == "bsdf"){
-                        if(getString(child.attribute("type")) != "diffuse")
-                            throw std::runtime_error("Invalid Material. Only diffuse is supported.");
+                        if(getString(child.attribute("type")) == "diffuse"){
+                            const auto color = child.child("rgb");
+                            if(getString(color.attribute("name")) != "reflectance")
+                                throw std::runtime_error("Invalid Tag \"" + getString(color.attribute("name")) + "\"found for material.");
+                            std::cout << "\t\tMaterial:\n";
+                            std::cout << "\t\t\tBSDF: DIFFUSE\n";
+                            bsdfs.emplace_back(Material::DIFFUSE, getVector3f(color, "value", "\t\t\t", "reflectance"));
+
+                        }else{
+                            throw std::runtime_error("Invalid Material \"" + getString(child.attribute("type")) + "\". Only diffuse is supported.");
+                        }
+                    }else if(childName == "emitter"){
+                        if(getString(child.attribute("type")) != "area")
+                            throw std::runtime_error("Invalid Emitter \"" + getString(child.attribute("type")) + "\". Only area is supported.");
 
                         const auto color = child.child("rgb");
-                        if(getString(color.attribute("name")) != "reflectance")
-                            throw std::runtime_error("Invalid Tag found for material.");
-                        std::cout << "\t\tMaterial:\n";
-                        std::cout << "\t\t\tBSDF: DIFFUSE\n";
-                        bsdfs.emplace_back(Material::DIFFUSE, getVector3f(color, "value", "\t\t\t"));
+                        if(getString(color.attribute("name")) != "radiance")
+                            throw std::runtime_error("Invalid Tag \"" + getString(color.attribute("name")) + "\" found for emitter.");
 
+                        std::cout << "\t\tEmitter:\n";
+                        std::cout << "\t\t\tType: Area\n";
+//                        emitters.emplace_back(filenames[filenames.size()-1], getVector3f(color, "value", "\t\t\t"));
+//                        filenames.pop_back(); //
+                    }else if(childName == "transform"){
+                        createTransform(child);
+//                        meshTransforms.emplace_back();
+//                        createTransform(child);
                     }else{
-                        throw std::runtime_error("Invalid Tag found for shape.");
+                        throw std::runtime_error("Invalid Tag \"" + childName + "\" found for shape.");
                     }
                 }
             }else{
-                    throw std::runtime_error("Unrecognized node name while parsing XML.");
+                    throw std::runtime_error("Unrecognized node name \"" + name + "\" while parsing XML.");
             }
         }
+
+
+
+        assert(samplePerPixel > 0);
+        assert(width > 0);
+        assert(height > 0);
     }
 
-    [[nodiscard]] Vector3f inline getVector3f(const pugi::xml_node &node, const std::string &name, const std::string &indents="") const noexcept{
-        const std::string targetS = getString(node.attribute(name.c_str()));
-        std::cout << indents << name << ": {" << targetS << "}\n";
+    [[nodiscard]] Vector3f inline getVector3f(pugi::xml_node node, const std::string &name, const std::string &indents="", const std::string &outName = "") const noexcept{
+        auto attrib = node.attribute(name.c_str());
+        const std::string targetS = getString(attrib);
+        std::cout << indents << (outName.empty() ? name : outName) << ": {" << targetS << "}\n";
+
         return Vector3f{targetS};
     }
 
@@ -155,11 +205,78 @@ struct SceneRepresentation{
         return attrib.value();
     }
 
+//    auto createTransform = [&](){
+//
+//    };
+
+    void inline createTransform(const pugi::xml_node &transform, bool isEmitter=false) noexcept(false) {
+
+
+        Affine3f &currentTransform = meshTransforms[meshTransforms.size() - 1];
+
+//        auto currentTransform = [&]() -> Affine3f &{
+//            if(isEmitter)
+//                return meshTransforms[meshTransforms.size() - 1];
+//            else
+//                return meshTransforms[meshTransforms.size() - 1];
+//        }();
+
+
+        std::cout << "\t\tTransform: \n";
+        for(auto &child : transform.children()){
+            const std::string & tfChildName = child.name();
+            if(tfChildName == "translate"){
+                currentTransform = Affine3f(getVector3f(child, "value", "\t\t\t", "translation")) * currentTransform;
+            }else if(tfChildName == "scale"){
+                currentTransform = Affine3f(Matrix3f::fromDiag(getVector3f(child, "value", "\t\t\t", "scale"))) * currentTransform;
+            }else if(tfChildName == "rotateAxis"){
+                const float angle = std::stof(child.attribute("angle").value());
+                currentTransform = Affine3f({
+                                                    getVector3f(child, "axis", "\t\t\t", "rotation axis"),
+                                                    angle
+                                            }) * currentTransform;
+                std::cout << "\t\t\trotation angle: " << angle << "°\n";
+            }else{
+                throw std::runtime_error("Invalid Tag \"" + tfChildName + "\" found for transform");
+            }
+        }
+    }
+
 //private:
-    std::unordered_map<std::string ,std::string> map;
+
+    struct CameraInfo{
+        Vector3f target, origin, up;
+        float fov=30;
+    };
+
+    struct MeshInfo{
+        std::string filename;
+        Affine3f transform;
+        BSDF bsdf;
+    };
+
+    struct EmitterInfo{
+        std::string filename;
+        Affine3f transform;
+        BSDF bsdf;
+        Vector3f color;
+    };
+
+    struct SceneInfo{
+        int samplePerPixel;
+        int width, height;
+    };
+
     Vector3f target, origin, up;
-    int samplePerPixel;
+    std::vector<Affine3f> meshTransforms{};
+    float fov=30;
+    int samplePerPixel=-1;
     std::vector<std::string> filenames;
     std::vector<BSDF> bsdfs;
-    int width, height;
+//    std::vector<std::pair<std::string, Vector3f>> emitters;
+    int width=-1, height=-1;
+
+private:
+    std::unordered_map<std::string ,std::string> map;
+
 };

@@ -23,6 +23,8 @@ namespace CustomRenderer{
     }
 }
 
+
+
 class Vector3f{
 public:
     __host__ __device__ constexpr Vector3f() noexcept: data{0.0f, 0.0f, 0.0f}{}
@@ -32,16 +34,10 @@ public:
     __host__ __device__ constexpr explicit Vector3f(float v) noexcept: data{v, v, v}{}
 
     __host__ constexpr explicit Vector3f(const std::string_view &str) : data{0.f, 0.f, 0.f}{
-//        std::stringstream ss(str);
-//        float x, y , z;
-//        ss >> data[0] >> data[1] >> data[2];
 
         auto checkConversion = [](std::from_chars_result res, float result){
             auto [ptr, ec] = res;
-            if (ec == std::errc::invalid_argument){
-                throw std::runtime_error("Invalid argument in vector construction from string.");
-            }
-            else if (ec == std::errc::result_out_of_range){
+            if (ec == std::errc::invalid_argument || ec == std::errc::result_out_of_range){
                 throw std::runtime_error("Invalid argument in vector construction from string.");
             }
         };
@@ -60,8 +56,6 @@ public:
         currentString.remove_prefix(currentString.find(',') + 1);
         currentString.remove_prefix(currentString.find_first_not_of(" \r\n\t\v\f"));
 
-
-//        std::cout << "Initialized vec with " << data[0] << ' ' << data[1] << ' ' << data[2] << '\n';
     }
 
     [[nodiscard]] __host__ __device__ constexpr inline float operator[](int i) const noexcept{ return data[i]; }
@@ -110,9 +104,13 @@ public:
 
     [[nodiscard]] __host__ __device__ constexpr inline int asColor(size_t i) const noexcept;
 
+    [[nodiscard]] __host__ __device__ constexpr inline Vector3f applyTransform(const class Affine3f &transform, bool isTranslationInvariant=false) const noexcept;
+
+
     __host__ __device__ constexpr inline Vector3f &clamp(float minimum, float maximum) noexcept;
 
     __host__ __device__ constexpr inline Vector3f absValues() const noexcept;
+
 
 
     friend inline std::ostream &operator<<(std::ostream &os, const Vector3f &t);
@@ -123,6 +121,102 @@ private:
 };
 
 using Color3f = Vector3f;
+
+class Matrix3f{
+
+public:
+    __host__ __device__ constexpr Matrix3f(const Vector3f &row1 , const Vector3f &row2, const Vector3f &row3) noexcept
+        :row1(row1), row2(row2), row3(row3){
+
+    }
+
+
+
+    [[nodiscard]] __host__ __device__ constexpr Vector3f operator*(const Vector3f &vec) const noexcept{
+        return {
+            row1.dot(vec),
+            row2.dot(vec),
+            row3.dot(vec)
+        };
+    }
+
+    [[nodiscard]] __host__ __device__ constexpr Matrix3f operator*(const Matrix3f &mat) const noexcept{
+        const Vector3f c1 = {mat.row1[0], mat.row2[0], mat.row3[0]},
+                       c2 = {mat.row1[1], mat.row2[1], mat.row3[1]},
+                       c3 = {mat.row1[2], mat.row2[2], mat.row3[2]};
+        return {
+                {row1.dot(c1), row1.dot(c2), row1.dot(c3)},
+                {row2.dot(c1), row2.dot(c2), row2.dot(c3)},
+                {row3.dot(c1), row3.dot(c2), row3.dot(c3)}
+        };
+    }
+
+    __host__ __device__ constexpr Matrix3f(const Vector3f axis, float theta) noexcept{
+        auto u = axis.normalized();
+        const float cosT = cos(theta), sinT = sin(theta);
+        assert(rotation >= -2 * M_PIf && rotation <= 2*M_PIf && "rotation should be in radians");
+        *this = Matrix3f{
+                {cosT + u[0]*u[0]*(1-cosT)     , u[0]*u[1]*(1-cosT) - u[2]*sinT, u[0]*u[2]*(1-cosT) + u[1]*sinT},
+                {u[0]*u[1]*(1-cosT) + u[2]*sinT, cosT + u[1]*u[1]*(1-cosT)     , u[1]*u[2]*(1-cosT) - u[0]*sinT},
+                {u[0]*u[2]*(1-cosT) - u[1]*sinT, u[1]*u[2]*(1-cosT) + u[0]*sinT, cosT + u[2]*u[2]*(1-cosT) }
+        };
+    }
+
+    [[nodiscard]] __host__ __device__ static constexpr inline Matrix3f fromDiag(const Vector3f &vec) noexcept{
+        return {
+            {vec[0], 0, 0},
+            {0, vec[1], 0},
+            {0, 0, vec[2]}
+        };
+    }
+
+    [[nodiscard]] __host__ __device__ static constexpr inline Matrix3f makeIdentity() noexcept{
+        return fromDiag(Vector3f{1.f});
+    }
+
+private:
+    Vector3f row1;
+    Vector3f row2;
+    Vector3f row3;
+};
+
+//TODO maybe change to quaternion representation
+struct Affine3f{
+
+    __host__ __device__ constexpr Affine3f(const Matrix3f &rotation , const Vector3f &translation) noexcept
+            :rotation(rotation), translation(translation){
+
+    }
+
+    __host__ __device__ constexpr Affine3f(const Matrix3f &rotation) noexcept
+            :rotation(rotation), translation(0.f){
+
+    }
+
+    __host__ __device__ constexpr Affine3f(const Vector3f &translation) noexcept
+            :rotation(Matrix3f::makeIdentity()), translation(translation){
+
+    }
+
+    __host__ __device__ constexpr Affine3f() noexcept
+            :rotation(Matrix3f::makeIdentity()), translation(0.f){
+
+    }
+
+    [[nodiscard]] __host__ __device__ constexpr Affine3f operator*(const Affine3f &other) const noexcept{
+        return {
+            rotation * other.rotation,
+            rotation * other.translation + translation
+        };
+    }
+
+
+    Matrix3f rotation;
+    Vector3f translation;
+
+};
+
+
 
 __host__ __device__ constexpr inline Vector3f operator*(float t, const Vector3f &v) noexcept;
 
@@ -301,6 +395,13 @@ __host__ __device__ constexpr inline bool Vector3f::operator==(const Vector3f &v
 
 __host__ __device__ constexpr inline bool Vector3f::operator!=(const Vector3f &v2) const noexcept{
     return !(*this == v2);
+}
+
+__host__ __device__ constexpr Vector3f Vector3f::applyTransform(const Affine3f &transform, bool isTranslationInvariant) const noexcept{
+    if(isTranslationInvariant)
+        return transform.rotation * (*this);
+    else
+        return transform.rotation * (*this) + transform.translation;
 }
 
 

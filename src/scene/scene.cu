@@ -24,7 +24,7 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) :
         deviceCamera(sceneRepr.origin,
                      sceneRepr.target,
                      sceneRepr.up,
-                     customRenderer::getCameraFOV(),
+                     sceneRepr.fov,
                      static_cast<float>(sceneRepr.width) / static_cast<float>(sceneRepr.height),
                      customRenderer::getCameraAperture(),
                      100000.f){//(customRenderer::getCameraOrigin() - customRenderer::getCameraLookAt()).norm()){
@@ -54,9 +54,20 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) :
     auto numMeshes = sceneRepresentation.filenames.size();
     std::vector<BLAS<Triangle> *> hostBlasVector(numMeshes);
 
+
+    clock_t meshLoadStart = clock();
+//#pragma omp parallel for
     for(int i = 0; i < numMeshes; ++i){
-        hostBlasVector[i] = getMeshFromFile(sceneRepr.filenames[i], hostDeviceTriangleVec[i], hostDeviceCDF[i], totalArea[i]);
+        hostBlasVector[i] = getMeshFromFile(sceneRepr.filenames[i],
+                                            hostDeviceTriangleVec[i],
+                                            hostDeviceCDF[i],
+                                            totalArea[i],
+                                            sceneRepr.meshTransforms[i]);
     }
+
+    std::cout << "Loading all Geometry took "
+              << ((double) (clock() - meshLoadStart)) / CLOCKS_PER_SEC
+              << " seconds.\n";
 
 
 
@@ -83,10 +94,10 @@ __host__ Scene::~Scene(){
 //        glDeleteBuffers(1, &VBO);
 //        glDeleteBuffers(1, &EBO);
     }else{
-        cudaGraphicsUnmapResources(1, &cudaPBOResource, 0);
+        cudaGraphicsUnmapResources(1, &cudaPBOResource, nullptr);
     }
 //    glfwTerminate();
-    cudaHelpers::freeVariables<<<blockSize, threadSize>>>(sceneRepresentation.width, sceneRepresentation.height);
+    cudaHelpers::freeVariables<<<blockSize, threadSize>>>();
 }
 
 

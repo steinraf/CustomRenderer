@@ -8,7 +8,7 @@ __device__ bool
 BSDF::scatter(const Ray &rIn, const Intersection &rec, Vector3f &attenuation, Ray &scattered, Sampler &sampler) const{
 
     switch(material){
-        break;case Material::DIFFUSE:
+        case Material::DIFFUSE:
             const Vector3f scatter = Warp::squareToCosineHemisphere(sampler.getSample2D());
 
             const Vector3f target = rec.p + scatter;

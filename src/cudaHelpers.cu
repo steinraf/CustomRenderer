@@ -33,7 +33,7 @@ namespace cudaHelpers{
     }
 
 
-    __global__ void freeVariables(int width, int height){
+    __global__ void freeVariables(){
         int i, j, pixelIndex;
         if(!initIndices(i, j, pixelIndex, 1, 1)) return;
 

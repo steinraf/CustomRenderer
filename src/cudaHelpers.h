@@ -213,18 +213,13 @@ namespace cudaHelpers{
     }
 
     template<typename Primitive>
-    __global__ void computeBVHBoundingBoxes(AccelerationNode<Primitive> *bvhNodes, int numPrimitives){
+    __global__ void computeBVHBoundingBoxes(AccelerationNode<Primitive> *bvhNodes){
         int i, j, pixelIndex;
         if(!cudaHelpers::initIndices(i, j, pixelIndex, 1, 1)) return;
-
-//        for(int tmp = 0; tmp < 2*numPrimitives-1; ++tmp){
-//            printf("%i, (%p, %p, %p, %p, %d)\n", tmp, bvhNodes + tmp, bvhNodes[tmp].right, bvhNodes[tmp].right, bvhNodes[tmp].primitive, bvhNodes[tmp].isLeaf);
-//        }
 
 //        printf("Starting BLAS BB Computation...\n");
 
 
-//        printf("Root %p -> %p -> %p \n", bvhNodes, bvhNodes + 544566 - 1, bvhNodes + (2 * 544566 - 1));
         const AABB &totalBoundingBox = getBoundingBox(&bvhNodes[0]);
 
         printf("\tTotal bounding box is (%f, %f, %f) -> (%f, %f, %f)\n",
@@ -241,7 +236,7 @@ namespace cudaHelpers{
         *bvh = BLAS<Primitive>(bvhTotalNodes, cdf, numPrimitives);
     }
 
-    __global__ void freeVariables(int width, int height);
+    __global__ void freeVariables();
 
 
     template<typename Primitive>

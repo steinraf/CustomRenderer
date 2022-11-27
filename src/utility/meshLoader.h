@@ -45,7 +45,7 @@ struct DeviceMeshInfo{
 };
 
 
-HostMeshInfo loadMesh(const std::filesystem::path &filePath) noexcept(false);
+HostMeshInfo loadMesh(const std::filesystem::path &filePath, const Affine3f &transform) noexcept(false);
 
 DeviceMeshInfo meshToGPU(const HostMeshInfo &mesh) noexcept;
 
@@ -118,10 +118,10 @@ private:
 
 template<typename Primitive>
 __host__ BLAS<Primitive> * getMeshFromFile(const std::string &filename, thrust::device_vector<Primitive> &deviceTrias,
-                                            thrust::device_vector<float> areaCDF, float &totalArea){
+                                            thrust::device_vector<float> areaCDF, float &totalArea, const Affine3f &transform){
     clock_t startGeometryBVH = clock();
 
-    auto mesh = loadMesh(filename);
+    auto mesh = loadMesh(filename, transform);
     auto[deviceTriangles, deviceMortonCodes, deviceCDF, area] = meshToGPU(mesh).toTuple();
     totalArea = area;
     Primitive *deviceTriaPtr = deviceTriangles.data().get();
@@ -160,7 +160,7 @@ __host__ BLAS<Primitive> * getMeshFromFile(const std::string &filename, thrust::
 
     clock_t bvhBoundingBox = clock();
 
-    cudaHelpers::computeBVHBoundingBoxes<<<1, 1>>>(bvhTotalNodes, numTriangles);
+    cudaHelpers::computeBVHBoundingBoxes<<<1, 1>>>(bvhTotalNodes);
 
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());

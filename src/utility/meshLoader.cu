@@ -6,7 +6,7 @@
 #include "vector.h"
 #include "../cudaHelpers.h"
 #include <thrust/transform_scan.h>
-HostMeshInfo loadMesh(const std::filesystem::path &filePath) noexcept(false){
+HostMeshInfo loadMesh(const std::filesystem::path &filePath, const Affine3f &transform) noexcept(false){
 
     std::cout << "Reading mesh " + filePath.filename().string() + " ...\n";
     std::ifstream file(filePath, std::ios::in);
@@ -42,7 +42,7 @@ HostMeshInfo loadMesh(const std::filesystem::path &filePath) noexcept(false){
         if(start == "v"){
             float x, y, z;
             line >> x >> y >> z;
-            vertices.push_back({x, y, z});
+            vertices.push_back(Vector3f{x, y, z}.applyTransform(transform));
 //            std::cout << filePath << ", found coord x y z " << x << ' ' << y << ' ' << z << '\n';
 
 
@@ -54,7 +54,7 @@ HostMeshInfo loadMesh(const std::filesystem::path &filePath) noexcept(false){
         }else if(start == "vn"){
             float x, y, z;
             line >> x >> y >> z;
-            normals.push_back({x, y, z});
+            normals.push_back(Vector3f{x, y, z}.applyTransform(transform, true));
 
         }else if(start == "f"){
             std::string e1, e2, e3, e4;
