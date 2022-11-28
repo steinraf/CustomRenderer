@@ -4,7 +4,8 @@
 
 
     <sensor type="perspective">
-        <float name="fov" value="39.3077"/>
+        <float name="fov" value="30"/>
+<!--        39.3077-->
 
 
         <transform name="to_world">
@@ -51,7 +52,6 @@
         </bsdf>
     </shape>
 
-    <!-- glowing wall -->
     <shape type="obj" id="emitter">
         <string name="filename" value="scenes/obj/cube.obj"/>
         <transform name="to_world">

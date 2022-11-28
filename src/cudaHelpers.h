@@ -312,13 +312,15 @@ namespace cudaHelpers{
 
     template<typename Primitive>
     __global__ void
-//    constructTLAS(AccelerationNode<Blas<Primitive>> *tlas, Blas<Primitive> *blas, int numMeshes){
-    constructTLAS(TLAS<Primitive> *tlas, BLAS<Primitive> **blas, size_t numMeshes){
+//    constructTLAS(AccelerationNode<Blas<Primitive>> *tlas, Blas<Primitive> *meshBlasArr, int numMeshes){
+    constructTLAS(TLAS<Primitive> *tlas,
+                      BLAS<Primitive> **meshBlasArr, size_t numMeshes,
+                      BLAS<Primitive> **emitterBlasArr, Vector3f **emitterRadiance, size_t numEmitters){
 
         int i, j, pixelIndex;
         if(!cudaHelpers::initIndices(i, j, pixelIndex, 1, 1)) return;
 
-        *tlas = TLAS(blas, numMeshes);
+        *tlas = TLAS(meshBlasArr, numMeshes, emitterBlasArr, emitterRadiance, numEmitters);
 
     }
 

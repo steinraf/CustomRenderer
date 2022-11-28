@@ -9,7 +9,7 @@ set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 
 set(CMAKE_CXX_FLAGS "-O3 -funroll-loops -DNO_FREETYPE -D_GLIBCXX_ASSERTIONS -fasynchronous-unwind-tables -fexceptions -fpie -Wl,-pie -fstack-clash-protection -fstack-protector-all -fstack-protector-strong -g -grecord-gcc-switches -fcf-protection -pipe -Wall -Werror -Wextra ")
 
-set(CMAKE_CUDA_FLAGS "-extended-lambda ")
+set(CMAKE_CUDA_FLAGS "-extended-lambda")
 
 include_directories(libs/pugixml/src)
 
@@ -51,7 +51,7 @@ add_executable(CustomRenderer
         src/bsdf.cu
         src/bsdf.h
         src/acceleration/aabb.h
-        src/utility/vector.cu src/scene/sceneLoader.cu src/scene/sceneLoader.h)
+        src/utility/vector.cu src/scene/sceneLoader.cu src/scene/sceneLoader.h src/emitters/areaEmitter.h)
 
 add_dependencies(CustomRenderer pugixml)
 

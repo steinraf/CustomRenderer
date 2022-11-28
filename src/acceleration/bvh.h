@@ -52,11 +52,14 @@ private:
     float *cdf;
     size_t numPrimitives;
 
+    Color3f *radiance;
+
+
 public:
 
     __device__ constexpr explicit BLAS(AccelerationNode<Primitive> *bvhTotalNodes, float *cdf, size_t numPrimitives) noexcept
             : root(bvhTotalNodes), cdf(cdf), numPrimitives(numPrimitives){
-
+//        printf("BVH LOG NUM: %f\n", log(numPrimitives));
     }
 
 //TODO make generic over primitives
@@ -66,7 +69,7 @@ public:
         Intersection itsTmp;
         bool hasHit = false;
 
-        constexpr int stackSize = 256;
+        constexpr int stackSize = 64;
         NodePtr stack[stackSize];
         int idx = 0;
 
@@ -112,6 +115,9 @@ public:
         return hasHit;
     }
 
+    [[nodiscard]] __device__ Triangle *sample() const noexcept{
+        return false;
+    }
 
 
 };
@@ -121,12 +127,19 @@ public:
 template<typename Primitive>
 class TLAS{
 private:
-    BLAS<Primitive> **blasArr;
-    int numBLAS;
-public:
-    __device__ constexpr TLAS(BLAS<Primitive> **blasArr, int numBLAS) noexcept
-        : blasArr(blasArr), numBLAS(numBLAS){
+    BLAS<Primitive> **meshBlasArr;
+    int numMeshes;
 
+    BLAS<Primitive> **emitterBlasArr;
+    Vector3f **emitterRadiance;
+    int numEmitters;
+
+public:
+    __device__ constexpr TLAS(BLAS<Primitive> **meshBlasArr, int numBLAS,
+                              BLAS<Primitive> **emitterBlasArr, Vector3f **emitterRadiance, int numEmitters) noexcept
+        : meshBlasArr(meshBlasArr), numMeshes(numBLAS),
+        emitterBlasArr(emitterBlasArr), emitterRadiance(emitterRadiance), numEmitters(numEmitters){
+        printf("TLAS contains %i meshes and %i emitters.\n", numMeshes, numEmitters);
 
     }
 
@@ -135,8 +148,15 @@ public:
         Intersection record;
         bool hasHit = false;
 
-        for(int i = 0; i < numBLAS; ++i){
-            if(blasArr[i]->rayIntersect(r, record)){
+        for(int i = 0; i < numMeshes; ++i){
+            if(meshBlasArr[i]->rayIntersect(r, record)){
+                hasHit = true;
+                r.maxDist = record.t;
+            }
+        }
+
+        for(int i = 0; i < numEmitters; ++i){
+            if(emitterBlasArr[i]->rayIntersect(r, record)){
                 hasHit = true;
                 r.maxDist = record.t;
             }

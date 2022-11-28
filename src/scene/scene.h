@@ -78,14 +78,19 @@ private:
     Vector3f *hostImageBuffer;
     Vector3f *hostImageBufferDenoised;
 
-    std::vector<thrust::device_vector<Triangle>> hostDeviceTriangleVec;
-    std::vector<thrust::device_vector<float>> hostDeviceCDF;
-    std::vector<float> totalArea;
+    std::vector<thrust::device_vector<Triangle>> hostDeviceMeshTriangleVec;
+    std::vector<thrust::device_vector<float>> hostDeviceMeshCDF;
+    std::vector<float> totalMeshArea;
+
+    std::vector<thrust::device_vector<Triangle>> hostDeviceEmitterTriangleVec;
+    std::vector<thrust::device_vector<float>> hostDeviceEmitterCDF;
+    std::vector<float> totalEmitterArea;
 
     Camera deviceCamera;
 
 
-    TLAS<Triangle> *triangleAccelerationStructure;
+    TLAS<Triangle> *meshAccelerationStructure;
+    TLAS<Triangle> *emitterAccelerationStructure;
 
     curandState *deviceCurandState;
 

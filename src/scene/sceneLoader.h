@@ -68,12 +68,6 @@ struct SceneRepresentation{
                     throw std::runtime_error("Unrecognized node name \"" + name + "\" while parsing XML.");
             }
         }
-
-
-
-        assert(samplePerPixel > 0);
-        assert(width > 0);
-        assert(height > 0);
     }
 
     void inline addDefault(const pugi::xml_node &node) noexcept{
@@ -97,14 +91,20 @@ struct SceneRepresentation{
                 if(getString(child.attribute("name")) != "fov")
                     throw std::runtime_error("Unrecognized sensor float option " + getString(child.attribute("name")));
 
-                fov = std::stof(getString(child.attribute("value")));
+                cameraInfo.fov = std::stof(getString(child.attribute("value")));
+                std::cout << "\t\tFOV: \n\t\t\t" << cameraInfo.fov << '\n';
 
             }else if(childName == "transform"){
                 std::cout << "\t\t" << "Transform: \n";
                 auto lookAt = child.child("lookat");
-                target = getVector3f(lookAt, "target", "\t\t\t");
-                origin = getVector3f(lookAt, "origin", "\t\t\t");
-                up = getVector3f(lookAt, "up", "\t\t\t");
+                if(lookAt){
+                    cameraInfo.target = getVector3f(lookAt, "target", "\t\t\t");
+                    cameraInfo.origin = getVector3f(lookAt, "origin", "\t\t\t");
+                    cameraInfo.up = getVector3f(lookAt, "up", "\t\t\t");
+                }else{
+                    throw std::runtime_error("Sensor Transform must contain lookAt.");
+                }
+
             }else if(childName == "sampler"){
 
                 std::cout << "\t\t" << "Sampler: " << '\n';
@@ -115,8 +115,8 @@ struct SceneRepresentation{
                 auto sampleCount = child.child("integer");
                 if(getString(sampleCount.attribute("name")) != "sample_count")
                     throw std::runtime_error("Encountered unknown attribute \"" + getString(sampleCount.attribute("name")) + "\" in sampler.");
-                samplePerPixel = std::stoi(getString(sampleCount.attribute("value")));
-                std::cout << "\t\t\t" << "SampleCount: " << samplePerPixel << '\n';
+                sceneInfo.samplePerPixel = std::stoi(getString(sampleCount.attribute("value")));
+                std::cout << "\t\t\t" << "SampleCount: " << sceneInfo.samplePerPixel << '\n';
             }else if(childName == "film"){
 
                 if(getString(child.attribute("type")) != "hdrfilm")
@@ -128,11 +128,11 @@ struct SceneRepresentation{
                         std::cerr << "WARNING, IGNORING FILTERS\n";
                     }else if(filmChildName == "integer"){
                         if(getString(filmChild.attribute("name")) == "width"){
-                            width = std::stoi(getString(filmChild.attribute("value")));
-                            std::cout << "\t\t\t" << "Width: " << width << '\n';
+                            sceneInfo.width = std::stoi(getString(filmChild.attribute("value")));
+                            std::cout << "\t\t\t" << "Width: " << sceneInfo.width << '\n';
                         }else if(getString(filmChild.attribute("name")) == "height"){
-                            height = std::stoi(getString(filmChild.attribute("value")));
-                            std::cout << "\t\t\t" << "Height: " << height << '\n';
+                            sceneInfo.height = std::stoi(getString(filmChild.attribute("value")));
+                            std::cout << "\t\t\t" << "Height: " << sceneInfo.height << '\n';
                         }else{
                             throw std::runtime_error("Unknown integer option \"" + getString(filmChild.attribute("name")) + "\"for hdrfilm encountered.");
                         }
@@ -147,9 +147,16 @@ struct SceneRepresentation{
 
     }
 
-    void addFilename(const std::string &name){
-        filenames.push_back(name);
-        std::cout << "\t\tFilename: " << filenames[filenames.size()-1] << '\n';
+    void addFilename(const std::string &name, bool isEmitter=false){
+
+        if(isEmitter){
+            emitterInfos.back().filename = name;
+        }else{
+            meshInfos.back().filename = name;
+        }
+
+
+        std::cout << "\t\tFilename: " << meshInfos.back().filename << '\n';
     }
 
     void addBSDF(const pugi::xml_node &node){
@@ -159,7 +166,7 @@ struct SceneRepresentation{
                 throw std::runtime_error("Invalid Tag \"" + getString(color.attribute("name")) + "\"found for material.");
             std::cout << "\t\tMaterial:\n";
             std::cout << "\t\t\tBSDF: DIFFUSE\n";
-            bsdfs.emplace_back(Material::DIFFUSE, getVector3f(color, "value", "\t\t\t", "reflectance"));
+            meshInfos.back().bsdf = {Material::DIFFUSE, getVector3f(color, "value", "\t\t\t", "reflectance")};
 
         }else{
             throw std::runtime_error("Invalid Material \"" + getString(node.attribute("type")) + "\". Only diffuse is supported.");
@@ -170,12 +177,32 @@ struct SceneRepresentation{
         if(getString(node.attribute("type")) != "obj")
             throw std::runtime_error("Error while parsing shape. Only .obj files are supported.");
 
-        meshTransforms.emplace_back();
+        meshInfos.emplace_back();
 
         for(const auto& child : node.children()){
             const std::string &childName = child.name();
             if(childName == "string"){
                 addFilename(getString(child.attribute("value")));
+            }else if(childName == "bsdf"){
+                addBSDF(child);
+            }else if(childName == "transform"){
+                createTransform(child);
+            }else{
+                throw std::runtime_error("Invalid Tag \"" + childName + "\" found for shape.");
+            }
+        }
+    }
+
+    void inline addEmitter(const pugi::xml_node &node) noexcept(false){
+        if(getString(node.attribute("type")) != "obj")
+            throw std::runtime_error("Error while parsing shape. Only .obj files are supported.");
+
+        emitterInfos.emplace_back();
+
+        for(const auto& child : node.children()){
+            const std::string &childName = child.name();
+            if(childName == "string"){
+                addFilename(getString(child.attribute("value")), true);
             }else if(childName == "bsdf"){
                 addBSDF(child);
             }else if(childName == "emitter"){
@@ -191,15 +218,11 @@ struct SceneRepresentation{
 //                        emitters.emplace_back(filenames[filenames.size()-1], getVector3f(color, "value", "\t\t\t"));
 //                        filenames.pop_back(); //
             }else if(childName == "transform"){
-                createTransform(child);
+                createTransform(child, true);
             }else{
                 throw std::runtime_error("Invalid Tag \"" + childName + "\" found for shape.");
             }
         }
-    }
-
-    void inline addEmitter(const pugi::xml_node &node) noexcept(false){
-        addMesh(node);
     }
 
 
@@ -218,14 +241,15 @@ struct SceneRepresentation{
         return attrib.value();
     }
 
-//    auto createTransform = [&](){
-//
-//    };
-
     void inline createTransform(const pugi::xml_node &transform, bool isEmitter=false) noexcept(false) {
 
 
-        Affine3f &currentTransform = meshTransforms[meshTransforms.size() - 1];
+        Affine3f &currentTransform = [&]() -> Affine3f &{
+            if(isEmitter)
+                return emitterInfos.back().transform;
+            else
+                return meshInfos.back().transform;
+        }();
 
 
         std::cout << "\t\tTransform: \n";
@@ -242,6 +266,9 @@ struct SceneRepresentation{
                                                     angle
                                             }) * currentTransform;
                 std::cout << "\t\t\trotation angle: " << angle << "°\n";
+            }else if(tfChildName == "matrix"){
+                throw std::runtime_error("Matrix transforms are not implemented yet.");
+                //TODO implement matrix transform
             }else{
                 throw std::runtime_error("Invalid Tag \"" + tfChildName + "\" found for transform");
             }
@@ -260,12 +287,16 @@ struct SceneRepresentation{
         float fov;
     };
 
+    CameraInfo cameraInfo;
+
     struct MeshInfo{
         MeshInfo() = default;
         std::string filename;
         Affine3f transform;
         BSDF bsdf;
     };
+
+    std::vector<MeshInfo> meshInfos{};
 
     struct EmitterInfo{
         EmitterInfo() = default;
@@ -274,6 +305,8 @@ struct SceneRepresentation{
         BSDF bsdf;
         Vector3f color;
     };
+
+    std::vector<EmitterInfo> emitterInfos{};
 
     struct SceneInfo{
         SceneInfo()
@@ -285,13 +318,8 @@ struct SceneRepresentation{
         int width, height;
     };
 
-    Vector3f target, origin, up;
-    std::vector<Affine3f> meshTransforms{};
-    float fov=30;
-    int samplePerPixel=-1;
-    std::vector<std::string> filenames;
-    std::vector<BSDF> bsdfs;
-    int width=-1, height=-1;
+    SceneInfo sceneInfo;
+
 
 private:
     std::unordered_map<std::string ,std::string> map;

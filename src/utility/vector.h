@@ -154,7 +154,7 @@ public:
     __host__ __device__ constexpr Matrix3f(const Vector3f axis, float theta) noexcept{
         auto u = axis.normalized();
         const float cosT = cos(theta), sinT = sin(theta);
-        assert(rotation >= -2 * M_PIf && rotation <= 2*M_PIf && "rotation should be in radians");
+        assert(theta >= -2 * M_PIf && theta <= 2*M_PIf && "rotation should be in radians");
         *this = Matrix3f{
                 {cosT + u[0]*u[0]*(1-cosT)     , u[0]*u[1]*(1-cosT) - u[2]*sinT, u[0]*u[2]*(1-cosT) + u[1]*sinT},
                 {u[0]*u[1]*(1-cosT) + u[2]*sinT, cosT + u[1]*u[1]*(1-cosT)     , u[1]*u[2]*(1-cosT) - u[0]*sinT},

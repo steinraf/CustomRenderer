@@ -29,6 +29,7 @@ __device__ __host__ Camera::Camera(Vector3f origin, Vector3f lookAt, Vector3f _u
                 + halfV
                 + focusDist * front;
 
+
     horizontal = 2.0f * halfU;
     vertical = -2.0f * halfV;
 }

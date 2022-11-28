@@ -118,7 +118,7 @@ private:
 
 template<typename Primitive>
 __host__ BLAS<Primitive> * getMeshFromFile(const std::string &filename, thrust::device_vector<Primitive> &deviceTrias,
-                                            thrust::device_vector<float> areaCDF, float &totalArea, const Affine3f &transform){
+                                            thrust::device_vector<float> &areaCDF, float &totalArea, const Affine3f &transform){
     clock_t startGeometryBVH = clock();
 
     auto mesh = loadMesh(filename, transform);

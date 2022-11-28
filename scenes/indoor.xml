@@ -1,0 +1,1037 @@
+<scene version="3.0.0">
+	<default name="integrator" value="path" />
+	<default name="spp" value="64" />
+	<default name="resy" value="720" />
+	<default name="resx" value="1280" />
+	<default name="max_depth" value="33" />
+	<integrator type="$integrator">
+		<integer name="max_depth" value="$max_depth" />
+	</integrator>
+	<sensor type="perspective">
+		<float name="fov" value="90" />
+		<transform name="to_world">
+			<lookat target="-1, 0, 0"
+					origin="2.25009, 1.31171, 6.17872"
+					up    ="0, 1, 0"/>
+<!--			<matrix value="-0.900688 -0.0159147 -0.434176 2.25009 0 0.999329 -0.0366305 1.31171 0.434467 -0.0329926 -0.900083 6.17872 0 0 0 1" />-->
+		</transform>
+		<sampler type="independent">
+			<integer name="sample_count" value="$spp" />
+		</sampler>
+		<film type="hdrfilm">
+			<integer name="width" value="$resx" />
+			<integer name="height" value="$resy" />
+		</film>
+	</sensor>
+	<shape type="obj" id="LampStand">
+		<string name="filename" value="scenes/models/Mesh138.obj" />
+		
+	</shape>
+<!--	<shape type="rectangle" id="Walls_0001">-->
+<!--		<transform name="to_world">-->
+<!--			<matrix value="1.82938 0 0 -0.142806 0 1.69577 -6.85958e-008 1.52932 0 -6.85958e-008 3.26505 8.18283 0 0 0 1" />-->
+<!--		</transform>-->
+<!--	</shape>-->
+	<shape type="obj" id="CandleHolders_0001">
+		<string name="filename" value="scenes/models/Mesh113.obj" />
+		
+	</shape>
+	<shape type="obj" id="CandleHolders_0002">
+		<string name="filename" value="scenes/models/Mesh087.obj" />
+		
+	</shape>
+	<shape type="obj" id="CandleHolders_0003">
+		<string name="filename" value="scenes/models/Mesh110.obj" />
+		
+	</shape>
+	<shape type="obj" id="Magazine">
+		<string name="filename" value="scenes/models/Mesh128.obj" />
+		
+	</shape>
+	<shape type="obj" id="LampshadeInner">
+		<string name="filename" value="scenes/models/Mesh095.obj" />
+		
+	</shape>
+	<shape type="obj" id="Apple_0001">
+		<string name="filename" value="scenes/models/Mesh076.obj" />
+		
+	</shape>
+	<shape type="obj" id="Apple_0002">
+		<string name="filename" value="scenes/models/Mesh108.obj" />
+		
+	</shape>
+	<shape type="obj" id="Apple_0003">
+		<string name="filename" value="scenes/models/Mesh080.obj" />
+		
+	</shape>
+	<shape type="obj" id="Apple_0004">
+		<string name="filename" value="scenes/models/Mesh166.obj" />
+		
+	</shape>
+	<shape type="obj" id="Ceramic_0001">
+		<string name="filename" value="scenes/models/Mesh088.obj" />
+		
+	</shape>
+	<shape type="obj" id="LoveLettersBack_0001">
+		<string name="filename" value="scenes/models/Mesh059.obj" />
+		
+	</shape>
+	<shape type="obj" id="LoveLettersBack_0002">
+		<string name="filename" value="scenes/models/Mesh073.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="LoveLettersBack_0003">
+		<string name="filename" value="scenes/models/Mesh099.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="LoveLettersBack_0004">
+		<string name="filename" value="scenes/models/Mesh103.obj" />
+		
+	</shape>
+	<shape type="obj" id="LoveLettersBack_0005">
+		<string name="filename" value="scenes/models/Mesh155.obj" />
+		
+	</shape>
+	<shape type="obj" id="LoveLettersBack_0006">
+		<string name="filename" value="scenes/models/Mesh065.obj" />
+		
+	</shape>
+	<shape type="obj" id="LoveLetters_0001">
+		<string name="filename" value="scenes/models/Mesh069.obj" />
+		
+	</shape>
+	<shape type="obj" id="LoveLetters_0002">
+		<string name="filename" value="scenes/models/Mesh090.obj" />
+		
+	</shape>
+	<shape type="obj" id="LoveLetters_0003">
+		<string name="filename" value="scenes/models/Mesh063.obj" />
+		
+	</shape>
+	<shape type="obj" id="LoveLetters_0004">
+		<string name="filename" value="scenes/models/Mesh062.obj" />
+		
+	</shape>
+	<shape type="obj" id="SmallPictureC">
+		<string name="filename" value="scenes/models/Mesh068.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="SmallPictureFrame_0001">
+		<string name="filename" value="scenes/models/Mesh131.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="SmallPictureFrame_0002">
+		<string name="filename" value="scenes/models/Mesh098.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="SmallPictureB">
+		<string name="filename" value="scenes/models/Mesh056.obj" />
+		
+	</shape>
+	<shape type="obj" id="SmallPictureA">
+		<string name="filename" value="scenes/models/Mesh077.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="SmallPictureFrame_0003">
+		<string name="filename" value="scenes/models/Mesh055.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="Cushion1_0001">
+		<string name="filename" value="scenes/models/Mesh118.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="LightFitting_0001">
+		<string name="filename" value="scenes/models/Mesh064.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="LightFitting_0002">
+		<string name="filename" value="scenes/models/Mesh052.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="LightFitting_0003">
+		<string name="filename" value="scenes/models/Mesh112.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="CeilingShadeWire">
+		<string name="filename" value="scenes/models/Mesh066.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="CeilingLampshade">
+		<string name="filename" value="scenes/models/Mesh122.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="SmallPictureFrame_0004">
+		<string name="filename" value="scenes/models/Mesh127.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="SmallPictureD">
+		<string name="filename" value="scenes/models/Mesh129.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="Books_0001">
+		<string name="filename" value="scenes/models/Mesh132.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="Books_0002">
+		<string name="filename" value="scenes/models/Mesh140.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="Books_0003">
+		<string name="filename" value="scenes/models/Mesh156.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="Books_0004">
+		<string name="filename" value="scenes/models/Mesh135.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="Books_0005">
+		<string name="filename" value="scenes/models/Mesh175.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="Books_0006">
+		<string name="filename" value="scenes/models/Mesh136.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="Books_0007">
+		<string name="filename" value="scenes/models/Mesh078.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="Books_0008">
+		<string name="filename" value="scenes/models/Mesh141.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="Books_0009">
+		<string name="filename" value="scenes/models/Mesh147.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="Books_0010">
+		<string name="filename" value="scenes/models/Mesh071.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="Books_0011">
+		<string name="filename" value="scenes/models/Mesh148.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="Books_0012">
+		<string name="filename" value="scenes/models/Mesh149.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="Books_0013">
+		<string name="filename" value="scenes/models/Mesh150.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="Books_0014">
+		<string name="filename" value="scenes/models/Mesh153.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="Books_0015">
+		<string name="filename" value="scenes/models/Mesh109.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="Books_0016">
+		<string name="filename" value="scenes/models/Mesh083.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="Books_0017">
+		<string name="filename" value="scenes/models/Mesh157.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="Books_0018">
+		<string name="filename" value="scenes/models/Mesh159.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="WhitePaint_0001">
+		<string name="filename" value="scenes/models/Mesh161.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="WhitePaint_0002">
+		<string name="filename" value="scenes/models/Mesh143.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="WhitePaint_0003">
+		<string name="filename" value="scenes/models/Mesh176.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="DrawerHandles_0001">
+		<string name="filename" value="scenes/models/Mesh107.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="WhitePaint_0004">
+		<string name="filename" value="scenes/models/Mesh139.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="WhitePaint_0005">
+		<string name="filename" value="scenes/models/Mesh162.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="TvBevel">
+		<string name="filename" value="scenes/models/Mesh126.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="TvScreen">
+		<string name="filename" value="scenes/models/Mesh152.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="Cushion3">
+		<string name="filename" value="scenes/models/Mesh104.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="SofaLeather_0001">
+		<string name="filename" value="scenes/models/Mesh167.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="SofaLeather_0002">
+		<string name="filename" value="scenes/models/Mesh091.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="SofaLeather_0003">
+		<string name="filename" value="scenes/models/Mesh145.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="Cushion">
+		<string name="filename" value="scenes/models/Mesh160.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="LampshaderOuter">
+		<string name="filename" value="scenes/models/Mesh171.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="WhitePaint_0006">
+		<string name="filename" value="scenes/models/Mesh092.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="WhitePaint_0007">
+		<string name="filename" value="scenes/models/Mesh067.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="WhitePaint_0008">
+		<string name="filename" value="scenes/models/Mesh172.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="DrawerHandles_0002">
+		<string name="filename" value="scenes/models/Mesh173.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="Table_0001">
+		<string name="filename" value="scenes/models/Mesh177.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="Table_0002">
+		<string name="filename" value="scenes/models/Mesh054.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="Socket_0001">
+		<string name="filename" value="scenes/models/Mesh165.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="Socket_0002">
+		<string name="filename" value="scenes/models/Mesh100.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="PictureFrame_0001">
+		<string name="filename" value="scenes/models/Mesh096.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="LargePicture">
+		<string name="filename" value="scenes/models/Mesh169.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="Socket_0003">
+		<string name="filename" value="scenes/models/Mesh085.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="Socket_0004">
+		<string name="filename" value="scenes/models/Mesh116.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="Picture">
+		<string name="filename" value="scenes/models/Mesh105.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="PictureFrame_0002">
+		<string name="filename" value="scenes/models/Mesh170.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="BlindStringKnob_0001">
+		<string name="filename" value="scenes/models/Mesh179.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="BlindString_0001">
+		<string name="filename" value="scenes/models/Mesh125.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="BlindEnds_0001">
+		<string name="filename" value="scenes/models/Mesh144.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="BlindEnds_0002">
+		<string name="filename" value="scenes/models/Mesh072.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="BlindEnds_0003">
+		<string name="filename" value="scenes/models/Mesh124.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="BlindWoodStrip_0001">
+		<string name="filename" value="scenes/models/Mesh050.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="BlindMaterial_0001">
+		<string name="filename" value="scenes/models/Mesh117.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="BlindMaterial_0002">
+		<string name="filename" value="scenes/models/Mesh047.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="BlindMaterial_0003">
+		<string name="filename" value="scenes/models/Mesh046.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="BlindMaterial_0004">
+		<string name="filename" value="scenes/models/Mesh045.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="BlindWoodStrip_0002">
+		<string name="filename" value="scenes/models/Mesh043.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="BlindEnds_0004">
+		<string name="filename" value="scenes/models/Mesh070.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="BlindEnds_0005">
+		<string name="filename" value="scenes/models/Mesh042.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="BlindEnds_0006">
+		<string name="filename" value="scenes/models/Mesh041.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="BlindString_0002">
+		<string name="filename" value="scenes/models/Mesh039.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="BlindStringKnob_0002">
+		<string name="filename" value="scenes/models/Mesh038.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="BlindStringKnob_0003">
+		<string name="filename" value="scenes/models/Mesh037.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="BlindString_0003">
+		<string name="filename" value="scenes/models/Mesh036.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="BlindEnds_0007">
+		<string name="filename" value="scenes/models/Mesh034.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="BlindEnds_0008">
+		<string name="filename" value="scenes/models/Mesh033.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="BlindEnds_0009">
+		<string name="filename" value="scenes/models/Mesh031.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="BlindWoodStrip_0003">
+		<string name="filename" value="scenes/models/Mesh094.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="BlindMaterial_0005">
+		<string name="filename" value="scenes/models/Mesh102.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="BlindMaterial_0006">
+		<string name="filename" value="scenes/models/Mesh058.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="Steel_0001">
+		<string name="filename" value="scenes/models/Mesh030.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="BlackRaughtIron_0001">
+		<string name="filename" value="scenes/models/Mesh028.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="BlackRaughtIron_0002">
+		<string name="filename" value="scenes/models/Mesh027.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="Steel_0002">
+		<string name="filename" value="scenes/models/Mesh026.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="BlackRaughtIron_0003">
+		<string name="filename" value="scenes/models/Mesh097.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="BlackRaughtIron_0004">
+		<string name="filename" value="scenes/models/Mesh035.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="BlackRaughtIron_0005">
+		<string name="filename" value="scenes/models/Mesh024.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="BlackRaughtIron_0006">
+		<string name="filename" value="scenes/models/Mesh023.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="BlackRaughtIron_0007">
+		<string name="filename" value="scenes/models/Mesh089.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="WhitePaint_0009">
+		<string name="filename" value="scenes/models/Mesh022.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="WhitePaint_0010">
+		<string name="filename" value="scenes/models/Mesh137.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="BlackMarble">
+		<string name="filename" value="scenes/models/Mesh121.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="WhitePaint_0011">
+		<string name="filename" value="scenes/models/Mesh021.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="WhitePaint_0012">
+		<string name="filename" value="scenes/models/Mesh115.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="WhitePaint_0013">
+		<string name="filename" value="scenes/models/Mesh120.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="Walls_0002">
+		<string name="filename" value="scenes/models/Mesh020.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="Floor">
+		<string name="filename" value="scenes/models/Mesh019.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="WhitePaint_0014">
+		<string name="filename" value="scenes/models/Mesh017.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="WhitePaint_0015">
+		<string name="filename" value="scenes/models/Mesh016.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="Walls_0003">
+		<string name="filename" value="scenes/models/Mesh015.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="WhitePaint_0016">
+		<string name="filename" value="scenes/models/Mesh119.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="WhitePaint_0017">
+		<string name="filename" value="scenes/models/Mesh014.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="WhitePaint_0018">
+		<string name="filename" value="scenes/models/Mesh151.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="WhitePaint_0019">
+		<string name="filename" value="scenes/models/Mesh013.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="WhitePaint_0020">
+		<string name="filename" value="scenes/models/Mesh111.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="WhitePaint_0021">
+		<string name="filename" value="scenes/models/Mesh101.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="Socket_0005">
+		<string name="filename" value="scenes/models/Mesh011.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="Socket_0006">
+		<string name="filename" value="scenes/models/Mesh053.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="SofaLeather_0004">
+		<string name="filename" value="scenes/models/Mesh010.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="SofaLeather_0005">
+		<string name="filename" value="scenes/models/Mesh082.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="SofaLeather_0006">
+		<string name="filename" value="scenes/models/Mesh086.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="SofaLeather_0007">
+		<string name="filename" value="scenes/models/Mesh134.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="SofaLeather_0008">
+		<string name="filename" value="scenes/models/Mesh057.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="SofaLeather_0009">
+		<string name="filename" value="scenes/models/Mesh081.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="Cushion1_0002">
+		<string name="filename" value="scenes/models/Mesh114.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="Carpet">
+		<string name="filename" value="scenes/models/Mesh008.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="Table_0003">
+		<string name="filename" value="scenes/models/Mesh158.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="DrawerHandles_0003">
+		<string name="filename" value="scenes/models/Mesh174.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="TableLegs">
+		<string name="filename" value="scenes/models/Mesh079.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="Table_0004">
+		<string name="filename" value="scenes/models/Mesh007.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="RadiatorBase_0001">
+		<string name="filename" value="scenes/models/Mesh006.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="RadiatorBase_0002">
+		<string name="filename" value="scenes/models/Mesh005.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="RadiatorKnobOuter">
+		<string name="filename" value="scenes/models/Mesh032.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="RadiatorKnobCentre">
+		<string name="filename" value="scenes/models/Mesh025.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="RadiatorPanelsEnamel_0001">
+		<string name="filename" value="scenes/models/Mesh168.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="RadiatorPanelsEnamel_0002">
+		<string name="filename" value="scenes/models/Mesh146.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="RadiatorPanelsEnamel_0003">
+		<string name="filename" value="scenes/models/Mesh049.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="RadiatorPanelsEnamel_0004">
+		<string name="filename" value="scenes/models/Mesh040.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="RadiatorPanelsEnamel_0005">
+		<string name="filename" value="scenes/models/Mesh130.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="RadiatorPanelsEnamel_0006">
+		<string name="filename" value="scenes/models/Mesh075.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="RadiatorPanelsEnamel_0007">
+		<string name="filename" value="scenes/models/Mesh164.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="RadiatorPanelsEnamel_0008">
+		<string name="filename" value="scenes/models/Mesh044.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="Dishes_0001">
+		<string name="filename" value="scenes/models/Mesh004.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="Dishes_0002">
+		<string name="filename" value="scenes/models/Mesh003.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="DullSteel">
+		<string name="filename" value="scenes/models/Mesh061.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="Ceramic_0002">
+		<string name="filename" value="scenes/models/Mesh002.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="Ceramic_0003">
+		<string name="filename" value="scenes/models/Mesh051.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="RadioHandle">
+		<string name="filename" value="scenes/models/Mesh123.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="RadioPlastic_0001">
+		<string name="filename" value="scenes/models/Mesh178.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="BushLogo_0001">
+		<string name="filename" value="scenes/models/Mesh084.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="BushLogo_0002">
+		<string name="filename" value="scenes/models/Mesh012.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="RadioDialLine">
+		<string name="filename" value="scenes/models/Mesh001.obj" />
+		
+		
+		
+	</shape>
+	<shape type="obj" id="RadioDialBack">
+		<string name="filename" value="scenes/models/Mesh018.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="RadioDialRed">
+		<string name="filename" value="scenes/models/Mesh000.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="RadioMetalRing">
+		<string name="filename" value="scenes/models/Mesh074.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="RadioGlass">
+		<string name="filename" value="scenes/models/Mesh106.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="RadioPlastic_0002">
+		<string name="filename" value="scenes/models/Mesh029.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="RadioPlastic_0003">
+		<string name="filename" value="scenes/models/Mesh163.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="ChromeHandle">
+		<string name="filename" value="scenes/models/Mesh154.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="RadioPlastic_0004">
+		<string name="filename" value="scenes/models/Mesh060.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="RadioInside">
+		<string name="filename" value="scenes/models/Mesh048.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="RadioKnob">
+		<string name="filename" value="scenes/models/Mesh009.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="RadioSurround">
+		<string name="filename" value="scenes/models/Mesh093.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="RadioEdges_0001">
+		<string name="filename" value="scenes/models/Mesh133.obj" />
+		
+		
+	</shape>
+	<shape type="obj" id="RadioEdges_0002">
+		<string name="filename" value="scenes/models/Mesh142.obj" />
+		
+		
+	</shape>
+<!--	<shape type="rectangle">-->
+<!--		<transform name="to_world">-->
+<!--			<matrix value="0.422647 0 0 0.213572 0 0.821719 1.40628e-008 1.96307 0 1.40628e-008 0.5 0.383951 0 0 0 1" />-->
+<!--		</transform>-->
+<!--		<bsdf type="twosided">-->
+<!--			<bsdf type="diffuse">-->
+<!--				<rgb name="reflectance" value="0, 0, 0" />-->
+<!--			</bsdf>-->
+<!--		</bsdf>-->
+<!--		<emitter type="area">-->
+<!--			<rgb name="radiance" value="13.748, 13.748, 13.748" />-->
+<!--		</emitter>-->
+<!--	</shape>-->
+<!--	<shape type="rectangle">-->
+<!--		<transform name="to_world">-->
+<!--			<matrix value="0.280021 -1.05076e-008 0.240387 -1.03113 6.71125e-009 0.841037 1.75988e-008 1.96592 -0.153536 1.75988e-008 0.438422 0.659918 0 0 0 1" />-->
+<!--		</transform>-->
+<!--		<bsdf type="twosided">-->
+<!--			<bsdf type="diffuse">-->
+<!--				<rgb name="reflectance" value="0, 0, 0" />-->
+<!--			</bsdf>-->
+<!--		</bsdf>-->
+<!--		<emitter type="area">-->
+<!--			<rgb name="radiance" value="17.777, 17.777, 17.777" />-->
+<!--		</emitter>-->
+<!--	</shape>-->
+<!--	<shape type="rectangle">-->
+<!--		<transform name="to_world">-->
+<!--			<matrix value="0.280997 1.03849e-008 -0.23758 1.45584 -6.63289e-009 0.841037 1.75321e-008 1.96592 0.151743 1.75321e-008 0.43995 0.658936 0 0 0 1" />-->
+<!--		</transform>-->
+<!--		<bsdf type="twosided">-->
+<!--			<bsdf type="diffuse">-->
+<!--				<rgb name="reflectance" value="0, 0, 0" />-->
+<!--			</bsdf>-->
+<!--		</bsdf>-->
+<!--		<emitter type="area">-->
+<!--			<rgb name="radiance" value="17.777, 17.777, 17.777" />-->
+<!--		</emitter>-->
+<!--	</shape>-->
+<!--	<shape type="rectangle">-->
+<!--		<transform name="to_world">-->
+<!--			<matrix value="-1.52674 -3.30012e-015 7.54979e-008 -0.149774 1.00769e-014 0.964701 6.40241e-008 2.03104 -2.30532e-007 6.40241e-008 -0.5 8.14201 0 0 0 1" />-->
+<!--		</transform>-->
+<!--		<bsdf type="twosided">-->
+<!--			<bsdf type="diffuse">-->
+<!--				<rgb name="reflectance" value="0, 0, 0" />-->
+<!--			</bsdf>-->
+<!--		</bsdf>-->
+<!--		<emitter type="area">-->
+<!--			<rgb name="radiance" value="1.08059, 1.08059, 1.08059" />-->
+<!--		</emitter>-->
+<!--	</shape>-->
+</scene>

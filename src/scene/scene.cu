@@ -15,17 +15,20 @@
 
 __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) :
         sceneRepresentation(sceneRepr),
-        imageBufferByteSize(sceneRepr.width * sceneRepr.height * sizeof(Vector3f)),
-        blockSize(sceneRepr.width / blockSizeX + 1, sceneRepr.height / blockSizeY + 1),
+        imageBufferByteSize(sceneRepr.sceneInfo.width * sceneRepr.sceneInfo.height * sizeof(Vector3f)),
+        blockSize(sceneRepr.sceneInfo.width / blockSizeX + 1, sceneRepr.sceneInfo.height / blockSizeY + 1),
         device(dev),
-        hostDeviceTriangleVec(sceneRepresentation.filenames.size()),
-        hostDeviceCDF(sceneRepresentation.filenames.size()),
-        totalArea(sceneRepresentation.filenames.size()),
-        deviceCamera(sceneRepr.origin,
-                     sceneRepr.target,
-                     sceneRepr.up,
-                     sceneRepr.fov,
-                     static_cast<float>(sceneRepr.width) / static_cast<float>(sceneRepr.height),
+        hostDeviceMeshTriangleVec(sceneRepresentation.meshInfos.size()),
+        hostDeviceMeshCDF(sceneRepresentation.meshInfos.size()),
+        totalMeshArea(sceneRepresentation.meshInfos.size()),
+        hostDeviceEmitterTriangleVec(sceneRepresentation.meshInfos.size()),
+        hostDeviceEmitterCDF(sceneRepresentation.meshInfos.size()),
+        totalEmitterArea(sceneRepresentation.meshInfos.size()),
+        deviceCamera(sceneRepr.cameraInfo.origin,
+                     sceneRepr.cameraInfo.target,
+                     sceneRepr.cameraInfo.up,
+                     sceneRepr.cameraInfo.fov,
+                     static_cast<float>(sceneRepr.sceneInfo.width) / static_cast<float>(sceneRepr.sceneInfo.height),
                      customRenderer::getCameraAperture(),
                      100000.f){//(customRenderer::getCameraOrigin() - customRenderer::getCameraLookAt()).norm()){
 
@@ -40,30 +43,44 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) :
         initOpenGL();
     }
 
-    checkCudaErrors(cudaMalloc(&deviceCurandState, sceneRepresentation.width * sceneRepresentation.height * sizeof(curandState)));
+    checkCudaErrors(cudaMalloc(&deviceCurandState, sceneRepresentation.sceneInfo.width * sceneRepresentation.sceneInfo.height * sizeof(curandState)));
 
-    cudaHelpers::initRng<<<blockSize, threadSize>>>(sceneRepresentation.width, sceneRepresentation.height, deviceCurandState);
+    cudaHelpers::initRng<<<blockSize, threadSize>>>(sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height, deviceCurandState);
     checkCudaErrors(cudaGetLastError());
 
 
-    checkCudaErrors(cudaMalloc(&triangleAccelerationStructure, sizeof(TLAS<Triangle>)));
+    checkCudaErrors(cudaMalloc(&meshAccelerationStructure, sizeof(TLAS<Triangle>)));
+    checkCudaErrors(cudaMalloc(&emitterAccelerationStructure, sizeof(TLAS<Triangle>)));
 
     // No need to sync because can run independently
 //    checkCudaErrors(cudaDeviceSynchronize());
 
-    auto numMeshes = sceneRepresentation.filenames.size();
-    std::vector<BLAS<Triangle> *> hostBlasVector(numMeshes);
+    auto numMeshes = sceneRepresentation.meshInfos.size();
+    std::vector<BLAS<Triangle> *> hostMeshBlasVector(numMeshes);
 
 
     clock_t meshLoadStart = clock();
-//#pragma omp parallel for
+#pragma omp parallel for
     for(int i = 0; i < numMeshes; ++i){
-        hostBlasVector[i] = getMeshFromFile(sceneRepr.filenames[i],
-                                            hostDeviceTriangleVec[i],
-                                            hostDeviceCDF[i],
-                                            totalArea[i],
-                                            sceneRepr.meshTransforms[i]);
+        hostMeshBlasVector[i] = getMeshFromFile(sceneRepr.meshInfos[i].filename,
+                                                hostDeviceMeshTriangleVec[i],
+                                                hostDeviceMeshCDF[i],
+                                                totalMeshArea[i],
+                                                sceneRepr.meshInfos[i].transform);
     }
+
+    auto numEmitters = sceneRepresentation.emitterInfos.size();
+    std::vector<BLAS<Triangle> *> hostEmitterBlasVector(numEmitters);
+
+#pragma omp parallel for
+    for(int i = 0; i < numEmitters; ++i){
+        hostEmitterBlasVector[i] = getMeshFromFile( sceneRepr.emitterInfos[i].filename,
+                                                    hostDeviceEmitterTriangleVec[i],
+                                                    hostDeviceEmitterCDF[i],
+                                                    totalEmitterArea[i],
+                                                    sceneRepr.emitterInfos[i].transform);
+    }
+
 
     std::cout << "Loading all Geometry took "
               << ((double) (clock() - meshLoadStart)) / CLOCKS_PER_SEC
@@ -71,9 +88,13 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) :
 
 
 
-    BLAS<Triangle> **deviceBlasArr = cudaHelpers::hostVecToDeviceRawPtr(hostBlasVector);
+    BLAS<Triangle> **deviceBlasArr = cudaHelpers::hostVecToDeviceRawPtr(hostMeshBlasVector);
+    BLAS<Triangle> **deviceEmitterBlasArr = cudaHelpers::hostVecToDeviceRawPtr(hostEmitterBlasVector);
 
-    cudaHelpers::constructTLAS<<<1, 1>>>(triangleAccelerationStructure, deviceBlasArr, numMeshes);
+    cudaHelpers::constructTLAS<<<1, 1>>>(meshAccelerationStructure,
+                                            deviceBlasArr, numMeshes,
+                                            deviceEmitterBlasArr, nullptr, numEmitters);
+
     checkCudaErrors(cudaGetLastError());
 
     hostImageBuffer = new Vector3f[imageBufferByteSize];
@@ -107,7 +128,7 @@ void Scene::render(){
     std::cout << "Starting render...\n";
 
 
-    cudaHelpers::render<<<blockSize, threadSize>>>(deviceImageBuffer, deviceCamera, triangleAccelerationStructure, sceneRepresentation.width, sceneRepresentation.height, sceneRepresentation.samplePerPixel, deviceCurandState);
+    cudaHelpers::render<<<blockSize, threadSize>>>(deviceImageBuffer, deviceCamera, meshAccelerationStructure, sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height, sceneRepresentation.sceneInfo.samplePerPixel, deviceCurandState);
     checkCudaErrors(cudaGetLastError());
 
     std::cout << "Starting draw thread...\n";
@@ -126,7 +147,7 @@ void Scene::render(){
 
     std::cout << "Starting denoise...\n";
     checkCudaErrors(cudaMemcpy(hostImageBuffer, deviceImageBuffer, imageBufferByteSize, cudaMemcpyDeviceToHost));
-    cudaHelpers::denoise<<<blockSize, threadSize>>>(deviceImageBuffer, deviceImageBufferDenoised, sceneRepresentation.width, sceneRepresentation.height);
+    cudaHelpers::denoise<<<blockSize, threadSize>>>(deviceImageBuffer, deviceImageBufferDenoised, sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height);
     checkCudaErrors(cudaDeviceSynchronize());
 
     checkCudaErrors(
@@ -182,12 +203,12 @@ __host__ void Scene::renderCPU(){
 
 //    stbi_set_flip_vertically_on_load(true);
 
-    const bool didHDR = stbi_write_hdr(hdrPath.c_str(), sceneRepresentation.width, sceneRepresentation.height, 3, (float *)hostImageBuffer);
+    const bool didHDR = stbi_write_hdr(hdrPath.c_str(), sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height, 3, (float *)hostImageBuffer);
     assert(didHDR);
 
 
-    pngwriter png(sceneRepresentation.width, sceneRepresentation.height, 1., pngPath.c_str());
-    pngwriter pngDenoised(sceneRepresentation.width, sceneRepresentation.height, 1., pngPathDenoised.c_str());
+    pngwriter png(sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height, 1., pngPath.c_str());
+    pngwriter pngDenoised(sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height, 1., pngPathDenoised.c_str());
 
     auto gammaCorrect = [](float value){
         if (value <= 0.0031308f) return std::clamp(12.92f * value, 0.f, 1.f);
@@ -196,14 +217,14 @@ __host__ void Scene::renderCPU(){
 
 
 #pragma omp parallel for
-    for(int j = 0; j < sceneRepresentation.height; j++){
-        for(int i = 0; i < sceneRepresentation.width; i++){
-            const int idx = j * sceneRepresentation.width + i;
-            png.plot(i + 1, sceneRepresentation.height - j,
+    for(int j = 0; j < sceneRepresentation.sceneInfo.height; j++){
+        for(int i = 0; i < sceneRepresentation.sceneInfo.width; i++){
+            const int idx = j * sceneRepresentation.sceneInfo.width + i;
+            png.plot(i + 1, sceneRepresentation.sceneInfo.height - j,
                     gammaCorrect(hostImageBuffer[idx][0]),
                     gammaCorrect(hostImageBuffer[idx][1]),
                     gammaCorrect(hostImageBuffer[idx][2]));
-            pngDenoised.plot(i + 1, sceneRepresentation.height - j,
+            pngDenoised.plot(i + 1, sceneRepresentation.sceneInfo.height - j,
                     gammaCorrect(hostImageBufferDenoised[idx][0]),
                     gammaCorrect(hostImageBufferDenoised[idx][1]),
                     gammaCorrect(hostImageBufferDenoised[idx][2]));
@@ -220,7 +241,7 @@ __host__ void Scene::initOpenGL(){
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    window = glfwCreateWindow(sceneRepresentation.width, sceneRepresentation.height, "Raytracing", nullptr, nullptr);
+    window = glfwCreateWindow(sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height, "Raytracing", nullptr, nullptr);
     if(!window){
         std::cerr << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
@@ -249,7 +270,7 @@ __host__ void Scene::initOpenGL(){
 
             glGenBuffers(1, &PBO);
             glBindBuffer(GL_PIXEL_UNPACK_BUFFER, PBO);
-            glBufferData(GL_PIXEL_UNPACK_BUFFER, sizeof(Vector3f) * sceneRepresentation.width * sceneRepresentation.height, nullptr, GL_STREAM_DRAW);
+            glBufferData(GL_PIXEL_UNPACK_BUFFER, sizeof(Vector3f) * sceneRepresentation.sceneInfo.width * sceneRepresentation.sceneInfo.height, nullptr, GL_STREAM_DRAW);
             glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 
             //    glGenTextures(1, &tex);
