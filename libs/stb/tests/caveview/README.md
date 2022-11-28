@@ -62,7 +62,7 @@ overlaid texture, which would require separate rendering.
 Handling redstone's brightness being different from underlying
 block's brightness would require separate rendering.
 
-You can use the face-color effect to do biome coloration,
+You can use the face-radiance effect to do biome coloration,
 but the change won't be smooth the way it is in Minecraft.
 
 

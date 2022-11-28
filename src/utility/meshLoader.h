@@ -118,8 +118,11 @@ private:
 
 template<typename Primitive>
 __host__ BLAS<Primitive> * getMeshFromFile(const std::string &filename, thrust::device_vector<Primitive> &deviceTrias,
-                                            thrust::device_vector<float> &areaCDF, float &totalArea, const Affine3f &transform){
+                                            thrust::device_vector<float> &areaCDF, float &totalArea, const Affine3f &transform, const Color3f &radiance = Vector3f{0.f}){
     clock_t startGeometryBVH = clock();
+
+    if(!radiance.isEmpty())
+        std::cout << "\tLoading Emitter...\n";
 
     auto mesh = loadMesh(filename, transform);
     auto[deviceTriangles, deviceMortonCodes, deviceCDF, area] = meshToGPU(mesh).toTuple();
@@ -171,7 +174,7 @@ __host__ BLAS<Primitive> * getMeshFromFile(const std::string &filename, thrust::
 
     clock_t initBVHTime = clock();
 
-    cudaHelpers::initBVH<<<1, 1>>>(bvh, bvhTotalNodes, deviceCDF.data().get(), numTriangles);
+    cudaHelpers::initBVH<<<1, 1>>>(bvh, bvhTotalNodes, deviceCDF.data().get(), numTriangles, radiance);
 
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());

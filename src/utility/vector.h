@@ -109,7 +109,11 @@ public:
 
     __host__ __device__ constexpr inline Vector3f &clamp(float minimum, float maximum) noexcept;
 
-    __host__ __device__ constexpr inline Vector3f absValues() const noexcept;
+    [[nodiscard]] __host__ __device__ constexpr inline Vector3f absValues() const noexcept;
+
+    [[nodiscard]] __host__ __device__ constexpr inline bool isEmpty() const noexcept;
+
+
 
 
 
@@ -387,6 +391,12 @@ __host__ __device__ constexpr inline Vector3f Vector3f::absValues() const noexce
             abs(data[1]),
             abs(data[2])
     };
+}
+
+__host__ __device__ constexpr inline bool Vector3f::isEmpty() const noexcept{
+    return  (data[0] == 0) &&
+            (data[1] == 0) &&
+            (data[2] == 0);
 }
 
 __host__ __device__ constexpr inline bool Vector3f::operator==(const Vector3f &v2) const noexcept{

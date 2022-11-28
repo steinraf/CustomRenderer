@@ -8,6 +8,7 @@
 
 #include "../utility/ray.h"
 #include "../hittable.h"
+#include "../emitters/areaLight.h"
 
 template<typename Primitive>
 struct AccelerationNode{
@@ -49,16 +50,23 @@ private:
 
     NodePtr root;
 
-    float *cdf;
+    const float *cdf;
     size_t numPrimitives;
 
-    Color3f *radiance;
+    AreaLight *emitter;
 
 
 public:
 
-    __device__ constexpr explicit BLAS(AccelerationNode<Primitive> *bvhTotalNodes, float *cdf, size_t numPrimitives) noexcept
-            : root(bvhTotalNodes), cdf(cdf), numPrimitives(numPrimitives){
+    __device__ constexpr explicit BLAS(AccelerationNode<Primitive> *bvhTotalNodes, const float *cdf, size_t numPrimitives, const Color3f &radiance) noexcept
+            : root(bvhTotalNodes), cdf(cdf), numPrimitives(numPrimitives), radiance(radiance){
+
+        if(radiance.isEmpty()){
+            emitter = nullptr;
+        }else{
+            emitter = new AreaLight(this);
+        }
+
 //        printf("BVH LOG NUM: %f\n", log(numPrimitives));
     }
 
@@ -85,8 +93,8 @@ public:
                 if(currentNode->primitive->rayIntersect(r, itsTmp)){
                     hasHit = true;
                     r.maxDist = itsTmp.t;
-                    itsOut = itsTmp;
                     itsTmp.triangle = currentNode->primitive;
+                    itsTmp.emitter = emitter;
                 }
                 currentNode = stack[--idx];
             }else{
@@ -108,18 +116,25 @@ public:
             }
         }while(idx >= 0);
 
+        itsOut = itsTmp;
         if(hasHit)
             itsTmp.triangle->setHitInformation(r, itsOut);
+
 
 
         return hasHit;
     }
 
+    [[nodiscard]] __device__ constexpr bool isEmitter() const noexcept{
+        return radiance.isEmpty();
+    }
+
     [[nodiscard]] __device__ Triangle *sample() const noexcept{
-        return false;
+        return nullptr;
     }
 
 
+    Color3f radiance;
 };
 
 //TODO make logarithmic traversal as well

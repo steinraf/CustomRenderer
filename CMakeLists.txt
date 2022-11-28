@@ -51,7 +51,11 @@ add_executable(CustomRenderer
         src/bsdf.cu
         src/bsdf.h
         src/acceleration/aabb.h
-        src/utility/vector.cu src/scene/sceneLoader.cu src/scene/sceneLoader.h src/emitters/areaEmitter.h)
+        src/utility/vector.cu
+        src/scene/sceneLoader.cu
+        src/scene/sceneLoader.h
+        src/emitters/areaLight.h
+        src/emitters/areaLight.cu)
 
 add_dependencies(CustomRenderer pugixml)
 

@@ -78,7 +78,8 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) :
                                                     hostDeviceEmitterTriangleVec[i],
                                                     hostDeviceEmitterCDF[i],
                                                     totalEmitterArea[i],
-                                                    sceneRepr.emitterInfos[i].transform);
+                                                    sceneRepr.emitterInfos[i].transform,
+                                                    sceneRepr.emitterInfos[i].radiance);
     }
 
 

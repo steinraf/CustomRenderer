@@ -215,8 +215,11 @@ struct SceneRepresentation{
 
                 std::cout << "\t\tEmitter:\n";
                 std::cout << "\t\t\tType: Area\n";
-//                        emitters.emplace_back(filenames[filenames.size()-1], getVector3f(color, "value", "\t\t\t"));
-//                        filenames.pop_back(); //
+
+//                meshInfos.back().bsdf = {Material::DIFFUSE, getVector3f(color, "value", "\t\t\t", "reflectance")};
+
+                emitterInfos.back().radiance = getVector3f(color, "value", "\t\t\t", "radiance");
+
             }else if(childName == "transform"){
                 createTransform(child, true);
             }else{
@@ -303,7 +306,7 @@ struct SceneRepresentation{
         std::string filename;
         Affine3f transform;
         BSDF bsdf;
-        Vector3f color;
+        Vector3f radiance;
     };
 
     std::vector<EmitterInfo> emitterInfos{};

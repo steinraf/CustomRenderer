@@ -18,7 +18,6 @@ struct Intersection{
 
     float t;
 
-
     //TODO rayIntersect records need to set in the shape class, and not just with ray.at(t) because of numerical
     //instabilities
 

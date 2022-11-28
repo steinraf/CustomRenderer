@@ -229,11 +229,11 @@ namespace cudaHelpers{
     }
 
     template<typename Primitive>
-    __global__ void initBVH(BLAS<Primitive> *bvh, AccelerationNode<Primitive> *bvhTotalNodes, float *cdf, size_t numPrimitives){
+    __global__ void initBVH(BLAS<Primitive> *bvh, AccelerationNode<Primitive> *bvhTotalNodes, const float *cdf, size_t numPrimitives, Color3f radiance = Color3f{0.f}){
         int i, j, pixelIndex;
         if(!cudaHelpers::initIndices(i, j, pixelIndex, 1, 1)) return;
 
-        *bvh = BLAS<Primitive>(bvhTotalNodes, cdf, numPrimitives);
+        *bvh = BLAS<Primitive>(bvhTotalNodes, cdf, numPrimitives, radiance);
     }
 
     __global__ void freeVariables();
@@ -247,7 +247,16 @@ namespace cudaHelpers{
         if(!scene->rayIntersect(ray, its))
             return Color3f{0.f};
 
-//
+        if(its.emitter){
+//            printf("Hit emitter.\n");
+//            return Color3f{1.f};
+            return its.emitter->eval({ray.origin, its.p, its.n});
+        }
+//        else{
+//            return Color3f{0.f};
+//        }
+
+
         return its.n.absValues();
 
 //        printf("UV's are (%f, %f)\n", its.uv[0], its.uv[1]);

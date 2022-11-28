@@ -10,7 +10,7 @@
 
 class Ray{
 public:
-    [[nodiscard]] __device__ constexpr Ray()
+    [[nodiscard]] __host__ __device__ constexpr Ray()
         : origin{0.f, 0.f, 0.f}, dir{1.f, 0.f, 0.f}
         , minDist(FLT_EPSILON), maxDist(cuda::std::numeric_limits<float>::infinity()){
 
