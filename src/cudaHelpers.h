@@ -238,10 +238,8 @@ namespace cudaHelpers{
 
     __global__ void freeVariables();
 
-
     template<typename Primitive>
-    __device__ Color3f constexpr getColor(const Ray &ray, TLAS<Primitive> *scene, int maxRayDepth, Sampler &sampler) noexcept{
-
+    __device__ Color3f constexpr DirectMAS(const Ray &ray, TLAS<Primitive> *scene, Sampler &sampler) noexcept{
         Intersection its;
         if (!scene->rayIntersect(ray, its))
             return Color3f{0.f};
@@ -253,7 +251,7 @@ namespace cudaHelpers{
             sample = its.mesh->getEmitter()->eval({ray.o, its.p, its.shFrame.n});
 
 
-        BSDFQuer    yRecord bsdfQueryRecord{
+        BSDFQueryRecord bsdfQueryRecord{
                 its.shFrame.toLocal(-ray.d)
         };
         bsdfQueryRecord.measure = ESolidAngle;
@@ -284,29 +282,79 @@ namespace cudaHelpers{
         }
 
         return sample;
+    }
+
+    template<typename Primitive>
+    __device__ Color3f constexpr PathMAS(const Ray &ray, TLAS<Primitive> *scene, int maxRayDepth, Sampler &sampler) noexcept{
+        Intersection its;
 
 
-//
-//        Intersection its;
-//
-//        if(!scene->rayIntersect(ray, its))
-//            return Color3f{0.f};
-//
-//        Color3f sample{0.5f};
-//
-//        if(its.mesh->isEmitter()){
-//            sample =  its.mesh->getEmitter()->eval({ray.o, its.p, its.shFrame.n});
-//            return sample;
-//        }
-//
-//
-//
-////        printf("Not emitter...\n");
-////        return Color3f{0.25f};
-//
-//        return sample;
-////        return (its.p + Vector3f{EPSILON}).normalized().absValues();
+        Color3f Li{0.f}, t{1.f};
 
+        Ray currentRay = ray;
+
+        int numBounces = 0;
+
+        while(true){
+
+            if (!scene->rayIntersect(currentRay, its))
+                return Li;
+
+            if (its.mesh->isEmitter())
+                Li += t * its.mesh->getEmitter()->eval({currentRay.o, its.p, its.shFrame.n});
+
+            float successProbability = fmin(t.maxCoeff(), 0.99f);
+//                if((++numBounces > 3) && sampler->next1D() > successProbability)
+            if(sampler.getSample1D() >= successProbability || ++numBounces > maxRayDepth)
+                return Li;
+
+            t /= successProbability;
+
+            BSDFQueryRecord bsdfQueryRecord{
+                    its.shFrame.toLocal(-currentRay.d)
+            };
+            bsdfQueryRecord.measure = ESolidAngle;
+            bsdfQueryRecord.uv = its.uv;
+
+            const auto bsdfSample = its.mesh->getBSDF()->sample(bsdfQueryRecord, sampler.getSample2D());
+
+            t *= bsdfSample;
+
+            currentRay = {
+                    its.p,
+                    its.shFrame.toWorld(bsdfQueryRecord.wo)
+            };
+        }
+    }
+
+    template<typename Primitive>
+    __device__ Color3f constexpr normalMapper(const Ray &ray, TLAS<Primitive> *scene, Sampler &sampler) noexcept{
+        Intersection its;
+        Color3f Li{0.f};
+        if (!scene->rayIntersect(ray, its))
+            return Li;
+
+        return its.shFrame.n.absValues();
+    }
+
+    template<typename Primitive>
+    __device__ Color3f constexpr depthMapper(const Ray &ray, TLAS<Primitive> *scene, Sampler &sampler) noexcept{
+        Intersection its;
+        Color3f Li{0.f};
+        if (!scene->rayIntersect(ray, its))
+            return Li;
+
+        return (its.p + Vector3f(EPSILON)).normalized().absValues();
+    }
+
+
+    template<typename Primitive>
+    __device__ Color3f constexpr getColor(const Ray &ray, TLAS<Primitive> *scene, int maxRayDepth, Sampler &sampler) noexcept{
+
+//        return DirectMAS(ray, scene, sampler);
+        return PathMAS(ray, scene, maxRayDepth, sampler);
+//        return normalMapper(ray, scene, sampler);
+//        return de pthMapper(ray, scene, sampler);
     }
 
     template<typename Primitive>
@@ -337,7 +385,7 @@ namespace cudaHelpers{
     __global__ void denoise(Vector3f *input, Vector3f *output, int width, int height);
 
     template<typename Primitive>
-    __global__ void render(Vector3f *output, Camera cam, TLAS<Primitive> *tlas, int width, int height, int numSubsamples,
+    __global__ void render(Vector3f *output, Camera cam, TLAS<Primitive> *tlas, int width, int height, int numSubsamples, int maxRayDepth,
                            curandState *globalRandState){
         int i, j, pixelIndex;
         if(!initIndices(i, j, pixelIndex, width, height)) return;
@@ -350,8 +398,6 @@ namespace cudaHelpers{
 
         const auto widthFloat = static_cast<float>(width);
         const auto heightFloat = static_cast<float>(height);
-
-        const int maxRayDepth = customRenderer::getMaxRayDepth();
 
         Color3f col{0.0f};
 

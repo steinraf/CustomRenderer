@@ -88,6 +88,7 @@ HostMeshInfo loadMesh(const std::filesystem::path &filePath, const Affine3f &tra
                 int v4, t4, n4;
                 std::istringstream s4(e4);
                 s4 >> v4 >> delim >> t4 >> delim >> n4;
+                assert(delim == '/');
 
                 vertexIndices3.push_back(v4 - 1);
                 vertexIndices1.push_back(v1 - 1);
@@ -104,6 +105,29 @@ HostMeshInfo loadMesh(const std::filesystem::path &filePath, const Affine3f &tra
                 normalIndices2.push_back(n3 - 1);
 
             }
+        }
+    }
+
+
+    if(normals.size() == 0){
+        normals.resize(vertexIndices1.size());
+        std::cout << "\tNo normals found. Interpolating...\n";
+        for(int i = 0; i < vertexIndices1.size(); ++i){
+            const Vector3f  p0 = vertices[vertexIndices1[i]],
+                            p1 = vertices[vertexIndices2[i]],
+                            p2 = vertices[vertexIndices3[i]];
+            normals[i] = ((p1-p0).cross(p2-p0)).normalized();
+//            std::cout << "NM Idx " << normalIndices1[i] << '\n';
+//            std::cout << "Normal " << i << " (" << normals[i][0] << '/' << normals[i][1] << '/' << normals[i][2] << ")\n";
+        }
+
+    }
+
+    if(textures.size() == 0){
+        textures.resize(textureIndices1.size());
+        std::cout << "\tNo textures found. Interpolating...\n";
+        for(int i = 0; i < textureIndices1.size(); ++i){
+            textures[i] = {0.f, 0.f};
         }
     }
 
@@ -131,6 +155,8 @@ DeviceMeshInfo meshToGPU(const HostMeshInfo &mesh) noexcept {
             textureIndexList,
             normalIndexList] = mesh;
 
+
+
 #pragma omp parallel for
     for(int i = 0; i < numTriangles; ++i){
         hostTriangles[i] = {
@@ -143,7 +169,7 @@ DeviceMeshInfo meshToGPU(const HostMeshInfo &mesh) noexcept {
                 normals[normalIndexList.first[i]],
                 normals[normalIndexList.second[i]],
                 normals[normalIndexList.third[i]],
-                BSDF{Material::DIFFUSE}
+//                BSDF{Material::DIFFUSE}
         };
     }
 
@@ -162,6 +188,8 @@ DeviceMeshInfo meshToGPU(const HostMeshInfo &mesh) noexcept {
 
     float totalTriaArea = thrust::transform_reduce(deviceTriangles.begin(), deviceTriangles.end(),
                                                   triangleToArea, 0.f, thrust::plus<float>());
+
+    assert(isfinite(totalTriaArea));
 
     TriangleToCDF triangleToCdf(totalTriaArea);
     thrust::device_vector<float> areaCDF(numTriangles);

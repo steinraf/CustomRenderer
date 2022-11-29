@@ -1,14 +1,15 @@
 <scene>
-    <integrator type="path"/>
+    <integrator type="path">
+        <integer name="max_depth" value="6"/>
+    </integrator>
 
 
     <sensor type="perspective">
-        <float name="fov" value="30"/>
-<!--        39.3077-->
+        <float name="fov" value="39.3077"/>
 
 
         <transform name="to_world">
-            <lookat o="20, 20, 50"
+            <lookat origin="20, 20, 50"
                     target="0, 4, 0"
                     up="0, 1, 0"/>
         </transform>
@@ -16,7 +17,7 @@
 
 
         <sampler type="independent">
-            <integer name="sample_count" value="32"/>
+            <integer name="sample_count" value="64"/>
         </sampler>
 
         <film type="hdrfilm">

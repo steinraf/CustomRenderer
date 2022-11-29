@@ -10,8 +10,7 @@ __device__ __host__ Camera::Camera(Vector3f origin, Vector3f lookAt, Vector3f _u
         : origin(origin), lensRadius(aperture / 2.0f){
 
 
-    const float halfHeight = tan(vFOV * M_PIf / 360.0f);
-    const float halfWidth = aspectRatio * halfHeight;
+
 
 
     constexpr int noriConvert = -1; // -1 for nori, 1 for correct handedness
@@ -20,6 +19,9 @@ __device__ __host__ Camera::Camera(Vector3f origin, Vector3f lookAt, Vector3f _u
     front = (lookAt - origin).normalized();
     right = noriConvert*(_up.cross(-front)).normalized();
     up = front.cross(noriConvert*-right);
+
+    const float halfHeight = tan(vFOV * M_PIf * 0.5f / 180.0f);
+    const float halfWidth = aspectRatio * halfHeight;
 
     const Vector3f halfU = halfWidth * focusDist * right;
     const Vector3f halfV = halfHeight * focusDist * up;

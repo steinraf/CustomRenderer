@@ -1,5 +1,5 @@
 <scene version='3.0.0'>
-    <default name="spp" value="32"/>
+    <default name="spp" value="256"/>
 
     <integrator type='path'/>
 

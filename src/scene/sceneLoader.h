@@ -75,10 +75,25 @@ struct SceneRepresentation{
         std::cout << "\t\t" << "Added mapping " << node.attribute("name").value() << " -> " << node.attribute("value").value() << '\n';
     }
 
-    void inline setIntegrator(const pugi::xml_node &node) const noexcept(false){
+    void inline setIntegrator(const pugi::xml_node &node) noexcept(false){
         if(getString(node.attribute("type")) != "path")
             throw std::runtime_error("Integrator must be path, not \"" + getString(node.attribute("type")) + "\".");
         std::cout << "\t\t path\n";
+
+        for(const auto& child : node.children()){
+            const std::string &childName = child.name();
+            if(childName == "integer"){
+                if(getString(child.attribute("name")) != "max_depth")
+                    throw std::runtime_error("Unrecognized integrator integer option " + getString(child.attribute("name")));
+
+                sceneInfo.maxRayDepth = std::stof(getString(child.attribute("value")));
+                std::cout << "\t\tMaxRayDepth: \n\t\t\t" << sceneInfo.maxRayDepth << '\n';
+            }else{
+                throw std::runtime_error("Non-Integer child found in integrator.");
+            }
+        }
+
+
     }
 
     void inline setSensor(const pugi::xml_node &node) noexcept(false) {
@@ -99,7 +114,7 @@ struct SceneRepresentation{
                 auto lookAt = child.child("lookat");
                 if(lookAt){
                     cameraInfo.target = getVector3f(lookAt, "target", "\t\t\t");
-                    cameraInfo.origin = getVector3f(lookAt, "o", "\t\t\t");
+                    cameraInfo.origin = getVector3f(lookAt, "origin", "\t\t\t");
                     cameraInfo.up = getVector3f(lookAt, "up", "\t\t\t");
                 }else{
                     throw std::runtime_error("Sensor Transform must contain lookAt.");
@@ -319,12 +334,13 @@ struct SceneRepresentation{
 
     struct SceneInfo{
         SceneInfo()
-            :samplePerPixel(4), width(100), height(100){
+            :samplePerPixel(4), width(100), height(100), maxRayDepth(6){
 
         }
 
         int samplePerPixel;
         int width, height;
+        int maxRayDepth;
     };
 
     SceneInfo sceneInfo;

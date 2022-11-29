@@ -30,7 +30,7 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) :
                      sceneRepr.cameraInfo.fov,
                      static_cast<float>(sceneRepr.sceneInfo.width) / static_cast<float>(sceneRepr.sceneInfo.height),
                      customRenderer::getCameraAperture(),
-                     100000.f){//(customRenderer::getCameraOrigin() - customRenderer::getCameraLookAt()).norm()){
+                     (sceneRepr.cameraInfo.origin-sceneRepr.cameraInfo.target).norm()){//(customRenderer::getCameraOrigin() - customRenderer::getCameraLookAt()).norm()){
 
 
     if(dev == CPU){
@@ -60,6 +60,7 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) :
     std::vector<BSDF> hostMeshBSDFS(numMeshes);
     for(int i = 0; i < numMeshes; ++i){
         hostMeshBSDFS[i] = sceneRepresentation.meshInfos[i].bsdf;
+        std::cout << "Mesh " << i << " has bsdf " << hostMeshBSDFS[i].albedo/255.9 << '\n';
     }
 
     BSDF *deviceMeshBSDF;
@@ -87,6 +88,7 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) :
     std::vector<BSDF> hostEmitterBSDFS(numEmitters);
     for(int i = 0; i < numEmitters; ++i){
         hostEmitterBSDFS[i] = sceneRepresentation.emitterInfos[i].bsdf;
+        std::cout << "Emitter " << i << " has bsdf " << hostEmitterBSDFS[i].albedo/255.9 << '\n';
     }
 
     BSDF *deviceEmitterBSDF;
@@ -166,7 +168,7 @@ void Scene::render(){
     std::cout << "Starting render...\n";
 
 
-    cudaHelpers::render<<<blockSize, threadSize>>>(deviceImageBuffer, deviceCamera, meshAccelerationStructure, sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height, sceneRepresentation.sceneInfo.samplePerPixel, deviceCurandState);
+    cudaHelpers::render<<<blockSize, threadSize>>>(deviceImageBuffer, deviceCamera, meshAccelerationStructure, sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height, sceneRepresentation.sceneInfo.samplePerPixel, sceneRepresentation.sceneInfo.maxRayDepth, deviceCurandState);
     checkCudaErrors(cudaGetLastError());
 
     std::cout << "Starting draw thread...\n";

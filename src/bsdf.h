@@ -41,6 +41,7 @@ struct BSDFQueryRecord{
 
 enum class Material{
     DIFFUSE,
+    MIRROR
 };
 
 
@@ -52,23 +53,28 @@ public:
 
     }
 
-    __device__ __host__ constexpr BSDF(Material mat, Color3f albedo=Color3f{1.f}) noexcept
+    __device__ __host__ constexpr BSDF(Material mat, Color3f albedo) noexcept
         : material(mat), albedo(albedo){
 
     }
 
     __device__ constexpr Color3f sample(BSDFQueryRecord &bsdfQueryRecord, const Vector2f &sample) const noexcept{
-        if (Frame::cosTheta(bsdfQueryRecord.wi) <= 0)
-            return Color3f(0.0f);
+        switch(material){
+            case Material::DIFFUSE:
+                if (Frame::cosTheta(bsdfQueryRecord.wi) <= 0)
+                    return Color3f(0.0f);
 
-        bsdfQueryRecord.measure = ESolidAngle;
+                bsdfQueryRecord.measure = ESolidAngle;
 
-        bsdfQueryRecord.wo = Warp::squareToCosineHemisphere(sample);
+                bsdfQueryRecord.wo = Warp::squareToCosineHemisphere(sample);
 
-        bsdfQueryRecord.eta = 1.0f;
+                bsdfQueryRecord.eta = 1.0f;
 
-        //TODO add support for textures
-        return albedo;
+                //TODO add support for textures
+                return albedo;
+
+        }
+
     }
 
 //private:

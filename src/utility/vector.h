@@ -113,6 +113,8 @@ public:
 
     [[nodiscard]] __host__ __device__ constexpr inline bool isZero() const noexcept;
 
+    [[nodiscard]] __host__ __device__ constexpr inline float maxCoeff() const noexcept;
+
 
 
 
@@ -412,6 +414,10 @@ __host__ __device__ constexpr Vector3f Vector3f::applyTransform(const Affine3f &
         return transform.rotation * (*this);
     else
         return transform.rotation * (*this) + transform.translation;
+}
+
+__host__ __device__ constexpr float Vector3f::maxCoeff() const noexcept{
+    return CustomRenderer::max(data[0], CustomRenderer::max(data[1], data[2]));
 }
 
 
