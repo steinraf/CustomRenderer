@@ -9,6 +9,7 @@
 #include "../utility/ray.h"
 #include "../hittable.h"
 #include "../emitters/areaLight.h"
+#include "../bsdf.h"
 
 template<typename Primitive>
 struct AccelerationNode{
@@ -54,15 +55,16 @@ private:
     size_t numPrimitives;
 
 
-
+    AreaLight *emitter;
+    BSDF *bsdf;
 
 public:
 
-    AreaLight *emitter;
 
 
-    __device__ constexpr explicit BLAS(AccelerationNode<Primitive> *bvhTotalNodes, const float *cdf, size_t numPrimitives, AreaLight *emitter) noexcept
-            : root(bvhTotalNodes), cdf(cdf), numPrimitives(numPrimitives), emitter(emitter){
+
+    __device__ constexpr explicit BLAS(AccelerationNode<Primitive> *bvhTotalNodes, const float *cdf, size_t numPrimitives, AreaLight *emitter, BSDF *bsdf) noexcept
+            : root(bvhTotalNodes), cdf(cdf), numPrimitives(numPrimitives), emitter(emitter), bsdf(bsdf){
 
         if(emitter)
             emitter->setBlas(this);
@@ -89,6 +91,8 @@ public:
         NodePtr stack[stackSize];
         int idx = 0;
 
+        Triangle *hitTriangle = nullptr;
+
         NodePtr currentNode = root;
 
         if(!root->boundingBox.rayIntersect(r))
@@ -101,9 +105,8 @@ public:
                 if(currentNode->primitive->rayIntersect(r, itsOut)){
                     hasHit = true;
                     r.maxDist = itsOut.t;
-                    itsOut.triangle = currentNode->primitive;
-
-                    itsOut.emitter = this->emitter;
+                    hitTriangle = currentNode->primitive;
+                    itsOut.mesh = this;
                 }
                 currentNode = stack[--idx];
             }else{
@@ -127,11 +130,20 @@ public:
 
 //        itsOut = itsTmp;
         if(hasHit)
-            itsOut.triangle->setHitInformation(r, itsOut);
+            hitTriangle->setHitInformation(r, itsOut);
 
 
 
         return hasHit;
+    }
+
+    [[nodiscard]] __device__ constexpr BSDF *getBSDF() const noexcept{
+        return bsdf;
+    }
+
+    [[nodiscard]] __device__ constexpr AreaLight *getEmitter() const noexcept{
+        assert(emitter);
+        return emitter;
     }
 
     [[nodiscard]] __device__ constexpr bool isEmitter() const noexcept{

@@ -11,7 +11,7 @@
 class Ray{
 public:
     [[nodiscard]] __host__ __device__ constexpr Ray()
-        : origin{0.f, 0.f, 0.f}, dir{1.f, 0.f, 0.f}
+        : o{0.f, 0.f, 0.f}, d{1.f, 0.f, 0.f}
         , minDist(FLT_EPSILON), maxDist(cuda::std::numeric_limits<float>::infinity()){
 
     }
@@ -19,20 +19,20 @@ public:
     [[nodiscard]] __device__ constexpr Ray(const Vector3f &origin, const Vector3f &direction
                                            , float minDist = FLT_EPSILON,
                                            float maxDist = cuda::std::numeric_limits<float>::infinity()) noexcept
-        : origin(origin), dir(direction), minDist(minDist), maxDist(maxDist){
+        : o(origin), d(direction), minDist(minDist), maxDist(maxDist){
 
     }
 
-    [[nodiscard]] __device__ constexpr Vector3f atTime(float t) const noexcept {return origin + t * dir;}
+    [[nodiscard]] __device__ constexpr Vector3f atTime(float t) const noexcept {return o + t * d;}
 
-    [[nodiscard]] __device__ constexpr Vector3f getOrigin() const noexcept { return origin; }
+    [[nodiscard]] __device__ constexpr Vector3f getOrigin() const noexcept { return o; }
 
-    [[nodiscard]] __device__ constexpr Vector3f getDirection() const noexcept { return dir; }
+    [[nodiscard]] __device__ constexpr Vector3f getDirection() const noexcept { return d; }
 
 
 //private:
-    Vector3f origin;
-    Vector3f dir;
+    Vector3f o;
+    Vector3f d;
     float minDist;
     float maxDist;
 };

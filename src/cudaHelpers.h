@@ -229,11 +229,11 @@ namespace cudaHelpers{
     }
 
     template<typename Primitive>
-    __global__ void initBVH(BLAS<Primitive> *bvh, AccelerationNode<Primitive> *bvhTotalNodes, const float *cdf, size_t numPrimitives, AreaLight *emitter){
+    __global__ void initBVH(BLAS<Primitive> *bvh, AccelerationNode<Primitive> *bvhTotalNodes, const float *cdf, size_t numPrimitives, AreaLight *emitter, BSDF *bsdf){
         int i, j, pixelIndex;
         if(!cudaHelpers::initIndices(i, j, pixelIndex, 1, 1)) return;
 
-        *bvh = BLAS<Primitive>(bvhTotalNodes, cdf, numPrimitives, emitter);
+        *bvh = BLAS<Primitive>(bvhTotalNodes, cdf, numPrimitives, emitter, bsdf);
     }
 
     __global__ void freeVariables();
@@ -243,102 +243,69 @@ namespace cudaHelpers{
     __device__ Color3f constexpr getColor(const Ray &ray, TLAS<Primitive> *scene, int maxRayDepth, Sampler &sampler) noexcept{
 
         Intersection its;
-
-        if(!scene->rayIntersect(ray, its))
+        if (!scene->rayIntersect(ray, its))
             return Color3f{0.f};
 
-        if(its.emitter){
-            return its.emitter->eval({ray.origin, its.p, its.n});
-//            return Color3f{1.f};
-        }
-        return (its.p + Vector3f{EPSILON}).normalized().absValues();
-//        return its.n.absValues();
-//
-//        if(its.emitter && its.emitter->blas->isEmitter()){
-        if(its.emitter){
-            if(!its.emitter->isEmitter()){
-                printf("Mesh is emitter\n");
-            }else if(!its.emitter->blas){
-                printf("No blas conntected to emitter\n");
-            }else if(!its.emitter->blas->isEmitter()){
-                printf("BLAS is not emitter\n");
-            }else{
-                //            printf("Hit emitter.\n");
-//            return Color3f{1.f};
-//            const EmitterQueryRecord emitterQueryRecord{
-//                    ray.origin, its.p, its.n
-//            };
-//            return emitterQueryRecord.wi.absValues();
 
-                return Color3f{0.f, 1.f, 0.f};
-//            return its.emitter->eval({ray.origin, its.p, its.n});
-            }
+        Color3f sample{0.f};
 
-        }
-//        else{
-//            return Color3f{0.f};
-//        }
+        if (its.mesh->isEmitter())
+            sample = its.mesh->getEmitter()->eval({ray.o, its.p, its.shFrame.n});
 
 
-        return Color3f{0.5f};
+        BSDFQuer    yRecord bsdfQueryRecord{
+                its.shFrame.toLocal(-ray.d)
+        };
+        bsdfQueryRecord.measure = ESolidAngle;
+        bsdfQueryRecord.uv = its.uv;
 
-//        printf("UV's are (%f, %f)\n", its.uv[0], its.uv[1]);
+        auto bsdfSample = its.mesh->getBSDF()->sample(bsdfQueryRecord, sampler.getSample2D());
 
-
-        Vector2f m_scale{0.5f, 0.5f}, m_delta{0.f, 0.f};
-        Color3f m_value1{1.f}, m_value2{0.f};
-
-        Vector2f p = its.uv/m_scale - m_delta;
-
-        auto a = static_cast<int>(floorf(p[0]));
-        auto b = static_cast<int>(floorf(p[1]));
-
-        auto mod = [](int a, int b){
-            const int r = a % b;
-            return (r < 0) ? r + b : r;
+        Ray newRay = {
+                its.p,
+                its.shFrame.toWorld(bsdfQueryRecord.wo)
         };
 
-        if (mod(a + b, 2) == 0.f)
-            return m_value1;
+        Intersection emitterIntersect;
 
-        return m_value2;
+        if (scene->rayIntersect(newRay, emitterIntersect) && emitterIntersect.mesh->isEmitter()){
+
+            const auto &emitter = emitterIntersect.mesh->getEmitter();
+
+            EmitterQueryRecord emitterQueryRecord{
+                    ray.o,
+                    its.p,
+                    its.shFrame.n
+            };
+
+            sample += emitter->eval(emitterQueryRecord)
+                      * bsdfSample;
+
+        }
+
+        return sample;
 
 
-
-//        const Vector3f scatter = Warp::sampleUniformHemisphere(sampler, its.n);
 //
+//        Intersection its;
 //
-//        if(!scene->rayIntersect({its.p, scatter, EPSILON, 1000}, its))
-//            return Color3f{1.f};
+//        if(!scene->rayIntersect(ray, its))
+//            return Color3f{0.f};
 //
+//        Color3f sample{0.5f};
 //
-//        return Color3f{0.f};
-
-//        Ray scattered;
-//        Color3f attenuation;
-//
-//        Color3f currentAttenuation{1.f};
-//
-//        for(int depth = 0; depth < maxRayDepth; ++depth){
-//            if(bvh->rayIntersect(currentRay, FLT_EPSILON, cuda::std::numeric_limits<float>::infinity(), record)){
-//                if(record.triangle->bsdf.scatter(currentRay, record, attenuation, scattered, sampler)){
-//                    currentRay = scattered;
-////                    currentAttenuation *= attenuation;
-////                    return record.n;// * 255.99;
-//                }else{
-//                    return Color3f{0.f};
-//                }
-//
-//            }else{
-////                return Color3f{1.f};
-////                float t = 0.5f * (r.getDirection().normalized()[1] + 1.f);
-////                Color3f c = (1 - t) * Vector3f{1.f} + t * Color3f{0.5f, 0.7f, 1.0f};
-//                const Color3f c{1.f};
-//                return currentAttenuation * c;
-//            }
+//        if(its.mesh->isEmitter()){
+//            sample =  its.mesh->getEmitter()->eval({ray.o, its.p, its.shFrame.n});
+//            return sample;
 //        }
-
-
+//
+//
+//
+////        printf("Not emitter...\n");
+////        return Color3f{0.25f};
+//
+//        return sample;
+////        return (its.p + Vector3f{EPSILON}).normalized().absValues();
 
     }
 
@@ -374,28 +341,6 @@ namespace cudaHelpers{
                            curandState *globalRandState){
         int i, j, pixelIndex;
         if(!initIndices(i, j, pixelIndex, width, height)) return;
-
-        if(i == 0 && j == 0){
-            for(int tmp = 0; tmp < tlas->numEmitters; ++tmp){
-                auto radiance = tlas->emitterBlasArr[tmp]->emitter->radiance;
-                printf("Emitter %i has radiance (%f, %f, %f)\n", tmp, radiance[0], radiance[1], radiance[2]);
-                assert(tlas->emitterBlasArr[tmp]->isEmitter());
-            }
-        }
-
-//        if(i == 0 && j == 0){
-//            printf("Testing Hit: \n");
-//
-//            auto r = Ray(customRenderer::getCameraOrigin(), customRenderer::getCameraLookAt() - customRenderer::getCameraOrigin());
-//            Intersection h;
-//            bool didHit = bvh->rayIntersect(r, FLT_EPSILON, INFINITY, h);
-//            printf("Testing Hit: %d \n", didHit);
-//            output[pixelIndex] = Vector3f{1.f};
-//            return;
-//        }else{
-//            output[pixelIndex] = Vector3f{0.f};
-//            return;
-//        }
 
 
         auto sampler = Sampler(&globalRandState[pixelIndex]);

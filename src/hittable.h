@@ -6,13 +6,21 @@
 
 #include "utility/vector.h"
 #include "utility/ray.h"
+#include "utility/frame.h"
+
+template <typename Primitive>
+class BLAS;
+
+class Triangle;
 
 struct Intersection{
     Vector3f p;
-    Vector3f n;
+    Frame shFrame;
+//    Vector3f n;
 
-    class Triangle const *triangle;
-    class AreaLight const *emitter;
+//    class Triangle const *triangle;
+//    class AreaLight const *emitter;
+    BLAS<Triangle> const *mesh;
 
     Vector2f uv;
 

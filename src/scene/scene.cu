@@ -56,20 +56,46 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) :
 //    checkCudaErrors(cudaDeviceSynchronize());
 
     auto numMeshes = sceneRepresentation.meshInfos.size();
+
+    std::vector<BSDF> hostMeshBSDFS(numMeshes);
+    for(int i = 0; i < numMeshes; ++i){
+        hostMeshBSDFS[i] = sceneRepresentation.meshInfos[i].bsdf;
+    }
+
+    BSDF *deviceMeshBSDF;
+    checkCudaErrors(cudaMalloc(&deviceMeshBSDF, sizeof(BSDF)*numMeshes));
+    checkCudaErrors(cudaMemcpy(deviceMeshBSDF, hostMeshBSDFS.data(), sizeof(BSDF) * numMeshes, cudaMemcpyHostToDevice));
+
+
+
     std::vector<BLAS<Triangle> *> hostMeshBlasVector(numMeshes);
 
 
     clock_t meshLoadStart = clock();
-//#pragma omp parallel for
+#pragma omp parallel for
     for(int i = 0; i < numMeshes; ++i){
         hostMeshBlasVector[i] = getMeshFromFile(sceneRepr.meshInfos[i].filename,
                                                 hostDeviceMeshTriangleVec[i],
                                                 hostDeviceMeshCDF[i],
                                                 totalMeshArea[i],
-                                                sceneRepr.meshInfos[i].transform);
+                                                sceneRepr.meshInfos[i].transform,
+                                                deviceMeshBSDF + i);
     }
 
     auto numEmitters = sceneRepresentation.emitterInfos.size();
+
+    std::vector<BSDF> hostEmitterBSDFS(numEmitters);
+    for(int i = 0; i < numEmitters; ++i){
+        hostEmitterBSDFS[i] = sceneRepresentation.emitterInfos[i].bsdf;
+    }
+
+    BSDF *deviceEmitterBSDF;
+    checkCudaErrors(cudaMalloc(&deviceEmitterBSDF, sizeof(BSDF)*numEmitters));
+    checkCudaErrors(cudaMemcpy(deviceEmitterBSDF, hostEmitterBSDFS.data(), sizeof(BSDF) * numEmitters, cudaMemcpyHostToDevice));
+
+
+
+
     std::vector<BLAS<Triangle> *> hostEmitterBlasVector(numEmitters);
 
     std::vector<AreaLight> hostAreaLights(numEmitters);
@@ -78,17 +104,18 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) :
     }
 
     AreaLight *deviceAreaLights;
-    checkCudaErrors(cudaMalloc(&deviceAreaLights, sizeof(AreaLight)));
+    checkCudaErrors(cudaMalloc(&deviceAreaLights, sizeof(AreaLight)*numEmitters));
     checkCudaErrors(cudaMemcpy(deviceAreaLights, hostAreaLights.data(), sizeof(AreaLight) * numEmitters, cudaMemcpyHostToDevice));
 
 
-//#pragma omp parallel for
+#pragma omp parallel for
     for(int i = 0; i < numEmitters; ++i){
         hostEmitterBlasVector[i] = getMeshFromFile( sceneRepr.emitterInfos[i].filename,
                                                     hostDeviceEmitterTriangleVec[i],
                                                     hostDeviceEmitterCDF[i],
                                                     totalEmitterArea[i],
                                                     sceneRepr.emitterInfos[i].transform,
+                                                    deviceEmitterBSDF + i,
                                                     deviceAreaLights + i);
     }
 

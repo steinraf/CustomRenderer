@@ -99,7 +99,7 @@ struct SceneRepresentation{
                 auto lookAt = child.child("lookat");
                 if(lookAt){
                     cameraInfo.target = getVector3f(lookAt, "target", "\t\t\t");
-                    cameraInfo.origin = getVector3f(lookAt, "origin", "\t\t\t");
+                    cameraInfo.origin = getVector3f(lookAt, "o", "\t\t\t");
                     cameraInfo.up = getVector3f(lookAt, "up", "\t\t\t");
                 }else{
                     throw std::runtime_error("Sensor Transform must contain lookAt.");
@@ -151,22 +151,28 @@ struct SceneRepresentation{
 
         if(isEmitter){
             emitterInfos.back().filename = name;
+            std::cout << "\t\tFilename: " << emitterInfos.back().filename << '\n';
         }else{
             meshInfos.back().filename = name;
+            std::cout << "\t\tFilename: " << meshInfos.back().filename << '\n';
         }
 
 
-        std::cout << "\t\tFilename: " << meshInfos.back().filename << '\n';
+
     }
 
-    void addBSDF(const pugi::xml_node &node){
+    void addBSDF(const pugi::xml_node &node, bool isEmitter=false){
         if(getString(node.attribute("type")) == "diffuse"){
             const auto color = node.child("rgb");
             if(getString(color.attribute("name")) != "reflectance")
                 throw std::runtime_error("Invalid Tag \"" + getString(color.attribute("name")) + "\"found for material.");
             std::cout << "\t\tMaterial:\n";
             std::cout << "\t\t\tBSDF: DIFFUSE\n";
-            meshInfos.back().bsdf = {Material::DIFFUSE, getVector3f(color, "value", "\t\t\t", "reflectance")};
+            if(isEmitter){
+                emitterInfos.back().bsdf = {Material::DIFFUSE, getVector3f(color, "value", "\t\t\t", "reflectance")};
+            }else{
+                meshInfos.back().bsdf = {Material::DIFFUSE, getVector3f(color, "value", "\t\t\t", "reflectance")};
+            }
 
         }else{
             throw std::runtime_error("Invalid Material \"" + getString(node.attribute("type")) + "\". Only diffuse is supported.");
@@ -204,7 +210,7 @@ struct SceneRepresentation{
             if(childName == "string"){
                 addFilename(getString(child.attribute("value")), true);
             }else if(childName == "bsdf"){
-                addBSDF(child);
+                addBSDF(child, true);
             }else if(childName == "emitter"){
                 if(getString(child.attribute("type")) != "area")
                     throw std::runtime_error("Invalid Emitter \"" + getString(child.attribute("type")) + "\". Only area is supported.");

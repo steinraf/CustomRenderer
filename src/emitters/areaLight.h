@@ -28,8 +28,7 @@ struct EmitterQueryRecord{
     }
 };
 
-template <typename Primitive>
-class BLAS;
+
 
 class AreaLight{
 public:

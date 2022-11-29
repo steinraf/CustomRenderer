@@ -118,7 +118,8 @@ private:
 
 template<typename Primitive>
 __host__ BLAS<Primitive> * getMeshFromFile(const std::string &filename, thrust::device_vector<Primitive> &deviceTrias,
-                                            thrust::device_vector<float> &areaCDF, float &totalArea, const Affine3f &transform, AreaLight *deviceEmitter = nullptr){
+                                            thrust::device_vector<float> &areaCDF, float &totalArea, const Affine3f &transform,
+                                            BSDF *deviceBSDF, AreaLight *deviceEmitter = nullptr){
     clock_t startGeometryBVH = clock();
 
 //    if(!radiance.isZero())
@@ -174,7 +175,7 @@ __host__ BLAS<Primitive> * getMeshFromFile(const std::string &filename, thrust::
 
     clock_t initBVHTime = clock();
 
-    cudaHelpers::initBVH<<<1, 1>>>(bvh, bvhTotalNodes, deviceCDF.data().get(), numTriangles, deviceEmitter);
+    cudaHelpers::initBVH<<<1, 1>>>(bvh, bvhTotalNodes, deviceCDF.data().get(), numTriangles, deviceEmitter, deviceBSDF);
 
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());

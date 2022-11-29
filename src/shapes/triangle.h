@@ -48,7 +48,7 @@ public:
 
         float inv_det = 1.f / det;
 
-        /* Calculate distance from v[0] to ray origin */
+        /* Calculate distance from v[0] to ray o */
         Vector3f tvec = r.getOrigin() - p0;
 
         /* Calculate U parameter and test bounds */
@@ -72,9 +72,9 @@ public:
 
         if(t >= r.minDist && t <= r.maxDist){
             const Vector3f bary{1 - u - v, u, v};
-            its.p = bary[0] * p0 + bary[1] * p1 + bary[2]     * p2; //r.atTime(its.t);
-            its.n = u       * n0 + v       * n1 + (1 - u - v) * n2;
-            its.triangle = this;
+            its.p = bary[0] * p0 + bary[1] * p1 + bary[2]     * p2;
+            its.shFrame = Frame{u * n0 + v * n1 + (1 - u - v) * n2};
+//            its.triangle = this;
             its.uv = {u, v};
             its.t = t;
 
@@ -100,7 +100,7 @@ public:
         return;
         //TODO compute proper texture coords
 
-        its.triangle = this;
+//        its.triangle = this;
     }
 
     __host__ __device__ constexpr inline float getArea() const noexcept{

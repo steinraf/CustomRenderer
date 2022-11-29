@@ -48,14 +48,14 @@ add_executable(CustomRenderer
         src/shapes/triangle.h
         src/utility/meshLoader.h
         src/utility/meshLoader.cu
-        src/bsdf.cu
         src/bsdf.h
         src/acceleration/aabb.h
         src/utility/vector.cu
         src/scene/sceneLoader.cu
         src/scene/sceneLoader.h
         src/emitters/areaLight.h
-        src/emitters/areaLight.cu)
+        src/emitters/areaLight.cu
+        src/utility/frame.h)
 
 add_dependencies(CustomRenderer pugixml)
 
