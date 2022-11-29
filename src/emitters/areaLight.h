@@ -33,19 +33,26 @@ class BLAS;
 
 class AreaLight{
 public:
-    explicit __device__ AreaLight(const class BLAS<Triangle> *blas)
-        :blas(blas){
-        assert(blas);
+    explicit __host__ __device__ AreaLight(const Color3f &radiance) noexcept;
 
+    AreaLight() = default;
+
+    __device__ void constexpr setBlas(const class BLAS<Triangle> *newBlas){
+        blas = newBlas;
     }
+
 
     [[nodiscard]] __device__ Color3f eval(const EmitterQueryRecord &emitterQueryRecord) const noexcept;
 
+    [[nodiscard]] __device__ constexpr bool isEmitter() const noexcept{
+        return !radiance.isZero();
+    }
 
 //    [[nodiscard]] __device__ Color3f sample(EmitterQueryRecord &emitterQueryRecord, const Vector2f &sample) const noexcept{
 //
 //    }
 
-private:
+//private:
+    Color3f radiance;
     const BLAS<Triangle> *blas;
 };

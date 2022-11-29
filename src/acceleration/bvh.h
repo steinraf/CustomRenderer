@@ -53,19 +53,27 @@ private:
     const float *cdf;
     size_t numPrimitives;
 
-    AreaLight *emitter;
+
 
 
 public:
 
-    __device__ constexpr explicit BLAS(AccelerationNode<Primitive> *bvhTotalNodes, const float *cdf, size_t numPrimitives, const Color3f &radiance) noexcept
-            : root(bvhTotalNodes), cdf(cdf), numPrimitives(numPrimitives), radiance(radiance){
+    AreaLight *emitter;
 
-        if(radiance.isEmpty()){
-            emitter = nullptr;
-        }else{
-            emitter = new AreaLight(this);
-        }
+
+    __device__ constexpr explicit BLAS(AccelerationNode<Primitive> *bvhTotalNodes, const float *cdf, size_t numPrimitives, AreaLight *emitter) noexcept
+            : root(bvhTotalNodes), cdf(cdf), numPrimitives(numPrimitives), emitter(emitter){
+
+        if(emitter)
+            emitter->setBlas(this);
+//        emitter = new AreaLight(this, radiance);
+
+//        if(radiance.isZero()){
+//            emitter = nullptr;
+//        }else{
+//            printf("Initialized emitter BLAS with radiance (%f, %f, %f)\n", radiance[0], radiance[1], radiance[2]);
+//            emitter = new AreaLight(this, radiance);
+//        }
 
 //        printf("BVH LOG NUM: %f\n", log(numPrimitives));
     }
@@ -74,7 +82,7 @@ public:
 //TODO add shadow Rays
     [[nodiscard]] __device__ bool rayIntersect(const Ray &_r, Intersection &itsOut) const noexcept{
         Ray r = _r;
-        Intersection itsTmp;
+//        Intersection itsTmp;
         bool hasHit = false;
 
         constexpr int stackSize = 64;
@@ -90,11 +98,12 @@ public:
             assert(idx < stackSize);
 
             if(currentNode->isLeaf){
-                if(currentNode->primitive->rayIntersect(r, itsTmp)){
+                if(currentNode->primitive->rayIntersect(r, itsOut)){
                     hasHit = true;
-                    r.maxDist = itsTmp.t;
-                    itsTmp.triangle = currentNode->primitive;
-                    itsTmp.emitter = emitter;
+                    r.maxDist = itsOut.t;
+                    itsOut.triangle = currentNode->primitive;
+
+                    itsOut.emitter = this->emitter;
                 }
                 currentNode = stack[--idx];
             }else{
@@ -116,9 +125,9 @@ public:
             }
         }while(idx >= 0);
 
-        itsOut = itsTmp;
+//        itsOut = itsTmp;
         if(hasHit)
-            itsTmp.triangle->setHitInformation(r, itsOut);
+            itsOut.triangle->setHitInformation(r, itsOut);
 
 
 
@@ -126,22 +135,21 @@ public:
     }
 
     [[nodiscard]] __device__ constexpr bool isEmitter() const noexcept{
-        return radiance.isEmpty();
+        return emitter && emitter->isEmitter();
     }
 
     [[nodiscard]] __device__ Triangle *sample() const noexcept{
         return nullptr;
     }
 
-
-    Color3f radiance;
 };
 
 //TODO make logarithmic traversal as well
 //Top Layer Acceleration structure, holds BLAS<Primitive>
 template<typename Primitive>
 class TLAS{
-private:
+//private:
+public:
     BLAS<Primitive> **meshBlasArr;
     int numMeshes;
 
@@ -167,6 +175,7 @@ public:
             if(meshBlasArr[i]->rayIntersect(r, record)){
                 hasHit = true;
                 r.maxDist = record.t;
+//                assert(!record.emitter);
             }
         }
 
@@ -174,6 +183,7 @@ public:
             if(emitterBlasArr[i]->rayIntersect(r, record)){
                 hasHit = true;
                 r.maxDist = record.t;
+//                assert(record.emitter);
             }
         }
 

@@ -229,18 +229,18 @@ namespace cudaHelpers{
     }
 
     template<typename Primitive>
-    __global__ void initBVH(BLAS<Primitive> *bvh, AccelerationNode<Primitive> *bvhTotalNodes, const float *cdf, size_t numPrimitives, Color3f radiance = Color3f{0.f}){
+    __global__ void initBVH(BLAS<Primitive> *bvh, AccelerationNode<Primitive> *bvhTotalNodes, const float *cdf, size_t numPrimitives, AreaLight *emitter){
         int i, j, pixelIndex;
         if(!cudaHelpers::initIndices(i, j, pixelIndex, 1, 1)) return;
 
-        *bvh = BLAS<Primitive>(bvhTotalNodes, cdf, numPrimitives, radiance);
+        *bvh = BLAS<Primitive>(bvhTotalNodes, cdf, numPrimitives, emitter);
     }
 
     __global__ void freeVariables();
 
 
     template<typename Primitive>
-    __device__ Color3f getColor(const Ray &ray, TLAS<Primitive> *scene, int maxRayDepth, Sampler &sampler){
+    __device__ Color3f constexpr getColor(const Ray &ray, TLAS<Primitive> *scene, int maxRayDepth, Sampler &sampler) noexcept{
 
         Intersection its;
 
@@ -248,16 +248,39 @@ namespace cudaHelpers{
             return Color3f{0.f};
 
         if(its.emitter){
-//            printf("Hit emitter.\n");
-//            return Color3f{1.f};
             return its.emitter->eval({ray.origin, its.p, its.n});
+//            return Color3f{1.f};
+        }
+        return (its.p + Vector3f{EPSILON}).normalized().absValues();
+//        return its.n.absValues();
+//
+//        if(its.emitter && its.emitter->blas->isEmitter()){
+        if(its.emitter){
+            if(!its.emitter->isEmitter()){
+                printf("Mesh is emitter\n");
+            }else if(!its.emitter->blas){
+                printf("No blas conntected to emitter\n");
+            }else if(!its.emitter->blas->isEmitter()){
+                printf("BLAS is not emitter\n");
+            }else{
+                //            printf("Hit emitter.\n");
+//            return Color3f{1.f};
+//            const EmitterQueryRecord emitterQueryRecord{
+//                    ray.origin, its.p, its.n
+//            };
+//            return emitterQueryRecord.wi.absValues();
+
+                return Color3f{0.f, 1.f, 0.f};
+//            return its.emitter->eval({ray.origin, its.p, its.n});
+            }
+
         }
 //        else{
 //            return Color3f{0.f};
 //        }
 
 
-        return its.n.absValues();
+        return Color3f{0.5f};
 
 //        printf("UV's are (%f, %f)\n", its.uv[0], its.uv[1]);
 
@@ -351,6 +374,14 @@ namespace cudaHelpers{
                            curandState *globalRandState){
         int i, j, pixelIndex;
         if(!initIndices(i, j, pixelIndex, width, height)) return;
+
+        if(i == 0 && j == 0){
+            for(int tmp = 0; tmp < tlas->numEmitters; ++tmp){
+                auto radiance = tlas->emitterBlasArr[tmp]->emitter->radiance;
+                printf("Emitter %i has radiance (%f, %f, %f)\n", tmp, radiance[0], radiance[1], radiance[2]);
+                assert(tlas->emitterBlasArr[tmp]->isEmitter());
+            }
+        }
 
 //        if(i == 0 && j == 0){
 //            printf("Testing Hit: \n");

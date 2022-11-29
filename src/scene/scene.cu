@@ -60,7 +60,7 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) :
 
 
     clock_t meshLoadStart = clock();
-#pragma omp parallel for
+//#pragma omp parallel for
     for(int i = 0; i < numMeshes; ++i){
         hostMeshBlasVector[i] = getMeshFromFile(sceneRepr.meshInfos[i].filename,
                                                 hostDeviceMeshTriangleVec[i],
@@ -72,14 +72,24 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) :
     auto numEmitters = sceneRepresentation.emitterInfos.size();
     std::vector<BLAS<Triangle> *> hostEmitterBlasVector(numEmitters);
 
-#pragma omp parallel for
+    std::vector<AreaLight> hostAreaLights(numEmitters);
+    for(int i = 0; i < numEmitters; ++i){
+        hostAreaLights[i] = AreaLight(sceneRepr.emitterInfos[i].radiance);
+    }
+
+    AreaLight *deviceAreaLights;
+    checkCudaErrors(cudaMalloc(&deviceAreaLights, sizeof(AreaLight)));
+    checkCudaErrors(cudaMemcpy(deviceAreaLights, hostAreaLights.data(), sizeof(AreaLight) * numEmitters, cudaMemcpyHostToDevice));
+
+
+//#pragma omp parallel for
     for(int i = 0; i < numEmitters; ++i){
         hostEmitterBlasVector[i] = getMeshFromFile( sceneRepr.emitterInfos[i].filename,
                                                     hostDeviceEmitterTriangleVec[i],
                                                     hostDeviceEmitterCDF[i],
                                                     totalEmitterArea[i],
                                                     sceneRepr.emitterInfos[i].transform,
-                                                    sceneRepr.emitterInfos[i].radiance);
+                                                    deviceAreaLights + i);
     }
 
 

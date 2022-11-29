@@ -89,17 +89,20 @@ HostMeshInfo loadMesh(const std::filesystem::path &filePath, const Affine3f &tra
                 std::istringstream s4(e4);
                 s4 >> v4 >> delim >> t4 >> delim >> n4;
 
+                vertexIndices3.push_back(v4 - 1);
                 vertexIndices1.push_back(v1 - 1);
                 vertexIndices2.push_back(v3 - 1);
-                vertexIndices3.push_back(v4 - 1);
 
+
+                textureIndices3.push_back(t4 - 1);
                 textureIndices1.push_back(t1 - 1);
                 textureIndices2.push_back(t3 - 1);
-                textureIndices3.push_back(t4 - 1);
 
+
+                normalIndices3.push_back(n4 - 1);
                 normalIndices1.push_back(n1 - 1);
                 normalIndices2.push_back(n3 - 1);
-                normalIndices3.push_back(n4 - 1);
+
             }
         }
     }

@@ -29,7 +29,7 @@ public:
     }
 
     //Nori Triangle Ray intersect
-    __device__ constexpr bool rayIntersect(const Ray &r, Intersection &rec) const noexcept {
+    __device__ constexpr bool rayIntersect(const Ray &r, Intersection &its) const noexcept {
 
 
         /* Find vectors for two edges sharing v[0] */
@@ -67,20 +67,18 @@ public:
         }
 
 
-        rec.t = edge2.dot(qvec) * inv_det;
+        float t = edge2.dot(qvec) * inv_det;
 
 
-        if(rec.t >= r.minDist && rec.t <= r.maxDist){
-//            rec.p = p0 * (1 - u - v) + p1 * u + p2 * v; //r.atTime(rec.t);
-            rec.p = p0 * u + p1 * v + p2 * (1 - u - v); //r.atTime(rec.t);
-            rec.n = n0 * (1 - u - v) + n1 * u + n2 * v;
-//            rec.n = n0 * u + n1 * v+ n2 * (1 - u - v);
-//            if(r.getDirection().dot(rec.n) >= 0)
-//                rec.n *= -1;
-            rec.triangle = this;
-            rec.uv = {u, v};
+        if(t >= r.minDist && t <= r.maxDist){
+            const Vector3f bary{1 - u - v, u, v};
+            its.p = bary[0] * p0 + bary[1] * p1 + bary[2]     * p2; //r.atTime(its.t);
+            its.n = u       * n0 + v       * n1 + (1 - u - v) * n2;
+            its.triangle = this;
+            its.uv = {u, v};
+            its.t = t;
 
-//        rec.bsdf = bsdf;
+//        its.bsdf = bsdf;
             return true;
         }
 
@@ -90,21 +88,19 @@ public:
     __device__ constexpr void setHitInformation(const Ray &ray, Intersection its) const {
         //TODO set precise rayIntersect Info here
 
-        return;
+
 
         float u = its.uv[0];
         float v = its.uv[1];
 
-        Vector3f bary{1 - u - v, u, v};
+        const Vector3f bary{1 - u - v, u, v};
+        its.p = bary[0] * p0 + bary[1] * p1 + bary[2]     * p2;
+//        its.n = bary[0] * n0 + bary[1] * n1 + bary[2] * n2;
 
-        its.p = bary[0] * p0 + bary[1] * p1 + bary[2] * p2;
-        its.n = bary[0] * n0 + bary[1] * n1 + bary[2] * n2;
-
+        return;
         //TODO compute proper texture coords
 
         its.triangle = this;
-//        its.setFaceNormal(ray, n0 * (1 - u - v) + n1 * u + n2 * v);
-
     }
 
     __host__ __device__ constexpr inline float getArea() const noexcept{

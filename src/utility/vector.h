@@ -111,7 +111,7 @@ public:
 
     [[nodiscard]] __host__ __device__ constexpr inline Vector3f absValues() const noexcept;
 
-    [[nodiscard]] __host__ __device__ constexpr inline bool isEmpty() const noexcept;
+    [[nodiscard]] __host__ __device__ constexpr inline bool isZero() const noexcept;
 
 
 
@@ -393,10 +393,10 @@ __host__ __device__ constexpr inline Vector3f Vector3f::absValues() const noexce
     };
 }
 
-__host__ __device__ constexpr inline bool Vector3f::isEmpty() const noexcept{
-    return  (data[0] == 0) &&
-            (data[1] == 0) &&
-            (data[2] == 0);
+__host__ __device__ constexpr inline bool Vector3f::isZero() const noexcept{
+    return  (data[0] == 0.f) &&
+            (data[1] == 0.f) &&
+            (data[2] == 0.f);
 }
 
 __host__ __device__ constexpr inline bool Vector3f::operator==(const Vector3f &v2) const noexcept{
