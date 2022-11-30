@@ -136,5 +136,4 @@ namespace Warp{
         float u = 1.f - su1, v = sample[1] * su1;
         return {u, v, 1.f - u - v};
     }
-
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#define EPSILON 1e-4
+#define EPSILON 0.00001f
 
 #include <cmath>
 #include <cstdlib>

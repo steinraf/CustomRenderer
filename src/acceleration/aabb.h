@@ -36,7 +36,7 @@ struct AABB{
     }
 
     //Nori BoundingBox RayIntersect
-    [[nodiscard]] __device__ constexpr bool rayIntersect(const Ray &ray) const noexcept {
+    [[nodiscard]] __device__ constexpr bool rayIntersect(const Ray3f &ray) const noexcept {
         float nearT = -cuda::std::numeric_limits<float>::infinity();
         float farT = cuda::std::numeric_limits<float>::infinity();
 

@@ -8,17 +8,17 @@
 #include <cuda/std/limits>
 
 
-class Ray{
+class Ray3f{
 public:
-    [[nodiscard]] __host__ __device__ constexpr Ray()
+    [[nodiscard]] __host__ __device__ constexpr Ray3f()
         : o{0.f, 0.f, 0.f}, d{1.f, 0.f, 0.f}
         , minDist(FLT_EPSILON), maxDist(cuda::std::numeric_limits<float>::infinity()){
 
     }
 
-    [[nodiscard]] __device__ constexpr Ray(const Vector3f &origin, const Vector3f &direction
+    [[nodiscard]] __device__ constexpr Ray3f(const Vector3f &origin, const Vector3f &direction
                                            , float minDist = FLT_EPSILON,
-                                           float maxDist = cuda::std::numeric_limits<float>::infinity()) noexcept
+                                             float maxDist = cuda::std::numeric_limits<float>::infinity()) noexcept
         : o(origin), d(direction), minDist(minDist), maxDist(maxDist){
 
     }

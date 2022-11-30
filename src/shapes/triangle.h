@@ -10,6 +10,32 @@
 #include "../bsdf.h"
 #include "../acceleration/aabb.h"
 
+struct ShapeQueryRecord{
+    Vector3f ref;
+    Vector3f p;
+    Vector3f n;
+
+    float pdf;
+
+    /// Empty constructor
+    __device__ constexpr ShapeQueryRecord() noexcept
+        :ref(), p(), n(), pdf(0.f){
+
+    }
+
+    /// Data structure with ref to call sampleSurface()
+    __device__ constexpr ShapeQueryRecord(const Vector3f &ref_) noexcept
+        : ref(ref_), p(), n(), pdf(0.f) {
+
+    }
+
+    /// Data structure with ref and p to call pdfSurface()
+    __device__ constexpr ShapeQueryRecord(const Vector3f &ref_, const Vector3f &p_) noexcept
+        : ref(ref_), p(p_), n(), pdf(0.f) {
+
+    }
+};
+
 
 class Triangle{
 public:
@@ -27,8 +53,8 @@ public:
 
     }
 
-    //Nori Triangle Ray intersect
-    __device__ constexpr bool rayIntersect(const Ray &r, Intersection &its) const noexcept {
+    //Nori Triangle Ray3f intersect
+    __device__ constexpr bool rayIntersect(const Ray3f &r, Intersection &its) const noexcept {
 
 
         /* Find vectors for two edges sharing v[0] */
@@ -83,7 +109,7 @@ public:
         return false;
     }
 
-    __device__ constexpr void setHitInformation(const Ray &ray, Intersection its) const {
+    __device__ constexpr void setHitInformation(const Ray3f &ray, Intersection its) const {
         //TODO set precise rayIntersect Info here
 
 
@@ -92,17 +118,24 @@ public:
         float v = its.uv[1];
 
         const Vector3f bary{1 - u - v, u, v};
-        its.p = bary[0] * p0 + bary[1] * p1 + bary[2]     * p2;
-//        its.n = bary[0] * n0 + bary[1] * n1 + bary[2] * n2;
 
-        return;
+        its.p = bary[0] * p0 + bary[1] * p1 + bary[2] * p2;
+        its.shFrame = Frame{bary[0] * n0 + bary[1] * n1 + bary[2] * n2};
         //TODO compute proper texture coords
 
 //        its.triangle = this;
     }
 
-    __host__ __device__ constexpr inline float getArea() const noexcept{
+    [[nodiscard]]__host__ __device__ constexpr inline float getArea() const noexcept{
         return 0.5f * (p1 - p0).cross(p2 - p0).norm();
+    }
+
+    [[nodiscard]] __device__ constexpr inline Vector3f getCoordinate(const Vector3f &bary) const noexcept{
+        return bary[0] * p0 + bary[1] * p1 + bary[2] * p2;
+    }
+
+    [[nodiscard]] __device__ constexpr inline Vector3f getNormal(const Vector3f &bary)  const noexcept{
+        return bary[0] * n0 + bary[1] * n1 + bary[2] * n2;
     }
 
 //private:

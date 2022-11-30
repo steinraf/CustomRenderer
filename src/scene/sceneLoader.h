@@ -103,12 +103,16 @@ struct SceneRepresentation{
         for(const auto& child : node.children()){
             const std::string &childName = child.name();
             if(childName == "float"){
-                if(getString(child.attribute("name")) != "fov")
+                auto attribName = getString(child.attribute("name"));
+                if(attribName == "fov"){
+                    cameraInfo.fov = std::stof(getString(child.attribute("value")));
+                    std::cout << "\t\tFOV: \n\t\t\t" << cameraInfo.fov << '\n';
+                }else if(attribName == "aperture"){
+                    cameraInfo.aperture = std::stof(getString(child.attribute("value")));
+                    std::cout << "\t\tAperture: \n\t\t\t" << cameraInfo.aperture << '\n';
+                }else{
                     throw std::runtime_error("Unrecognized sensor float option " + getString(child.attribute("name")));
-
-                cameraInfo.fov = std::stof(getString(child.attribute("value")));
-                std::cout << "\t\tFOV: \n\t\t\t" << cameraInfo.fov << '\n';
-
+                }
             }else if(childName == "transform"){
                 std::cout << "\t\t" << "Transform: \n";
                 auto lookAt = child.child("lookat");
@@ -303,12 +307,12 @@ struct SceneRepresentation{
 
     struct CameraInfo{
         CameraInfo()
-            :target(0.f, 0.f, -1.f), origin(0.f), up(0.f, 1.f, 0.f), fov(30){
+            :target(0.f, 0.f, -1.f), origin(0.f), up(0.f, 1.f, 0.f), fov(30), aperture(0.f){
 
         }
 
         Vector3f target, origin, up;
-        float fov;
+        float fov, aperture;
     };
 
     CameraInfo cameraInfo;

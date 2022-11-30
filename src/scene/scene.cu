@@ -3,7 +3,6 @@
 //
 
 #include "scene.h"
-#include "../constants.h"
 #include "../cudaHelpers.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -29,7 +28,7 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) :
                      sceneRepr.cameraInfo.up,
                      sceneRepr.cameraInfo.fov,
                      static_cast<float>(sceneRepr.sceneInfo.width) / static_cast<float>(sceneRepr.sceneInfo.height),
-                     customRenderer::getCameraAperture(),
+                     sceneRepr.cameraInfo.aperture,
                      (sceneRepr.cameraInfo.origin-sceneRepr.cameraInfo.target).norm()){//(customRenderer::getCameraOrigin() - customRenderer::getCameraLookAt()).norm()){
 
 
@@ -58,9 +57,8 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) :
     auto numMeshes = sceneRepresentation.meshInfos.size();
 
     std::vector<BSDF> hostMeshBSDFS(numMeshes);
-    for(int i = 0; i < numMeshes; ++i){
+    for(size_t i = 0; i < numMeshes; ++i){
         hostMeshBSDFS[i] = sceneRepresentation.meshInfos[i].bsdf;
-        std::cout << "Mesh " << i << " has bsdf " << hostMeshBSDFS[i].albedo/255.9 << '\n';
     }
 
     BSDF *deviceMeshBSDF;
@@ -74,7 +72,7 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) :
 
     clock_t meshLoadStart = clock();
 #pragma omp parallel for
-    for(int i = 0; i < numMeshes; ++i){
+    for(size_t i = 0; i < numMeshes; ++i){
         hostMeshBlasVector[i] = getMeshFromFile(sceneRepr.meshInfos[i].filename,
                                                 hostDeviceMeshTriangleVec[i],
                                                 hostDeviceMeshCDF[i],
@@ -86,9 +84,8 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) :
     auto numEmitters = sceneRepresentation.emitterInfos.size();
 
     std::vector<BSDF> hostEmitterBSDFS(numEmitters);
-    for(int i = 0; i < numEmitters; ++i){
+    for(size_t i = 0; i < numEmitters; ++i){
         hostEmitterBSDFS[i] = sceneRepresentation.emitterInfos[i].bsdf;
-        std::cout << "Emitter " << i << " has bsdf " << hostEmitterBSDFS[i].albedo/255.9 << '\n';
     }
 
     BSDF *deviceEmitterBSDF;
@@ -101,7 +98,7 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) :
     std::vector<BLAS<Triangle> *> hostEmitterBlasVector(numEmitters);
 
     std::vector<AreaLight> hostAreaLights(numEmitters);
-    for(int i = 0; i < numEmitters; ++i){
+    for(size_t i = 0; i < numEmitters; ++i){
         hostAreaLights[i] = AreaLight(sceneRepr.emitterInfos[i].radiance);
     }
 
@@ -111,7 +108,7 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) :
 
 
 #pragma omp parallel for
-    for(int i = 0; i < numEmitters; ++i){
+    for(size_t i = 0; i < numEmitters; ++i){
         hostEmitterBlasVector[i] = getMeshFromFile( sceneRepr.emitterInfos[i].filename,
                                                     hostDeviceEmitterTriangleVec[i],
                                                     hostDeviceEmitterCDF[i],
@@ -133,7 +130,7 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) :
 
     cudaHelpers::constructTLAS<<<1, 1>>>(meshAccelerationStructure,
                                             deviceBlasArr, numMeshes,
-                                            deviceEmitterBlasArr, nullptr, numEmitters);
+                                            deviceEmitterBlasArr, numEmitters);
 
     checkCudaErrors(cudaGetLastError());
 
@@ -167,8 +164,15 @@ void Scene::render(){
     volatile bool currentlyRendering = true;
     std::cout << "Starting render...\n";
 
+    unsigned *deviceCounter;
 
-    cudaHelpers::render<<<blockSize, threadSize>>>(deviceImageBuffer, deviceCamera, meshAccelerationStructure, sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height, sceneRepresentation.sceneInfo.samplePerPixel, sceneRepresentation.sceneInfo.maxRayDepth, deviceCurandState);
+    checkCudaErrors(cudaMalloc(&deviceCounter, sizeof(unsigned)));
+    checkCudaErrors(cudaMemset(deviceCounter, 0, sizeof(unsigned)));
+
+
+    cudaHelpers::render<<<blockSize, threadSize>>>(deviceImageBuffer, deviceCamera, meshAccelerationStructure,
+                                                   sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height, sceneRepresentation.sceneInfo.samplePerPixel, sceneRepresentation.sceneInfo.maxRayDepth,
+                                                   deviceCurandState, deviceCounter);
     checkCudaErrors(cudaGetLastError());
 
     std::cout << "Starting draw thread...\n";

@@ -12,7 +12,6 @@
 #include "camera.h"
 //#include "utility/meshLoader.h"
 #include "acceleration/bvh.h"
-#include "constants.h"
 #include <cuda/std/limits>
 
 
@@ -229,17 +228,17 @@ namespace cudaHelpers{
     }
 
     template<typename Primitive>
-    __global__ void initBVH(BLAS<Primitive> *bvh, AccelerationNode<Primitive> *bvhTotalNodes, const float *cdf, size_t numPrimitives, AreaLight *emitter, BSDF *bsdf){
+    __global__ void initBVH(BLAS<Primitive> *bvh, AccelerationNode<Primitive> *bvhTotalNodes, float totalArea, const float *cdf, size_t numPrimitives, AreaLight *emitter, BSDF *bsdf){
         int i, j, pixelIndex;
         if(!cudaHelpers::initIndices(i, j, pixelIndex, 1, 1)) return;
 
-        *bvh = BLAS<Primitive>(bvhTotalNodes, cdf, numPrimitives, emitter, bsdf);
+        *bvh = BLAS<Primitive>{bvhTotalNodes, totalArea, cdf, numPrimitives, emitter, bsdf};
     }
 
     __global__ void freeVariables();
 
     template<typename Primitive>
-    __device__ Color3f constexpr DirectMAS(const Ray &ray, TLAS<Primitive> *scene, Sampler &sampler) noexcept{
+    __device__ Color3f constexpr DirectMAS(const Ray3f &ray, TLAS<Primitive> *scene, Sampler &sampler) noexcept{
         Intersection its;
         if (!scene->rayIntersect(ray, its))
             return Color3f{0.f};
@@ -247,8 +246,10 @@ namespace cudaHelpers{
 
         Color3f sample{0.f};
 
-        if (its.mesh->isEmitter())
+        if (its.mesh->isEmitter()){
             sample = its.mesh->getEmitter()->eval({ray.o, its.p, its.shFrame.n});
+        }
+
 
 
         BSDFQueryRecord bsdfQueryRecord{
@@ -259,7 +260,7 @@ namespace cudaHelpers{
 
         auto bsdfSample = its.mesh->getBSDF()->sample(bsdfQueryRecord, sampler.getSample2D());
 
-        Ray newRay = {
+        Ray3f newRay = {
                 its.p,
                 its.shFrame.toWorld(bsdfQueryRecord.wo)
         };
@@ -285,13 +286,116 @@ namespace cudaHelpers{
     }
 
     template<typename Primitive>
-    __device__ Color3f constexpr PathMAS(const Ray &ray, TLAS<Primitive> *scene, int maxRayDepth, Sampler &sampler) noexcept{
+    __device__ Color3f constexpr DirectMIS(const Ray3f &ray, TLAS<Primitive> *scene, Sampler &sampler){
+        Intersection its;
+        if (!scene->rayIntersect(ray, its))
+            return Color3f{0.f};
+
+        Color3f sample{0.f};
+
+        if (its.mesh->isEmitter())
+            sample = its.mesh->getEmitter()->eval({ray.o, its.p, its.shFrame.n});
+
+
+        const auto& emsLight = scene->getRandomEmitter(sampler.getSample1D());
+
+
+        EmitterQueryRecord emsEmitterQueryRecord{its.p};
+
+
+        const auto &currentLight = emsLight->sample(emsEmitterQueryRecord, sampler.getSample2D());
+
+
+//        return sample;
+
+        BSDFQueryRecord emsBSDFRec{
+                its.shFrame.toLocal(-ray.d),
+                its.shFrame.toLocal(emsEmitterQueryRecord.wi),
+                ESolidAngle
+        };
+
+        emsBSDFRec.uv = its.uv;
+
+
+        Color3f emsSample{0.f};
+        float emsWeight = 1;
+
+
+        if (!scene->rayIntersect(emsEmitterQueryRecord.shadowRay)) {
+//            printf("n(%f, %f, %f), "
+//                   "sr(%f, %f, %f)\n",
+//                   its.shFrame.n[0], its.shFrame.n[1], its.shFrame.n[2],
+//                   emsEmitterQueryRecord.shadowRay.d[0], emsEmitterQueryRecord.shadowRay.d[1], emsEmitterQueryRecord.shadowRay.d[2]
+//            );
+
+//            printf("EVAL(%f, %f, %f), currentLight(%f, %f, %f), cos(%f), numEmitter(%i)\n",
+//                   its.mesh->getBSDF()->eval(emsBSDFRec)[0], its.mesh->getBSDF()->eval(emsBSDFRec)[1], its.mesh->getBSDF()->eval(emsBSDFRec)[2],
+//                   currentLight[0], currentLight[1], currentLight[2],
+//                   std::abs(its.shFrame.n.dot(emsEmitterQueryRecord.shadowRay.d)),
+//                   scene->numEmitters);
+
+
+            emsWeight = emsLight->pdf(emsEmitterQueryRecord) /
+                        (emsLight->pdf(emsEmitterQueryRecord) + its.mesh->getBSDF()->pdf(emsBSDFRec));
+
+            emsSample = its.mesh->getBSDF()->eval(emsBSDFRec)
+                        * currentLight
+                        * std::abs(its.shFrame.n.dot(emsEmitterQueryRecord.shadowRay.d))
+                        * scene->numEmitters;
+
+
+
+//            printf("Straight path to emitter (%f, %f, %f)\n", emsSample[0], emsSample[1], emsSample[2]);
+
+        }
+
+        BSDFQueryRecord masBSDFQueryRecord{
+                its.shFrame.toLocal(-ray.d)
+        };
+
+        masBSDFQueryRecord.uv = its.uv;
+
+        auto masBSDFSample = its.mesh->getBSDF()->sample(masBSDFQueryRecord, sampler.getSample2D());
+
+        Ray3f newMASRay{
+                its.p,
+                its.shFrame.toWorld(masBSDFQueryRecord.wo)
+        };
+
+        Intersection masEmitterIntersect;
+        Color3f masSample{0.f};
+        float masWeight = 1;
+
+
+        if (scene->rayIntersect(newMASRay, masEmitterIntersect) && masEmitterIntersect.mesh->isEmitter()) {
+
+            EmitterQueryRecord masEmitterQueryRecord{
+                    its.p,
+                    masEmitterIntersect.p,
+                    masEmitterIntersect.shFrame.n
+            };
+
+            const auto &masEmitter = masEmitterIntersect.mesh->getEmitter();
+
+            masWeight = its.mesh->getBSDF()->pdf(masBSDFQueryRecord) /
+                        (masEmitter->pdf(masEmitterQueryRecord) + its.mesh->getBSDF()->pdf(masBSDFQueryRecord));
+
+            masSample = masEmitter->eval(masEmitterQueryRecord)
+                        * masBSDFSample;
+        }
+
+        return sample + emsWeight * emsSample + masWeight * masSample;
+
+    }
+
+    template<typename Primitive>
+    __device__ Color3f constexpr PathMAS(const Ray3f &ray, TLAS<Primitive> *scene, int maxRayDepth, Sampler &sampler) noexcept{
         Intersection its;
 
 
         Color3f Li{0.f}, t{1.f};
 
-        Ray currentRay = ray;
+        Ray3f currentRay = ray;
 
         int numBounces = 0;
 
@@ -328,7 +432,95 @@ namespace cudaHelpers{
     }
 
     template<typename Primitive>
-    __device__ Color3f constexpr normalMapper(const Ray &ray, TLAS<Primitive> *scene, Sampler &sampler) noexcept{
+    __device__ Color3f constexpr PathMIS(const Ray3f &ray, TLAS<Primitive> *scene, int maxRayDepth, Sampler &sampler) noexcept{
+        Intersection its;
+
+
+        Color3f Li{0.f}, t{1.f};
+
+        Ray3f currentRay = ray;
+
+        int numBounces=0;
+
+        float wMat = 1.0f;
+
+
+        while (true) {
+
+            if (!scene->rayIntersect(currentRay, its))
+                return Li;
+
+            const auto *light = scene->getRandomEmitter(sampler.getSample1D());
+
+            EmitterQueryRecord emitterQueryRecord{
+                    its.p
+            };
+
+            const Color3f emsSample = light->sample(emitterQueryRecord, sampler.getSample2D()) * scene->numEmitters;
+
+            if (!scene->rayIntersect(emitterQueryRecord.shadowRay)){
+
+                BSDFQueryRecord bsdfQueryRecord{
+                        its.shFrame.toLocal(-currentRay.d),
+                        its.shFrame.toLocal(emitterQueryRecord.wi),
+                        ESolidAngle
+                };
+                bsdfQueryRecord.measure = ESolidAngle;
+                bsdfQueryRecord.uv = its.uv;
+
+                Li += emsSample
+                      * its.mesh->getBSDF()->eval(bsdfQueryRecord)
+                      * Frame::cosTheta(its.shFrame.toLocal(emitterQueryRecord.wi))
+                      * light->pdf(emitterQueryRecord) / (its.mesh->getBSDF()->pdf(bsdfQueryRecord) + light->pdf(emitterQueryRecord))
+                      * t;
+            }
+
+            if (its.mesh->isEmitter())
+                Li += t * wMat * its.mesh->getEmitter()->eval({currentRay.o, its.p, its.shFrame.n});
+
+            float successProbability = fmin(t.maxCoeff(), 0.99f);
+//                if((++numBounces > 3) && sampler->next1D() > successProbability)
+            if(sampler.getSample1D() >= successProbability)
+                return Li;
+
+            t /= successProbability;
+
+            BSDFQueryRecord bsdfQueryRecord{
+                    its.shFrame.toLocal(-currentRay.d)
+            };
+            bsdfQueryRecord.measure = ESolidAngle;
+            bsdfQueryRecord.uv = its.uv;
+
+            t *= its.mesh->getBSDF()->sample(bsdfQueryRecord, sampler.getSample2D());
+
+            currentRay = {
+                    its.p,
+                    its.shFrame.toWorld(bsdfQueryRecord.wo)
+            };
+
+
+            const float masPDF = its.mesh->getBSDF()->pdf(bsdfQueryRecord);
+
+            Intersection masEmitterIntersect;
+            if (!scene->rayIntersect(currentRay, masEmitterIntersect))
+                return Li;
+
+            if (masEmitterIntersect.mesh->isEmitter()) {
+                const float emsPDF = masEmitterIntersect.mesh->getEmitter()->pdf({
+                                                                                         currentRay.o, masEmitterIntersect.p, masEmitterIntersect.shFrame.n
+                                                                                 });
+                wMat = masPDF + emsPDF > 0.f ? masPDF / (masPDF + emsPDF) : masPDF;
+            }
+
+            if (bsdfQueryRecord.measure == EDiscrete)
+                wMat = 1.0f;
+        }
+
+
+    }
+
+    template<typename Primitive>
+    __device__ Color3f constexpr normalMapper(const Ray3f &ray, TLAS<Primitive> *scene, Sampler &sampler) noexcept{
         Intersection its;
         Color3f Li{0.f};
         if (!scene->rayIntersect(ray, its))
@@ -338,7 +530,7 @@ namespace cudaHelpers{
     }
 
     template<typename Primitive>
-    __device__ Color3f constexpr depthMapper(const Ray &ray, TLAS<Primitive> *scene, Sampler &sampler) noexcept{
+    __device__ Color3f constexpr depthMapper(const Ray3f &ray, TLAS<Primitive> *scene, Sampler &sampler) noexcept{
         Intersection its;
         Color3f Li{0.f};
         if (!scene->rayIntersect(ray, its))
@@ -349,10 +541,13 @@ namespace cudaHelpers{
 
 
     template<typename Primitive>
-    __device__ Color3f constexpr getColor(const Ray &ray, TLAS<Primitive> *scene, int maxRayDepth, Sampler &sampler) noexcept{
+    __device__ Color3f constexpr getColor(const Ray3f &ray, TLAS<Primitive> *scene, int maxRayDepth, Sampler &sampler) noexcept{
+
 
 //        return DirectMAS(ray, scene, sampler);
-        return PathMAS(ray, scene, maxRayDepth, sampler);
+//        return DirectMIS(ray, scene, sampler);
+//        return PathMAS(ray, scene, maxRayDepth, sampler);
+        return PathMIS(ray, scene, maxRayDepth, sampler);
 //        return normalMapper(ray, scene, sampler);
 //        return de pthMapper(ray, scene, sampler);
     }
@@ -362,12 +557,12 @@ namespace cudaHelpers{
 //    constructTLAS(AccelerationNode<Blas<Primitive>> *tlas, Blas<Primitive> *meshBlasArr, int numMeshes){
     constructTLAS(TLAS<Primitive> *tlas,
                       BLAS<Primitive> **meshBlasArr, size_t numMeshes,
-                      BLAS<Primitive> **emitterBlasArr, Vector3f **emitterRadiance, size_t numEmitters){
+                      BLAS<Primitive> **emitterBlasArr, size_t numEmitters){
 
         int i, j, pixelIndex;
         if(!cudaHelpers::initIndices(i, j, pixelIndex, 1, 1)) return;
 
-        *tlas = TLAS(meshBlasArr, numMeshes, emitterBlasArr, emitterRadiance, numEmitters);
+        *tlas = TLAS(meshBlasArr, numMeshes, emitterBlasArr, numEmitters);
 
     }
 
@@ -386,7 +581,7 @@ namespace cudaHelpers{
 
     template<typename Primitive>
     __global__ void render(Vector3f *output, Camera cam, TLAS<Primitive> *tlas, int width, int height, int numSubsamples, int maxRayDepth,
-                           curandState *globalRandState){
+                           curandState *globalRandState, unsigned *progressCounter){
         int i, j, pixelIndex;
         if(!initIndices(i, j, pixelIndex, width, height)) return;
 
@@ -402,6 +597,7 @@ namespace cudaHelpers{
         Color3f col{0.0f};
 
         for(int subSamples = 0; subSamples < numSubsamples; ++subSamples){
+
             const float s = (iFloat + sampler.getSample1D()) / (widthFloat - 1);
             const float t = (jFloat + sampler.getSample1D()) / (heightFloat - 1);
 
@@ -409,6 +605,22 @@ namespace cudaHelpers{
 
             col += getColor(ray, tlas, maxRayDepth, sampler);
         }
+
+        atomicAdd(progressCounter, 1);
+        if(*progressCounter % 1000 == 0){
+            const float progress = 100.f* (*progressCounter)/(width*height);
+            printf("Current progress is %f%\r", progress);
+
+//            const float spentTime = ((double) (clock() - renderStart)) / CLOCKS_PER_SEC;
+//
+//            printf("Estimated Time left: %f (%f, %f) s\n", 100*progress/spentTime, progress, spentTime);
+        }
+
+//        if(subSamples % 8 == 0){
+//            atomicAdd(progressCounter, 8 );
+//            if(i == 8 && j == 8)
+//                printf("Current Progress is %f% \n", 100.f*(*progressCounter)/(8*width*height));
+//        }
 
 
         col /= static_cast<float>(numSubsamples);

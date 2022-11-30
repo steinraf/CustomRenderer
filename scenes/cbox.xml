@@ -5,11 +5,13 @@
 
 	<sensor type="perspective">
 		<float name="fov" value="20.7856"/>
+		<float name="aperture" value="0.0"/>
 
 
 		<transform name="to_world">
 <!--			<scale value="-1,1,1"/>-->
-			<lookat target="0.445800, 0.332100, 0.376700"
+<!--			target="0.445800, 0.332100, 0.376700"-->
+			<lookat target="0, 0.893051, 4.41198"
 					origin="0, 0.919769, 5.41159"
 					up="0, 1, 0"/>
 		</transform>
@@ -17,7 +19,7 @@
 
 
 		<sampler type="independent">
-			<integer name="sample_count" value="16384"/>
+			<integer name="sample_count" value="1024"/>
 		</sampler>
 
 		<film type="hdrfilm">

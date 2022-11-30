@@ -145,7 +145,7 @@ __host__ BLAS<Primitive> * getMeshFromFile(const std::string &filename, thrust::
     AccelerationNode<Primitive> *bvhTotalNodes;
     checkCudaErrors(cudaMalloc((void **) &bvhTotalNodes,
                                sizeof(AccelerationNode<Primitive>) * (2 * numTriangles - 1))); //n-1 internal, n leaf
-    checkCudaErrors(cudaMalloc((void **) &bvh, sizeof(BLAS<Primitive> *)));
+    checkCudaErrors(cudaMalloc((void **) &bvh, sizeof(BLAS<Primitive>)));
 
     //    printf("BLAS has allocation range of (%p, %p)\n", bvhTotalNodes, bvhTotalNodes + (2 * numTriangles - 1));
 
@@ -175,7 +175,7 @@ __host__ BLAS<Primitive> * getMeshFromFile(const std::string &filename, thrust::
 
     clock_t initBVHTime = clock();
 
-    cudaHelpers::initBVH<<<1, 1>>>(bvh, bvhTotalNodes, deviceCDF.data().get(), numTriangles, deviceEmitter, deviceBSDF);
+    cudaHelpers::initBVH<<<1, 1>>>(bvh, bvhTotalNodes, totalArea, deviceCDF.data().get(), numTriangles, deviceEmitter, deviceBSDF);
 
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());

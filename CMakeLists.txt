@@ -7,9 +7,6 @@ set(CMAKE_CUDA_CXX_STANDARD 17)
 set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 
 
-set(CMAKE_CXX_FLAGS "-O3 -funroll-loops -DNO_FREETYPE -D_GLIBCXX_ASSERTIONS -fasynchronous-unwind-tables -fexceptions -fpie -Wl,-pie -fstack-clash-protection -fstack-protector-all -fstack-protector-strong -g -grecord-gcc-switches -fcf-protection -pipe -Wall -Werror -Wextra ")
-
-set(CMAKE_CUDA_FLAGS "-extended-lambda")
 
 include_directories(libs/pugixml/src)
 
@@ -25,8 +22,14 @@ find_package(PNGwriter 0.7.0 REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(X11 REQUIRED)
+find_package(OpenMP REQUIRED)
 
 include_directories(${CMAKE_SOURCE_DIR}/includes)
+
+set(CMAKE_CXX_FLAGS "-O3 -fopenmp -funroll-loops -DNO_FREETYPE -D_GLIBCXX_ASSERTIONS -fasynchronous-unwind-tables -fexceptions -fpie -Wl,-pie -fstack-clash-protection -fstack-protector-all -fstack-protector-strong -g -grecord-gcc-switches -fcf-protection -pipe -Wall -Werror -Wextra ")
+
+set(CMAKE_CUDA_FLAGS "-extended-lambda -dopt=on -extra-device-vectorization --restrict --compiler-options -Wall")
+
 
 
 

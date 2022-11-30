@@ -1,6 +1,6 @@
 <scene>
     <integrator type="path">
-        <integer name="max_depth" value="6"/>
+        <integer name="max_depth" value="200"/>
     </integrator>
 
 
@@ -17,7 +17,7 @@
 
 
         <sampler type="independent">
-            <integer name="sample_count" value="64"/>
+            <integer name="sample_count" value="1024"/>
         </sampler>
 
         <film type="hdrfilm">

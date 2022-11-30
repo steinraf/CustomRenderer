@@ -13,7 +13,7 @@ __device__ __host__ Camera::Camera(Vector3f origin, Vector3f lookAt, Vector3f _u
 
 
 
-    constexpr int noriConvert = -1; // -1 for nori, 1 for correct handedness
+    constexpr int noriConvert = 1; // -1 for nori, 1 for correct handedness
 
 
     front = (lookAt - origin).normalized();
@@ -36,7 +36,7 @@ __device__ __host__ Camera::Camera(Vector3f origin, Vector3f lookAt, Vector3f _u
     vertical = -2.0f * halfV;
 }
 
-__device__ Ray Camera::getRay(float s, float t, Sampler &sampler) const{
+__device__ Ray3f Camera::getRay(float s, float t, Sampler &sampler) const{
 
     //sample = ((0.5x, -0.5*aspect*y, 1z) + (1.0, -1.0f/aspect, 0.f) * perspective).inverse()
 

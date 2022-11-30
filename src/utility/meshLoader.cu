@@ -112,7 +112,7 @@ HostMeshInfo loadMesh(const std::filesystem::path &filePath, const Affine3f &tra
     if(normals.size() == 0){
         normals.resize(vertexIndices1.size());
         std::cout << "\tNo normals found. Interpolating...\n";
-        for(int i = 0; i < vertexIndices1.size(); ++i){
+        for(size_t i = 0; i < vertexIndices1.size(); ++i){
             const Vector3f  p0 = vertices[vertexIndices1[i]],
                             p1 = vertices[vertexIndices2[i]],
                             p2 = vertices[vertexIndices3[i]];
@@ -126,7 +126,7 @@ HostMeshInfo loadMesh(const std::filesystem::path &filePath, const Affine3f &tra
     if(textures.size() == 0){
         textures.resize(textureIndices1.size());
         std::cout << "\tNo textures found. Interpolating...\n";
-        for(int i = 0; i < textureIndices1.size(); ++i){
+        for(size_t i = 0; i < textureIndices1.size(); ++i){
             textures[i] = {0.f, 0.f};
         }
     }
@@ -158,7 +158,7 @@ DeviceMeshInfo meshToGPU(const HostMeshInfo &mesh) noexcept {
 
 
 #pragma omp parallel for
-    for(int i = 0; i < numTriangles; ++i){
+    for(size_t i = 0; i < numTriangles; ++i){
         hostTriangles[i] = {
                 vertices[vertexIndexList.first[i]],
                 vertices[vertexIndexList.second[i]],

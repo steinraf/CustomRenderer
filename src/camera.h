@@ -15,7 +15,7 @@ public:
                                float aperture,
                                float focusDist);
 
-    __device__ Ray getRay(float s, float t, Sampler &sampler) const;
+    __device__ Ray3f getRay(float s, float t, Sampler &sampler) const;
 
 private:
     Vector3f origin;
