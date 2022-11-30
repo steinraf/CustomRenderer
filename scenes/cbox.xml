@@ -5,12 +5,14 @@
 
 	<sensor type="perspective">
 		<float name="fov" value="20.7856"/>
-		<float name="aperture" value="0.0"/>
+		<float name="aperture" value="0.002"/>
 
 
 		<transform name="to_world">
 <!--			<scale value="-1,1,1"/>-->
 <!--			target="0.445800, 0.332100, 0.376700"-->
+<!--			target="0, 0.893051, 4.41198"-->
+<!--			-0.421400, 0.332100, -0.280000-->
 			<lookat target="0, 0.893051, 4.41198"
 					origin="0, 0.919769, 5.41159"
 					up="0, 1, 0"/>
@@ -19,12 +21,12 @@
 
 
 		<sampler type="independent">
-			<integer name="sample_count" value="1024"/>
+			<integer name="sample_count" value="512"/>
 		</sampler>
 
 		<film type="hdrfilm">
-			<integer name="height" value="600"/>
-			<integer name="width" value="800"/>
+			<integer name="height" value="2160"/>
+			<integer name="width" value="3840"/>
 		</film>
 
 	</sensor>
@@ -63,11 +65,11 @@
 		</transform>
 
 
-		<bsdf type="diffuse">
-			<rgb name="reflectance" value="0.630, 0.065, 0.05"/>
-		</bsdf>
+<!--		<bsdf type="diffuse">-->
+<!--			<rgb name="reflectance" value="0.630, 0.065, 0.05"/>-->
+<!--		</bsdf>-->
 
-<!--		<bsdf type="mirror"/>-->
+		<bsdf type="mirror"/>
 	</shape>
 
 	<shape type="obj">
@@ -78,10 +80,10 @@
 			<translate value="0.445800, 0.332100, 0.376700"/>
 		</transform>
 
-		<bsdf type="diffuse">
-			<rgb name="reflectance" value="0.630, 0.065, 0.05"/>
-		</bsdf>
-<!--		<bsdf type="dielectric"/>-->
+<!--		<bsdf type="diffuse">-->
+<!--			<rgb name="reflectance" value="0.630, 0.065, 0.05"/>-->
+<!--		</bsdf>-->
+		<bsdf type="dielectric"/>
 	</shape>
 
 	<shape type="obj">

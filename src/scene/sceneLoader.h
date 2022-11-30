@@ -181,20 +181,34 @@ struct SceneRepresentation{
     }
 
     void addBSDF(const pugi::xml_node &node, bool isEmitter=false){
-        if(getString(node.attribute("type")) == "diffuse"){
+        const std::string attribName = getString(node.attribute("type"));
+        std::cout << "\t\tMaterial:\n";
+        if(attribName == "diffuse"){
             const auto color = node.child("rgb");
             if(getString(color.attribute("name")) != "reflectance")
                 throw std::runtime_error("Invalid Tag \"" + getString(color.attribute("name")) + "\"found for material.");
-            std::cout << "\t\tMaterial:\n";
             std::cout << "\t\t\tBSDF: DIFFUSE\n";
             if(isEmitter){
                 emitterInfos.back().bsdf = {Material::DIFFUSE, getVector3f(color, "value", "\t\t\t", "reflectance")};
             }else{
                 meshInfos.back().bsdf = {Material::DIFFUSE, getVector3f(color, "value", "\t\t\t", "reflectance")};
             }
-
+        }else if(attribName == "mirror"){
+            std::cout << "\t\t\tBSDF: MIRROR\n";
+            if(isEmitter){
+                emitterInfos.back().bsdf = {Material::MIRROR, Color3f{0.f}};
+            }else{
+                meshInfos.back().bsdf = {Material::MIRROR, Color3f{0.f}};
+            }
+        }else if(attribName == "dielectric"){
+            std::cout << "\t\t\tBSDF: DIELECTRIC\n";
+            if(isEmitter){
+                emitterInfos.back().bsdf = {Material::DIELECTRIC, Color3f{0.f}};
+            }else{
+                meshInfos.back().bsdf = {Material::DIELECTRIC, Color3f{0.f}};
+            }
         }else{
-            throw std::runtime_error("Invalid Material \"" + getString(node.attribute("type")) + "\". Only diffuse is supported.");
+            throw std::runtime_error("Invalid Material \"" + getString(node.attribute("type")) + "\".");
         }
     }
 

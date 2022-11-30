@@ -480,7 +480,7 @@ namespace cudaHelpers{
 
             float successProbability = fmin(t.maxCoeff(), 0.99f);
 //                if((++numBounces > 3) && sampler->next1D() > successProbability)
-            if(sampler.getSample1D() >= successProbability)
+            if(sampler.getSample1D() >= successProbability || numBounces++ > maxRayDepth)
                 return Li;
 
             t /= successProbability;
