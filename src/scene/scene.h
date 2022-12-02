@@ -72,6 +72,9 @@ private:
     const Device device;
 
     Vector3f *deviceImageBuffer;
+
+    FeatureBuffer *deviceFeatureBuffer;
+
     Vector3f *deviceImageBufferDenoised;
     const size_t imageBufferByteSize;
 

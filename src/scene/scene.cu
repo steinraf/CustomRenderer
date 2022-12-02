@@ -37,10 +37,13 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) :
         checkCudaErrors(cudaMalloc(&deviceImageBufferDenoised, imageBufferByteSize));
     }else{
 
-        checkCudaErrors(cudaMalloc(&deviceImageBuffer, imageBufferByteSize));
-
+//        checkCudaErrors(cudaMalloc(&deviceImageBuffer, imageBufferByteSize)); Allocated by OpenGL instead
+        checkCudaErrors(cudaMalloc(&deviceImageBufferDenoised, imageBufferByteSize));
         initOpenGL();
     }
+
+    checkCudaErrors(cudaMalloc(&deviceFeatureBuffer, sizeof(FeatureBuffer)*sceneRepresentation.sceneInfo.width*sceneRepresentation.sceneInfo.height));
+
 
     checkCudaErrors(cudaMalloc(&deviceCurandState, sceneRepresentation.sceneInfo.width * sceneRepresentation.sceneInfo.height * sizeof(curandState)));
 
@@ -162,20 +165,6 @@ __host__ Scene::~Scene(){
 void Scene::render(){
 
     volatile bool currentlyRendering = true;
-    std::cout << "Starting render...\n";
-
-    unsigned *deviceCounter;
-
-    checkCudaErrors(cudaMalloc(&deviceCounter, sizeof(unsigned)));
-    checkCudaErrors(cudaMemset(deviceCounter, 0, sizeof(unsigned)));
-
-
-    cudaHelpers::render<<<blockSize, threadSize>>>(deviceImageBuffer, deviceCamera, meshAccelerationStructure,
-                                                   sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height, sceneRepresentation.sceneInfo.samplePerPixel, sceneRepresentation.sceneInfo.maxRayDepth,
-                                                   deviceCurandState, deviceCounter);
-    checkCudaErrors(cudaGetLastError());
-
-    std::cout << "Starting draw thread...\n";
 
     std::thread drawingThread;
 
@@ -185,13 +174,35 @@ void Scene::render(){
         }, deviceImageBuffer, std::ref(currentlyRendering)};
     }
 
+
+    std::cout << "Starting render...\n";
+
+    unsigned *deviceCounter;
+
+    checkCudaErrors(cudaMalloc(&deviceCounter, sizeof(unsigned)));
+    checkCudaErrors(cudaMemset(deviceCounter, 0, sizeof(unsigned)));
+
+    std::cout << "Starting draw thread...\n";
+
+
+
+
+    cudaHelpers::render<<<blockSize, threadSize>>>(deviceImageBuffer, deviceCamera, meshAccelerationStructure,
+                                                   sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height, sceneRepresentation.sceneInfo.samplePerPixel, sceneRepresentation.sceneInfo.maxRayDepth,
+                                                   deviceCurandState, deviceFeatureBuffer, deviceCounter);
+    checkCudaErrors(cudaGetLastError());
+
+
+
+
+
     std::cout << "Synchronizing GPU...\n";
     checkCudaErrors(cudaDeviceSynchronize());
 
 
     std::cout << "Starting denoise...\n";
     checkCudaErrors(cudaMemcpy(hostImageBuffer, deviceImageBuffer, imageBufferByteSize, cudaMemcpyDeviceToHost));
-    cudaHelpers::denoise<<<blockSize, threadSize>>>(deviceImageBuffer, deviceImageBufferDenoised, sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height);
+    cudaHelpers::denoise<<<blockSize, threadSize>>>(deviceImageBuffer, deviceImageBufferDenoised, deviceFeatureBuffer, sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height, sceneRepresentation.cameraInfo.origin);
     checkCudaErrors(cudaDeviceSynchronize());
 
     checkCudaErrors(
@@ -280,6 +291,7 @@ __host__ void Scene::renderCPU(){
 }
 
 __host__ void Scene::initOpenGL(){
+    assert(false);
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -308,6 +320,7 @@ __host__ void Scene::initOpenGL(){
 
     glEnable(GL_DEPTH_TEST);
 
+
     switch(device){
         break;
         case GPU:
@@ -324,12 +337,16 @@ __host__ void Scene::initOpenGL(){
             checkCudaErrors(cudaGraphicsGLRegisterBuffer(&cudaPBOResource, PBO, cudaGraphicsRegisterFlagsNone));
 
             checkCudaErrors(cudaGraphicsMapResources(1, &cudaPBOResource, nullptr));
+
             checkCudaErrors(
-                    cudaGraphicsResourceGetMappedPointer((void **) &deviceImageBufferDenoised, nullptr, cudaPBOResource));
+                    cudaGraphicsResourceGetMappedPointer((void **) &deviceImageBuffer, const_cast<size_t *>(&imageBufferByteSize), cudaPBOResource));
+
+            checkCudaErrors(cudaDeviceSynchronize());
             break;
         case CPU:
             glGenVertexArrays(1, &VAO);
             glGenBuffers(1, &VBO);
+
 //            glGenBuffers(1, &EBO);
 
     }

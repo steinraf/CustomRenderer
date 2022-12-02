@@ -94,7 +94,7 @@ public:
 
         numPrimitives = blas.numPrimitives;
 
-        printf("NumPrimitive after CC is %lu\n", numPrimitives);
+//        printf("NumPrimitive after CC is %lu\n", numPrimitives);
 
         emitter = blas.emitter;
         bsdf = blas.bsdf;
@@ -104,7 +104,7 @@ public:
         totalArea = blas.totalArea;
 
         if(emitter){
-            printf("Setting blas %p for emitter %p for %p primitives\n", this, emitter, &numPrimitives);
+//            printf("Setting blas %p for emitter %p for %p primitives\n", this, emitter, &numPrimitives);
             emitter->setBlas(this);
         }
 
@@ -164,7 +164,7 @@ public:
 
 //TODO make generic over primitives
 //TODO add shadow Rays
-    [[nodiscard]] __device__ bool rayIntersect(const Ray3f &_r, Intersection &itsOut) const noexcept{
+    [[nodiscard]] __device__ bool rayIntersect(const Ray3f &_r, Intersection &itsOut, bool isShadowRay=false) const noexcept{
         Ray3f r = _r;
 //        Intersection itsTmp;
         bool hasHit = false;
@@ -185,6 +185,8 @@ public:
 
             if(currentNode->isLeaf){
                 if(currentNode->primitive->rayIntersect(r, itsOut)){
+                    if(isShadowRay)
+                        return true;
                     hasHit = true;
                     r.maxDist = itsOut.t;
                     hitTriangle = currentNode->primitive;
@@ -282,7 +284,9 @@ public:
         //TODO make shadow ray work
 
         for(int i = 0; i < numMeshes; ++i){
-            if(meshBlasArr[i]->rayIntersect(r, record)){
+            if(meshBlasArr[i]->rayIntersect(r, record, isShadowRay)){
+                if(isShadowRay)
+                    return true;
                 hasHit = true;
                 r.maxDist = record.t;
 //                assert(!record.emitter);
@@ -290,7 +294,9 @@ public:
         }
 
         for(int i = 0; i < numEmitters; ++i){
-            if(emitterBlasArr[i]->rayIntersect(r, record)){
+            if(emitterBlasArr[i]->rayIntersect(r, record, isShadowRay)){
+                if(isShadowRay)
+                    return true;
                 hasHit = true;
                 r.maxDist = record.t;
 //                assert(record.emitter);

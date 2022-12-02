@@ -40,46 +40,49 @@ namespace cudaHelpers{
 
     }
 
-    __global__ void denoise(Vector3f *input, Vector3f *output, int width, int height){
+    enum class BOUNDARY{
+        PERIODIC,
+        REFLECTING,
+        ZERO
+    };
+
+    __global__ void denoise(Vector3f *input, Vector3f *output, FeatureBuffer*featureBuffer, int width, int height, Vector3f cameraOrigin){
         int i, j, pixelIndex;
         if(!initIndices(i, j, pixelIndex, width, height)) return;
 
-
-        Vector3f tmp{0.f};
-        int count = 0;
-
-        auto between = [](int val, int low, int high){ return val >= low && val < high; };
-
-        constexpr int range = 2;
-
-
-        const float filter[5][5] = {
-                { 0.00048091, 0.00501119, 0.01094545, 0.00501119, 0.00048091},
-                {0.00501119, 0.0522178,  0.11405416, 0.0522178,  0.00501119},
-                {0.01094545, 0.11405416, 0.2491172,  0.11405416, 0.01094545},
-                {0.00501119, 0.0522178,  0.11405416, 0.0522178,  0.00501119},
-                {0.00048091, 0.00501119, 0.01094545, 0.00501119, 0.00048091},
+        auto getNeighbour = [i, j, width, height] __device__ (auto *array, int dx, int dy, BOUNDARY boundary=BOUNDARY::PERIODIC){
+            switch(boundary){
+                case BOUNDARY::PERIODIC:
+                    return array[(j + height + dy)%height * width + (i + width + dx)%width];
+                case BOUNDARY::REFLECTING:
+                    //TODO implement?
+//                    const int toXBoundary = CustomRenderer::min(j + dx)
+                    assert(false && "Not implemented.");
+                    break;
+                case BOUNDARY::ZERO:
+                    assert(false && "Not implemented.");
+                    break;
+            }
         };
 
+//        output[pixelIndex] = Vector3f{(featureBuffer[pixelIndex].position-cameraOrigin).norm()/200};
+//        output[pixelIndex] = featureBuffer[pixelIndex].normal;
+//        output[pixelIndex] = featureBuffer[pixelIndex].albedo;
+//        output[pixelIndex] = featureBuffer[pixelIndex].variance;
+//        constexpr float numSamples = 64.f;
+//        output[pixelIndex] = Vector3f{powf(static_cast<float>(featureBuffer[pixelIndex].numSubSamples)/numSamples, 2.f)};
 
-//        const float filter[5][5] = {
-//                {1.f, 1.f, 1.f, 1.f, 1.f},
-//                {1.f, 1.f, 1.f, 1.f, 1.f},
-//                {1.f, 1.f, 1.f, 1.f, 1.f},
-//                {1.f, 1.f, 1.f, 1.f, 1.f},
-//                {1.f, 1.f, 1.f, 1.f, 1.f}
-//        };
 
-        for(int a = -range; a <= range; ++a){
-            for(int b = -range; b <= range; ++b){
-                if(between(i + a, 0, width) && between(j + b, 0, height)){
-                    ++count;
-                    tmp += filter[range + a][range + b] * input[(j + b) * width + i + a];
-                }
-            }
+        if(featureBuffer[pixelIndex].variance.maxCoeff() > 0.1){
+            output[pixelIndex] =  0.25 * getNeighbour(input, 0,-1)
+                                + 0.25 * getNeighbour(input, 1, 0)
+                                + 0.25 * getNeighbour(input, 0, 1)
+                                + 0.25 * getNeighbour(input,-1, 0);
+        }else{
+            output[pixelIndex] = input[pixelIndex];
         }
 
-        output[pixelIndex] = input[pixelIndex];
+//        output[pixelIndex] = Color3f(featureBuffer[pixelIndex].variance.norm());
     }
 
 

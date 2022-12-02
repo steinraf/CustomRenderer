@@ -96,6 +96,10 @@ public:
 
     }
 
+    [[nodiscard]] __device__ constexpr Color3f getAlbedo() const noexcept{
+        return albedo;
+    }
+
     [[nodiscard]] __device__ constexpr Color3f eval(const BSDFQueryRecord &bsdfQueryRecord) const noexcept{
         switch(material){
             case Material::DIFFUSE:

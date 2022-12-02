@@ -17,10 +17,20 @@
 
 #define checkCudaErrors(val) cudaHelpers::check_cuda( (val), #val, __FILE__, __LINE__ )
 
+struct FeatureBuffer{
+    Color3f variance;
+    Color3f albedo;
+    Vector3f position;
+    Vector3f normal;
+    int numSubSamples=0;
+
+};
 
 namespace cudaHelpers{
 
-    __device__ bool inline initIndices(int &i, int &j, int &pixelIndex, const int width, const int height){
+
+
+    __device__ bool inline initIndices(int &i, int &j, int &pixelIndex, const int width, const int height) noexcept{
         i = threadIdx.x + blockIdx.x * blockDim.x;
         j = threadIdx.y + blockIdx.y * blockDim.y;
 
@@ -432,7 +442,7 @@ namespace cudaHelpers{
     }
 
     template<typename Primitive>
-    __device__ Color3f constexpr PathMIS(const Ray3f &ray, TLAS<Primitive> *scene, int maxRayDepth, Sampler &sampler) noexcept{
+    __device__ Color3f constexpr PathMIS(const Ray3f &ray, TLAS<Primitive> *scene, int maxRayDepth, Sampler &sampler, FeatureBuffer &featureBuffer) noexcept{
         Intersection its;
 
 
@@ -447,8 +457,16 @@ namespace cudaHelpers{
 
         while (true) {
 
-            if (!scene->rayIntersect(currentRay, its))
+            if (!scene->rayIntersect(currentRay, its)){
                 return Li;
+            }
+
+            if(numBounces == 0){
+                featureBuffer.position = its.p;
+                featureBuffer.normal = its.shFrame.n;
+                featureBuffer.albedo = its.mesh->getBSDF()->getAlbedo();
+            }
+
 
             const auto *light = scene->getRandomEmitter(sampler.getSample1D());
 
@@ -480,7 +498,7 @@ namespace cudaHelpers{
 
             float successProbability = fmin(t.maxCoeff(), 0.99f);
 //                if((++numBounces > 3) && sampler->next1D() > successProbability)
-            if(sampler.getSample1D() >= successProbability || numBounces++ > maxRayDepth)
+            if(sampler.getSample1D() >= successProbability || numBounces > maxRayDepth)
                 return Li;
 
             t /= successProbability;
@@ -514,6 +532,8 @@ namespace cudaHelpers{
 
             if (bsdfQueryRecord.measure == EDiscrete)
                 wMat = 1.0f;
+
+            ++numBounces;
         }
 
 
@@ -526,7 +546,40 @@ namespace cudaHelpers{
         if (!scene->rayIntersect(ray, its))
             return Li;
 
+
+
         return its.shFrame.n.absValues();
+    }
+
+    template<typename Primitive>
+    __device__ Color3f constexpr checkerboard(const Ray3f &ray, TLAS<Primitive> *scene, int maxRayDepth, Sampler &sampler, FeatureBuffer &featureBuffer) noexcept{
+        Intersection its;
+
+        if(!scene->rayIntersect(ray, its))
+            return Color3f{0.f};
+
+        featureBuffer.position = its.p;
+        featureBuffer.normal = its.shFrame.n;
+        featureBuffer.albedo = its.mesh->getBSDF()->getAlbedo();
+
+        Vector2f m_scale{0.5f, 0.5f}, m_delta{0.f, 0.f};
+        Color3f m_value1{1.f}, m_value2{0.f};
+
+        Vector2f p = its.uv/m_scale - m_delta;
+
+        auto a = static_cast<int>(floorf(p[0]));
+        auto b = static_cast<int>(floorf(p[1]));
+
+        auto mod = [](int a, int b){
+            const int r = a % b;
+            return (r < 0) ? r + b : r;
+        };
+
+        if (mod(a + b, 2) == 0.f)
+            return m_value1;
+
+        return m_value2;
+
     }
 
     template<typename Primitive>
@@ -541,15 +594,16 @@ namespace cudaHelpers{
 
 
     template<typename Primitive>
-    __device__ Color3f constexpr getColor(const Ray3f &ray, TLAS<Primitive> *scene, int maxRayDepth, Sampler &sampler) noexcept{
+    __device__ Color3f constexpr getColor(const Ray3f &ray, TLAS<Primitive> *scene, int maxRayDepth, Sampler &sampler, FeatureBuffer &featureBuffer) noexcept{
 
 
 //        return DirectMAS(ray, scene, sampler);
 //        return DirectMIS(ray, scene, sampler);
 //        return PathMAS(ray, scene, maxRayDepth, sampler);
-        return PathMIS(ray, scene, maxRayDepth, sampler);
+//        return PathMIS(ray, scene, maxRayDepth, sampler, featureBuffer);
 //        return normalMapper(ray, scene, sampler);
-//        return de pthMapper(ray, scene, sampler);
+//        return depthMapper(ray, scene, sampler);
+        return checkerboard(ray, scene, maxRayDepth, sampler, featureBuffer);
     }
 
     template<typename Primitive>
@@ -577,11 +631,11 @@ namespace cudaHelpers{
         return deviceVec;
     }
 
-    __global__ void denoise(Vector3f *input, Vector3f *output, int width, int height);
+    __global__ void denoise(Vector3f *input, Vector3f *output, FeatureBuffer *featureBuffer, int width, int height, Vector3f cameraOrigin=Vector3f{0.f});
 
     template<typename Primitive>
     __global__ void render(Vector3f *output, Camera cam, TLAS<Primitive> *tlas, int width, int height, int numSubsamples, int maxRayDepth,
-                           curandState *globalRandState, unsigned *progressCounter){
+                           curandState *globalRandState, FeatureBuffer *featureBuffer, unsigned *progressCounter){
         int i, j, pixelIndex;
         if(!initIndices(i, j, pixelIndex, width, height)) return;
 
@@ -594,7 +648,14 @@ namespace cudaHelpers{
         const auto widthFloat = static_cast<float>(width);
         const auto heightFloat = static_cast<float>(height);
 
-        Color3f col{0.0f};
+        Color3f totalColor{0.0f};
+
+        //welfords algorithm to compute variance
+        Color3f mean{0.f}, m2{0.f};
+
+        FeatureBuffer tmpBuffer;
+
+        int actualSamples = 0;
 
         for(int subSamples = 0; subSamples < numSubsamples; ++subSamples){
 
@@ -603,8 +664,26 @@ namespace cudaHelpers{
 
             const auto ray = cam.getRay(s, t, sampler);
 
-            col += getColor(ray, tlas, maxRayDepth, sampler);
+
+
+            const Vector3f currentColor = getColor(ray, tlas, maxRayDepth, sampler, tmpBuffer);
+
+
+
+            const Vector3f delta = currentColor - mean;
+            mean += delta / static_cast<float>(subSamples + 1);
+            const Vector3f delta2 = currentColor - mean;
+            m2 += delta * delta2;
+
+            totalColor += currentColor;
+
+            actualSamples = subSamples;
+
+            if(subSamples > 16 && (m2/static_cast<float>(subSamples - 1)).norm() < EPSILON)
+                break;
         }
+
+
 
         atomicAdd(progressCounter, 1);
         if(*progressCounter % 1000 == 0){
@@ -622,10 +701,19 @@ namespace cudaHelpers{
 //                printf("Current Progress is %f% \n", 100.f*(*progressCounter)/(8*width*height));
 //        }
 
+        const Vector3f biasedVariance = m2/static_cast<float>(numSubsamples);
+        const Vector3f unbiasedVariance = m2/static_cast<float>(numSubsamples - 1);
 
-        col /= static_cast<float>(numSubsamples);
+//        printf("Unbiased Variance is %f\n", unbiasedVariance.norm());
 
-        output[pixelIndex] = col;
+
+        totalColor /= static_cast<float>(numSubsamples);
+
+        featureBuffer[pixelIndex] = tmpBuffer;
+        output[pixelIndex] = totalColor;
+
+        featureBuffer[pixelIndex].variance = unbiasedVariance;
+        featureBuffer[pixelIndex].numSubSamples = actualSamples;
 
     }
 
