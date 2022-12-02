@@ -21,12 +21,14 @@
 
 
 		<sampler type="independent">
-			<integer name="sample_count" value="4096"/>
+			<integer name="sample_count" value="64"/>
 		</sampler>
 
 		<film type="hdrfilm">
-			<integer name="height" value="2160"/>
-			<integer name="width" value="3840"/>
+			<integer name="height" value="600"/>
+			<integer name="width" value="800"/>
+<!--			<integer name="height" value="2160"/>-->
+<!--			<integer name="width" value="3840"/>-->
 		</film>
 
 	</sensor>

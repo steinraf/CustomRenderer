@@ -66,21 +66,21 @@ namespace cudaHelpers{
         };
 
 //        output[pixelIndex] = Vector3f{(featureBuffer[pixelIndex].position-cameraOrigin).norm()/200};
-//        output[pixelIndex] = featureBuffer[pixelIndex].normal;
+//        output[pixelIndex] = featureBuffer[pixelIndex].normal.absValues();
 //        output[pixelIndex] = featureBuffer[pixelIndex].albedo;
-//        output[pixelIndex] = featureBuffer[pixelIndex].variance;
+        output[pixelIndex] = featureBuffer[pixelIndex].variance;
 //        constexpr float numSamples = 64.f;
 //        output[pixelIndex] = Vector3f{powf(static_cast<float>(featureBuffer[pixelIndex].numSubSamples)/numSamples, 2.f)};
 
 
-        if(featureBuffer[pixelIndex].variance.maxCoeff() > 0.1){
-            output[pixelIndex] =  0.25 * getNeighbour(input, 0,-1)
-                                + 0.25 * getNeighbour(input, 1, 0)
-                                + 0.25 * getNeighbour(input, 0, 1)
-                                + 0.25 * getNeighbour(input,-1, 0);
-        }else{
-            output[pixelIndex] = input[pixelIndex];
-        }
+//        if(featureBuffer[pixelIndex].variance.maxCoeff() > 0.1){
+//            output[pixelIndex] =  0.25 * getNeighbour(input, 0,-1)
+//                                + 0.25 * getNeighbour(input, 1, 0)
+//                                + 0.25 * getNeighbour(input, 0, 1)
+//                                + 0.25 * getNeighbour(input,-1, 0);
+//        }else{
+//            output[pixelIndex] = input[pixelIndex];
+//        }
 
 //        output[pixelIndex] = Color3f(featureBuffer[pixelIndex].variance.norm());
     }

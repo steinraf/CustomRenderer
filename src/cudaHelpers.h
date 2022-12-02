@@ -600,10 +600,10 @@ namespace cudaHelpers{
 //        return DirectMAS(ray, scene, sampler);
 //        return DirectMIS(ray, scene, sampler);
 //        return PathMAS(ray, scene, maxRayDepth, sampler);
-//        return PathMIS(ray, scene, maxRayDepth, sampler, featureBuffer);
+        return PathMIS(ray, scene, maxRayDepth, sampler, featureBuffer);
 //        return normalMapper(ray, scene, sampler);
 //        return depthMapper(ray, scene, sampler);
-        return checkerboard(ray, scene, maxRayDepth, sampler, featureBuffer);
+//        return checkerboard(ray, scene, maxRayDepth, sampler, featureBuffer);
     }
 
     template<typename Primitive>
@@ -654,6 +654,7 @@ namespace cudaHelpers{
         Color3f mean{0.f}, m2{0.f};
 
         FeatureBuffer tmpBuffer;
+        //TODO add variance computations
 
         int actualSamples = 0;
 
@@ -662,7 +663,7 @@ namespace cudaHelpers{
             const float s = (iFloat + sampler.getSample1D()) / (widthFloat - 1);
             const float t = (jFloat + sampler.getSample1D()) / (heightFloat - 1);
 
-            const auto ray = cam.getRay(s, t, sampler);
+            const auto ray = cam.getRay(s, t, sampler.getSample2D());
 
 
 

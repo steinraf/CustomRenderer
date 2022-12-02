@@ -36,12 +36,20 @@ __device__ __host__ Camera::Camera(Vector3f origin, Vector3f lookAt, Vector3f _u
     vertical = -2.0f * halfV;
 }
 
-__device__ Ray3f Camera::getRay(float s, float t, Sampler &sampler) const{
+__device__ Ray3f Camera::getRay(float s, float t, const Vector2f &sample) const{
 
     //sample = ((0.5x, -0.5*aspect*y, 1z) + (1.0, -1.0f/aspect, 0.f) * perspective).inverse()
 
 
-    const Vector2f randomDisk = lensRadius * Warp::squareToUniformDisk(sampler.getSample2D());
+    const Vector2f randomDisk = lensRadius * Warp::squareToUniformDisk(sample);
+//    const Vector2f randomDisk = lensRadius * Warp::squareToUniformSquare(sample);
+//    const Vector3f triaSample =  Warp::squareToUniformTriangle(sample);
+//    const Vector3f triaPoint = lensRadius * (   Vector3f{-0.5, -0.5, 0} * triaSample[0] +
+//                                                Vector3f{-0.5,  0.5, 0} * triaSample[1] +
+//                                                Vector3f{ 0.5,  0.5, 0} * triaSample[2] );
+//    const Vector2f randomDisk{triaPoint[0], triaPoint[1]};
+
+
     const Vector3f offset = right * randomDisk[0] + up * randomDisk[1];
 
     const Vector3f pos = origin + offset;

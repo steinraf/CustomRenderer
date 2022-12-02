@@ -118,7 +118,7 @@ HostMeshInfo loadMesh(const std::filesystem::path &filePath, const Affine3f &tra
                             p2 = vertices[vertexIndices3[i]];
             normals[i] = ((p1-p0).cross(p2-p0)).normalized();
 //            std::cout << "NM Idx " << normalIndices1[i] << '\n';
-//            std::cout << "Normal " << i << " (" << normals[i][0] << '/' << normals[i][1] << '/' << normals[i][2] << ")\n";
+//            std::cout << "vn " << normals[i][0] << ' ' << normals[i][1] << ' ' << normals[i][2] << '\n';
         }
 
     }

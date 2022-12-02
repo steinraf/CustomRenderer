@@ -164,6 +164,7 @@ public:
 
                 return Color3f{1.0f};
             case Material::DIELECTRIC:
+                //TODO check Why AmongUS scene dielectric is incorrect
                 float extIOR = m_extIOR, intIOR = m_intIOR, cosThetaI = Frame::cosTheta(bsdfQueryRecord.wi);
                 Vector3f normal{0.f, 0.f,  1.f};
                 if(Frame::cosTheta(bsdfQueryRecord.wi) < 0){

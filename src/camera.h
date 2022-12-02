@@ -6,7 +6,6 @@
 
 #include "utility/vector.h"
 #include "utility/ray.h"
-#include "utility/sampler.h"
 
 
 class Camera{
@@ -15,7 +14,7 @@ public:
                                float aperture,
                                float focusDist);
 
-    __device__ Ray3f getRay(float s, float t, Sampler &sampler) const;
+    __device__ Ray3f getRay(float s, float t, const Vector2f &sample) const;
 
 private:
     Vector3f origin;

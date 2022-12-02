@@ -97,7 +97,7 @@ public:
 
         if(t >= r.minDist && t <= r.maxDist){
             const Vector3f bary{1 - u - v, u, v};
-            its.p = bary[0] * p0 + bary[1] * p1 + bary[2] * p2;
+            its.p =             bary[0] * p0 + bary[1] * p1 + bary[2] * p2;
             its.shFrame = Frame{bary[0] * n0 + bary[1] * n1 + bary[2] * n2};
 //            its.triangle = this;
             its.uv = {u, v};
@@ -119,7 +119,7 @@ public:
 
         const Vector3f bary{1 - u - v, u, v};
 
-        its.p = bary[0] * p0 + bary[1] * p1 + bary[2] * p2;
+        its.p =             bary[0] * p0 + bary[1] * p1 + bary[2] * p2;
         its.shFrame = Frame{bary[0] * n0 + bary[1] * n1 + bary[2] * n2};
         //TODO compute proper texture coords
 

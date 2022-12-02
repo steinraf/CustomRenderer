@@ -166,8 +166,7 @@ struct SceneRepresentation{
 
     }
 
-    void addFilename(const std::string &name, bool isEmitter=false){
-
+    void inline addFilename(const std::string &name, bool isEmitter=false){
         if(isEmitter){
             emitterInfos.back().filename = name;
             std::cout << "\t\tFilename: " << emitterInfos.back().filename << '\n';
@@ -175,9 +174,16 @@ struct SceneRepresentation{
             meshInfos.back().filename = name;
             std::cout << "\t\tFilename: " << meshInfos.back().filename << '\n';
         }
+    }
 
-
-
+    void inline addTextureFilename(const std::string &name, bool isEmitter=false){
+        if(isEmitter){
+            emitterInfos.back().textureName = name;
+            std::cout << "\t\tTexture: " << emitterInfos.back().textureName << '\n';
+        }else{
+            meshInfos.back().textureName = name;
+            std::cout << "\t\tTexture: " << meshInfos.back().textureName << '\n';
+        }
     }
 
     void addBSDF(const pugi::xml_node &node, bool isEmitter=false){
@@ -221,7 +227,13 @@ struct SceneRepresentation{
         for(const auto& child : node.children()){
             const std::string &childName = child.name();
             if(childName == "string"){
-                addFilename(getString(child.attribute("value")));
+                if(getString(child.attribute("name")) == "filename"){
+                    addFilename(getString(child.attribute("value")));
+                }else if(getString(child.attribute("name")) == "texture"){
+                    addTextureFilename(getString(child.attribute("value")));
+                }else{
+                    throw std::runtime_error("Unknown mesh string option \"" + getString(child.attribute("name")) + "\" found.");
+                }
             }else if(childName == "bsdf"){
                 addBSDF(child);
             }else if(childName == "transform"){
@@ -331,9 +343,12 @@ struct SceneRepresentation{
 
     CameraInfo cameraInfo;
 
+
+
     struct MeshInfo{
         MeshInfo() = default;
         std::string filename;
+        std::string textureName;
         Affine3f transform;
         BSDF bsdf;
     };
@@ -343,6 +358,7 @@ struct SceneRepresentation{
     struct EmitterInfo{
         EmitterInfo() = default;
         std::string filename;
+        std::string textureName;
         Affine3f transform;
         BSDF bsdf;
         Vector3f radiance;
