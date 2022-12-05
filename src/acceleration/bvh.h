@@ -164,9 +164,8 @@ public:
     //TODO make generic over primitives
     //TODO add shadow Rays
     [[nodiscard]] __device__ bool
-    rayIntersect(const Ray3f &_r, Intersection &itsOut, bool isShadowRay = false) const noexcept {
+    rayIntersect(const Ray3f &_r, Intersection &its, bool isShadowRay = false) const noexcept {
         Ray3f r = _r;
-        //        Intersection itsTmp;
         bool hasHit = false;
 
         constexpr int stackSize = 64;
@@ -184,13 +183,13 @@ public:
             assert(idx < stackSize);
 
             if(currentNode->isLeaf) {
-                if(currentNode->primitive->rayIntersect(r, itsOut)) {
+                if(currentNode->primitive->rayIntersect(r, its)) {
                     if(isShadowRay)
                         return true;
                     hasHit = true;
-                    r.maxDist = itsOut.t;
+                    r.maxDist = its.t;
                     hitTriangle = currentNode->primitive;
-                    itsOut.mesh = this;
+                    its.mesh = this;
                 }
                 currentNode = stack[--idx];
             } else {
@@ -212,9 +211,8 @@ public:
             }
         } while(idx >= 0);
 
-        //        itsOut = itsTmp;
         if(hasHit)
-            hitTriangle->setHitInformation(r, itsOut);
+            hitTriangle->setHitInformation(r, its);
 
 
         return hasHit;

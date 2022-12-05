@@ -10,12 +10,7 @@
 #include "utility/sampler.h"
 #include "utility/warp.h"
 
-[[nodiscard]] __device__ constexpr
-
-        float
-        fresnel(float cosThetaI, float extIOR, float intIOR)
-
-                noexcept {
+[[nodiscard]] __device__ constexpr float fresnel(float cosThetaI, float extIOR, float intIOR) noexcept {
     float etaI = extIOR, etaT = intIOR;
 
     if(extIOR == intIOR)
@@ -64,13 +59,8 @@ struct BSDFQueryRecord {
 
     EMeasure measure;
 
-    __device__ constexpr
-
-            explicit BSDFQueryRecord(const Vector3f &wi)
-
-                    noexcept
-        : wi(wi), wo(
-                          0.f),
+    __device__ constexpr explicit BSDFQueryRecord(const Vector3f &wi) noexcept
+        : wi(wi), wo(0.f),
           uv(0.f), eta(1.0),
           measure(EUnknownMeasure) {}
 
@@ -116,7 +106,9 @@ public:
     [[nodiscard]] __device__ constexpr Color3f eval(const BSDFQueryRecord &bsdfQueryRecord) const noexcept {
         switch(material) {
             case Material::DIFFUSE:
-                if(bsdfQueryRecord.measure != ESolidAngle || Frame::cosTheta(bsdfQueryRecord.wi) <= 0 || Frame::cosTheta(bsdfQueryRecord.wo) <= 0)
+                if(bsdfQueryRecord.measure != ESolidAngle
+                    || Frame::cosTheta(bsdfQueryRecord.wi) <= 0
+                    || Frame::cosTheta(bsdfQueryRecord.wo) <= 0)
                     return Color3f(0.0f);
 
                 return texture.eval(bsdfQueryRecord.uv) * M_1_PIf;
@@ -142,10 +134,7 @@ public:
     }
 
 
-    [[nodiscard]] __device__ constexpr
-
-            Color3f
-            sample(BSDFQueryRecord &bsdfQueryRecord, const Vector2f &sample) const noexcept {
+    [[nodiscard]] __device__ constexpr Color3f sample(BSDFQueryRecord &bsdfQueryRecord, const Vector2f &sample) const noexcept {
         switch(material) {
             case Material::DIFFUSE:
                 if(Frame::cosTheta(bsdfQueryRecord.wi) <= 0)

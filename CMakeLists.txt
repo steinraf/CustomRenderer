@@ -44,7 +44,6 @@ add_executable(CustomRenderer
         src/hittable.h
         src/camera.cu
         src/camera.h
-        src/constants.h
         src/utility/warp.h
         src/utility/sampler.h
         src/acceleration/bvh.h

@@ -89,16 +89,20 @@ public:
 
         float t = edge2.dot(qvec) * inv_det;
 
-        its.uv = {u, v};// This gets overwritten in the next step to be mesh-global uv, and not barycentric
-        its.t = t;
+        if(t >= r.minDist && t <= r.maxDist){
+            its.uv = {u, v};
+            its.t = t;
 
-        return t >= r.minDist && t <= r.maxDist;
+            return true;
+        }
+
+        return false;
     }
 
     __device__ constexpr void setHitInformation(const Ray3f &ray, Intersection &its) const {
 
-        float u = its.uv[0];
-        float v = its.uv[1];
+        const float u = its.uv[0];
+        const float v = its.uv[1];
 
         const Vector3f bary{1 - u - v, u, v};
 
