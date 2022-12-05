@@ -3,49 +3,52 @@
 //
 
 #include "scene.h"
-#include "../cudaHelpers.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
 
-#include <thread>
 #include <fstream>
+#include <thread>
 
-__host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) :
-        sceneRepresentation(sceneRepr),
-        imageBufferByteSize(sceneRepr.sceneInfo.width * sceneRepr.sceneInfo.height * sizeof(Vector3f)),
-        blockSize(sceneRepr.sceneInfo.width / blockSizeX + 1, sceneRepr.sceneInfo.height / blockSizeY + 1),
-        device(dev),
-        hostDeviceMeshTriangleVec(sceneRepresentation.meshInfos.size()),
-        hostDeviceMeshCDF(sceneRepresentation.meshInfos.size()),
-        totalMeshArea(sceneRepresentation.meshInfos.size()),
-        hostDeviceEmitterTriangleVec(sceneRepresentation.emitterInfos.size()),
-        hostDeviceEmitterCDF(sceneRepresentation.emitterInfos.size()),
-        totalEmitterArea(sceneRepresentation.emitterInfos.size()),
-        deviceCamera(sceneRepr.cameraInfo.origin,
-                     sceneRepr.cameraInfo.target,
-                     sceneRepr.cameraInfo.up,
-                     sceneRepr.cameraInfo.fov,
-                     static_cast<float>(sceneRepr.sceneInfo.width) / static_cast<float>(sceneRepr.sceneInfo.height),
-                     sceneRepr.cameraInfo.aperture,
-                     (sceneRepr.cameraInfo.origin-sceneRepr.cameraInfo.target).norm()){//(customRenderer::getCameraOrigin() - customRenderer::getCameraLookAt()).norm()){
+__host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) : sceneRepresentation(sceneRepr),
+                                                                     imageBufferByteSize(sceneRepr.sceneInfo.width * sceneRepr.sceneInfo.height * sizeof(Vector3f)),
+                                                                     blockSize(sceneRepr.sceneInfo.width / blockSizeX + 1, sceneRepr.sceneInfo.height / blockSizeY + 1),
+                                                                     device(dev),
+                                                                     hostDeviceMeshTriangleVec(sceneRepresentation.meshInfos.size()),
+                                                                     hostDeviceMeshCDF(sceneRepresentation.meshInfos.size()),
+                                                                     totalMeshArea(sceneRepresentation.meshInfos.size()),
+                                                                     hostDeviceEmitterTriangleVec(sceneRepresentation.emitterInfos.size()),
+                                                                     hostDeviceEmitterCDF(sceneRepresentation.emitterInfos.size()),
+                                                                     totalEmitterArea(sceneRepresentation.emitterInfos.size()),
+                                                                     deviceCamera(sceneRepr.cameraInfo.origin,
+                                                                                  sceneRepr.cameraInfo.target,
+                                                                                  sceneRepr.cameraInfo.up,
+                                                                                  sceneRepr.cameraInfo.fov,
+                                                                                  static_cast<float>(sceneRepr.sceneInfo.width) / static_cast<float>(sceneRepr.sceneInfo.height),
+                                                                                  sceneRepr.cameraInfo.aperture,
+                                                                                  (sceneRepr.cameraInfo.origin -
+                                                                                   sceneRepr.cameraInfo.target)
+                                                                                          .norm()) {//(customRenderer::getCameraOrigin() - customRenderer::getCameraLookAt()).norm()){
 
 
-    if(dev == CPU){
+    if(dev == CPU) {
         checkCudaErrors(cudaMalloc(&deviceImageBuffer, imageBufferByteSize));
         checkCudaErrors(cudaMalloc(&deviceImageBufferDenoised, imageBufferByteSize));
-    }else{
+    } else {
 
-//        checkCudaErrors(cudaMalloc(&deviceImageBuffer, imageBufferByteSize)); Allocated by OpenGL instead
+        //        checkCudaErrors(cudaMalloc(&deviceImageBuffer, imageBufferByteSize)); Allocated by OpenGL instead
         checkCudaErrors(cudaMalloc(&deviceImageBufferDenoised, imageBufferByteSize));
         initOpenGL();
     }
 
-    checkCudaErrors(cudaMalloc(&deviceFeatureBuffer, sizeof(FeatureBuffer)*sceneRepresentation.sceneInfo.width*sceneRepresentation.sceneInfo.height));
+    checkCudaErrors(cudaMalloc(&deviceFeatureBuffer, sizeof(FeatureBuffer) * sceneRepresentation.sceneInfo.width *
+                                                             sceneRepresentation.sceneInfo.height));
 
 
-    checkCudaErrors(cudaMalloc(&deviceCurandState, sceneRepresentation.sceneInfo.width * sceneRepresentation.sceneInfo.height * sizeof(curandState)));
+    checkCudaErrors(cudaMalloc(&deviceCurandState,
+                               sceneRepresentation.sceneInfo.width * sceneRepresentation.sceneInfo.height *
+                                       sizeof(curandState)));
 
     cudaHelpers::initRng<<<blockSize, threadSize>>>(sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height, deviceCurandState);
     checkCudaErrors(cudaGetLastError());
@@ -55,19 +58,18 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) :
     checkCudaErrors(cudaMalloc(&emitterAccelerationStructure, sizeof(TLAS<Triangle>)));
 
     // No need to sync because can run independently
-//    checkCudaErrors(cudaDeviceSynchronize());
+    //    checkCudaErrors(cudaDeviceSynchronize());
 
     auto numMeshes = sceneRepresentation.meshInfos.size();
 
     std::vector<BSDF> hostMeshBSDFS(numMeshes);
-    for(size_t i = 0; i < numMeshes; ++i){
+    for(size_t i = 0; i < numMeshes; ++i) {
         hostMeshBSDFS[i] = sceneRepresentation.meshInfos[i].bsdf;
     }
 
     BSDF *deviceMeshBSDF;
-    checkCudaErrors(cudaMalloc(&deviceMeshBSDF, sizeof(BSDF)*numMeshes));
+    checkCudaErrors(cudaMalloc(&deviceMeshBSDF, sizeof(BSDF) * numMeshes));
     checkCudaErrors(cudaMemcpy(deviceMeshBSDF, hostMeshBSDFS.data(), sizeof(BSDF) * numMeshes, cudaMemcpyHostToDevice));
-
 
 
     std::vector<BLAS<Triangle> *> hostMeshBlasVector(numMeshes);
@@ -75,7 +77,7 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) :
 
     clock_t meshLoadStart = clock();
 #pragma omp parallel for
-    for(size_t i = 0; i < numMeshes; ++i){
+    for(size_t i = 0; i < numMeshes; ++i) {
         hostMeshBlasVector[i] = getMeshFromFile(sceneRepr.meshInfos[i].filename,
                                                 hostDeviceMeshTriangleVec[i],
                                                 hostDeviceMeshCDF[i],
@@ -87,38 +89,38 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) :
     auto numEmitters = sceneRepresentation.emitterInfos.size();
 
     std::vector<BSDF> hostEmitterBSDFS(numEmitters);
-    for(size_t i = 0; i < numEmitters; ++i){
+    for(size_t i = 0; i < numEmitters; ++i) {
         hostEmitterBSDFS[i] = sceneRepresentation.emitterInfos[i].bsdf;
     }
 
     BSDF *deviceEmitterBSDF;
-    checkCudaErrors(cudaMalloc(&deviceEmitterBSDF, sizeof(BSDF)*numEmitters));
-    checkCudaErrors(cudaMemcpy(deviceEmitterBSDF, hostEmitterBSDFS.data(), sizeof(BSDF) * numEmitters, cudaMemcpyHostToDevice));
-
-
+    checkCudaErrors(cudaMalloc(&deviceEmitterBSDF, sizeof(BSDF) * numEmitters));
+    checkCudaErrors(
+            cudaMemcpy(deviceEmitterBSDF, hostEmitterBSDFS.data(), sizeof(BSDF) * numEmitters, cudaMemcpyHostToDevice));
 
 
     std::vector<BLAS<Triangle> *> hostEmitterBlasVector(numEmitters);
 
     std::vector<AreaLight> hostAreaLights(numEmitters);
-    for(size_t i = 0; i < numEmitters; ++i){
+    for(size_t i = 0; i < numEmitters; ++i) {
         hostAreaLights[i] = AreaLight(sceneRepr.emitterInfos[i].radiance);
     }
 
     AreaLight *deviceAreaLights;
-    checkCudaErrors(cudaMalloc(&deviceAreaLights, sizeof(AreaLight)*numEmitters));
-    checkCudaErrors(cudaMemcpy(deviceAreaLights, hostAreaLights.data(), sizeof(AreaLight) * numEmitters, cudaMemcpyHostToDevice));
+    checkCudaErrors(cudaMalloc(&deviceAreaLights, sizeof(AreaLight) * numEmitters));
+    checkCudaErrors(cudaMemcpy(deviceAreaLights, hostAreaLights.data(), sizeof(AreaLight) * numEmitters,
+                               cudaMemcpyHostToDevice));
 
 
 #pragma omp parallel for
-    for(size_t i = 0; i < numEmitters; ++i){
-        hostEmitterBlasVector[i] = getMeshFromFile( sceneRepr.emitterInfos[i].filename,
-                                                    hostDeviceEmitterTriangleVec[i],
-                                                    hostDeviceEmitterCDF[i],
-                                                    totalEmitterArea[i],
-                                                    sceneRepr.emitterInfos[i].transform,
-                                                    deviceEmitterBSDF + i,
-                                                    deviceAreaLights + i);
+    for(size_t i = 0; i < numEmitters; ++i) {
+        hostEmitterBlasVector[i] = getMeshFromFile(sceneRepr.emitterInfos[i].filename,
+                                                   hostDeviceEmitterTriangleVec[i],
+                                                   hostDeviceEmitterCDF[i],
+                                                   totalEmitterArea[i],
+                                                   sceneRepr.emitterInfos[i].transform,
+                                                   deviceEmitterBSDF + i,
+                                                   deviceAreaLights + i);
     }
 
 
@@ -127,51 +129,50 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) :
               << " seconds.\n";
 
 
-
     BLAS<Triangle> **deviceBlasArr = cudaHelpers::hostVecToDeviceRawPtr(hostMeshBlasVector);
     BLAS<Triangle> **deviceEmitterBlasArr = cudaHelpers::hostVecToDeviceRawPtr(hostEmitterBlasVector);
 
     cudaHelpers::constructTLAS<<<1, 1>>>(meshAccelerationStructure,
-                                            deviceBlasArr, numMeshes,
-                                            deviceEmitterBlasArr, numEmitters);
+                                         deviceBlasArr, numMeshes,
+                                         deviceEmitterBlasArr, numEmitters);
 
     checkCudaErrors(cudaGetLastError());
 
     hostImageBuffer = new Vector3f[imageBufferByteSize];
     hostImageBufferDenoised = new Vector3f[imageBufferByteSize];
-
 }
 
-__host__ Scene::~Scene(){
+__host__ Scene::~Scene() {
 
 
     delete[] hostImageBuffer;
     delete[] hostImageBufferDenoised;
 
-    if(device == CPU){
+    if(device == CPU) {
         checkCudaErrors(cudaDeviceSynchronize());
-//                checkCudaErrors(cudaFree(deviceImageBuffer));
-//        glDeleteVertexArrays(1, &VAO);
-//        glDeleteBuffers(1, &VBO);
-//        glDeleteBuffers(1, &EBO);
-    }else{
+        //                checkCudaErrors(cudaFree(deviceImageBuffer));
+        //        glDeleteVertexArrays(1, &VAO);
+        //        glDeleteBuffers(1, &VBO);
+        //        glDeleteBuffers(1, &EBO);
+    } else {
         cudaGraphicsUnmapResources(1, &cudaPBOResource, nullptr);
     }
-//    glfwTerminate();
+    //    glfwTerminate();
     cudaHelpers::freeVariables<<<blockSize, threadSize>>>();
 }
 
 
-void Scene::render(){
+void Scene::render() {
 
     volatile bool currentlyRendering = true;
 
     std::thread drawingThread;
 
-    if(device == GPU){
-        drawingThread = std::thread{[this](Vector3f *v, volatile bool &render){
-            OpenGLDraw(v, render);
-        }, deviceImageBuffer, std::ref(currentlyRendering)};
+    if(device == GPU) {
+        drawingThread = std::thread{[this](Vector3f *v, volatile bool &render) {
+                                        OpenGLDraw(v, render);
+                                    },
+                                    deviceImageBuffer, std::ref(currentlyRendering)};
     }
 
 
@@ -185,15 +186,10 @@ void Scene::render(){
     std::cout << "Starting draw thread...\n";
 
 
-
-
     cudaHelpers::render<<<blockSize, threadSize>>>(deviceImageBuffer, deviceCamera, meshAccelerationStructure,
                                                    sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height, sceneRepresentation.sceneInfo.samplePerPixel, sceneRepresentation.sceneInfo.maxRayDepth,
                                                    deviceCurandState, deviceFeatureBuffer, deviceCounter);
     checkCudaErrors(cudaGetLastError());
-
-
-
 
 
     std::cout << "Synchronizing GPU...\n";
@@ -206,35 +202,32 @@ void Scene::render(){
     checkCudaErrors(cudaDeviceSynchronize());
 
     checkCudaErrors(
-            cudaMemcpy(hostImageBufferDenoised, deviceImageBufferDenoised, imageBufferByteSize, cudaMemcpyDeviceToHost));
+            cudaMemcpy(hostImageBufferDenoised, deviceImageBufferDenoised, imageBufferByteSize,
+                       cudaMemcpyDeviceToHost));
     checkCudaErrors(cudaDeviceSynchronize());
-
 
 
     currentlyRendering = false;
 
-    if(device == GPU){
+    if(device == GPU) {
         drawingThread.join();
     }
 
 
     std::cout << "Joined draw thread...\n";
-
-
 }
 
-__host__ void Scene::renderGPU(){
+__host__ void Scene::renderGPU() {
 
 
-    for(int i = 0; i < 10000; ++i){
+    for(int i = 0; i < 10000; ++i) {
         std::cout << "Rendering frame " << i << '\n';
         render();
     }
-
 }
 
-__host__ void Scene::renderCPU(){
-//    initOpenGL();
+__host__ void Scene::renderCPU() {
+    //    initOpenGL();
 
     clock_t start, stop;
     start = clock();
@@ -256,33 +249,35 @@ __host__ void Scene::renderCPU(){
     const std::string hdrPath = "./data/image.hdr";
     const std::string hdrPathDenoised = "./data/imageDenoised.hdr";
 
-//    stbi_set_flip_vertically_on_load(true);
+    //    stbi_set_flip_vertically_on_load(true);
 
-    const bool didHDR = stbi_write_hdr(hdrPath.c_str(), sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height, 3, (float *)hostImageBuffer);
+    const bool didHDR = stbi_write_hdr(hdrPath.c_str(), sceneRepresentation.sceneInfo.width,
+                                       sceneRepresentation.sceneInfo.height, 3, (float *) hostImageBuffer);
     assert(didHDR);
 
 
     pngwriter png(sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height, 1., pngPath.c_str());
-    pngwriter pngDenoised(sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height, 1., pngPathDenoised.c_str());
+    pngwriter pngDenoised(sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height, 1.,
+                          pngPathDenoised.c_str());
 
-    auto gammaCorrect = [](float value){
-        if (value <= 0.0031308f) return std::clamp(12.92f * value, 0.f, 1.f);
+    auto gammaCorrect = [](float value) {
+        if(value <= 0.0031308f) return std::clamp(12.92f * value, 0.f, 1.f);
         return std::clamp(1.055f * std::pow(value, 1.f / 2.4f) - 0.055f, 0.f, 1.f);
     };
 
 
 #pragma omp parallel for
-    for(int j = 0; j < sceneRepresentation.sceneInfo.height; j++){
-        for(int i = 0; i < sceneRepresentation.sceneInfo.width; i++){
+    for(int j = 0; j < sceneRepresentation.sceneInfo.height; j++) {
+        for(int i = 0; i < sceneRepresentation.sceneInfo.width; i++) {
             const int idx = j * sceneRepresentation.sceneInfo.width + i;
             png.plot(i + 1, sceneRepresentation.sceneInfo.height - j,
-                    gammaCorrect(hostImageBuffer[idx][0]),
-                    gammaCorrect(hostImageBuffer[idx][1]),
-                    gammaCorrect(hostImageBuffer[idx][2]));
+                     gammaCorrect(hostImageBuffer[idx][0]),
+                     gammaCorrect(hostImageBuffer[idx][1]),
+                     gammaCorrect(hostImageBuffer[idx][2]));
             pngDenoised.plot(i + 1, sceneRepresentation.sceneInfo.height - j,
-                    gammaCorrect(hostImageBufferDenoised[idx][0]),
-                    gammaCorrect(hostImageBufferDenoised[idx][1]),
-                    gammaCorrect(hostImageBufferDenoised[idx][2]));
+                             gammaCorrect(hostImageBufferDenoised[idx][0]),
+                             gammaCorrect(hostImageBufferDenoised[idx][1]),
+                             gammaCorrect(hostImageBufferDenoised[idx][2]));
         }
     }
 
@@ -290,28 +285,29 @@ __host__ void Scene::renderCPU(){
     pngDenoised.close();
 }
 
-__host__ void Scene::initOpenGL(){
+__host__ void Scene::initOpenGL() {
     assert(false);
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    window = glfwCreateWindow(sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height, "Raytracing", nullptr, nullptr);
-    if(!window){
+    window = glfwCreateWindow(sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height, "Raytracing",
+                              nullptr, nullptr);
+    if(!window) {
         std::cerr << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
         throw std::runtime_error("GLFW WINDOW ERROR");
     }
 
     glfwMakeContextCurrent(window);
-//    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-//    glfwSetCursorPosCallback(window, mouse_callback);
+    //    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    //    glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     glfwSwapInterval(1);
 
-    if(!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)){
+    if(!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
         std::cerr << "Failed to initialize GLAD" << std::endl;
         throw std::runtime_error("GLAD INIT ERROR");
     }
@@ -321,13 +317,15 @@ __host__ void Scene::initOpenGL(){
     glEnable(GL_DEPTH_TEST);
 
 
-    switch(device){
+    switch(device) {
         break;
         case GPU:
 
             glGenBuffers(1, &PBO);
             glBindBuffer(GL_PIXEL_UNPACK_BUFFER, PBO);
-            glBufferData(GL_PIXEL_UNPACK_BUFFER, sizeof(Vector3f) * sceneRepresentation.sceneInfo.width * sceneRepresentation.sceneInfo.height, nullptr, GL_STREAM_DRAW);
+            glBufferData(GL_PIXEL_UNPACK_BUFFER,
+                         sizeof(Vector3f) * sceneRepresentation.sceneInfo.width * sceneRepresentation.sceneInfo.height,
+                         nullptr, GL_STREAM_DRAW);
             glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 
             //    glGenTextures(1, &tex);
@@ -339,7 +337,8 @@ __host__ void Scene::initOpenGL(){
             checkCudaErrors(cudaGraphicsMapResources(1, &cudaPBOResource, nullptr));
 
             checkCudaErrors(
-                    cudaGraphicsResourceGetMappedPointer((void **) &deviceImageBuffer, const_cast<size_t *>(&imageBufferByteSize), cudaPBOResource));
+                    cudaGraphicsResourceGetMappedPointer((void **) &deviceImageBuffer,
+                                                         const_cast<size_t *>(&imageBufferByteSize), cudaPBOResource));
 
             checkCudaErrors(cudaDeviceSynchronize());
             break;
@@ -347,14 +346,11 @@ __host__ void Scene::initOpenGL(){
             glGenVertexArrays(1, &VAO);
             glGenBuffers(1, &VBO);
 
-//            glGenBuffers(1, &EBO);
-
+            //            glGenBuffers(1, &EBO);
     }
-
-
 }
 
-__host__ void Scene::OpenGLDraw(Vector3f *deviceVector, volatile bool &isRendering){
+__host__ void Scene::OpenGLDraw(Vector3f *deviceVector, volatile bool &isRendering) {
 
     glGenVertexArrays(1, &VAO);
 
@@ -363,12 +359,11 @@ __host__ void Scene::OpenGLDraw(Vector3f *deviceVector, volatile bool &isRenderi
     float vertices[] = {
             -0.5f, -0.5f, 0.0f,
             0.5f, -0.5f, 0.0f,
-            0.0f, 0.5f, 0.0f
-    };
+            0.0f, 0.5f, 0.0f};
 
     std::cout << "Hehe 2";
 
-//    float *vertices;
+    //    float *vertices;
 
     glBindVertexArray(VAO);
 
@@ -388,29 +383,28 @@ __host__ void Scene::OpenGLDraw(Vector3f *deviceVector, volatile bool &isRenderi
     glBindVertexArray(0);
 
     std::cout << "Hehe 1";
-    while(isRendering){
-//        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    while(isRendering) {
+        //        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
 
         glUseProgram(shaderID);
         glBindVertexArray(VAO);
-//        checkCudaErrors(cudaMemcpy(hostImageBuffer, deviceImageBuffer, imageBufferByteSize, cudaMemcpyDeviceToHost));
+        //        checkCudaErrors(cudaMemcpy(hostImageBuffer, deviceImageBuffer, imageBufferByteSize, cudaMemcpyDeviceToHost));
 
-//        std::cout << deviceImageBuffer[0] << '\n';
+        //        std::cout << deviceImageBuffer[0] << '\n';
         //        glBufferData(GL_ARRAY_BUFFER, 2 * width * height * sizeof(Vector3f), NULL, GL_STATIC_DRAW);
-//
-//        glBufferSubData(GL_ARRAY_BUFFER, 0, width * height * sizeof(Vector3f), hostImageBuffer);
-//        glBufferSubData(GL_ARRAY_BUFFER, width * height * sizeof(Vector3f), width * height * sizeof(Vector3f), hostCoordinateVector);
+        //
+        //        glBufferSubData(GL_ARRAY_BUFFER, 0, width * height * sizeof(Vector3f), hostImageBuffer);
+        //        glBufferSubData(GL_ARRAY_BUFFER, width * height * sizeof(Vector3f), width * height * sizeof(Vector3f), hostCoordinateVector);
 
-//        checkCudaErrors(cudaDeviceSynchronize());
-//        glBufferData(GL_ARRAY_BUFFER, width * height * sizeof(Vector3f), hostImageBuffer, GL_STATIC_DRAW);
+        //        checkCudaErrors(cudaDeviceSynchronize());
+        //        glBufferData(GL_ARRAY_BUFFER, width * height * sizeof(Vector3f), hostImageBuffer, GL_STATIC_DRAW);
 
 
         //            glDrawArrays(GL_POINTS, 0, width*height);
 
-//        glEnable(GL_PROGRAM_POINT_SIZE);
-
+        //        glEnable(GL_PROGRAM_POINT_SIZE);
 
 
         glDrawArrays(GL_TRIANGLES, 0, sizeof(vertices) / 3);
@@ -420,16 +414,15 @@ __host__ void Scene::OpenGLDraw(Vector3f *deviceVector, volatile bool &isRenderi
         glfwPollEvents();
     }
     std::cout << "Exiting :sadge:\n";
-
 }
 
-__host__ void Scene::loadShader(){
+__host__ void Scene::loadShader() {
     std::string vertexCode, fragmentCode;
     std::ifstream vShaderFile, fShaderFile;
 
     vShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
     fShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-    try{
+    try {
 
         vShaderFile.open(vertexShaderPath);
         fShaderFile.open(fragmentShaderPath);
@@ -444,7 +437,7 @@ __host__ void Scene::loadShader(){
 
         vertexCode = vShaderStream.str();
         fragmentCode = fShaderStream.str();
-    }catch(std::ifstream::failure &e){
+    } catch(std::ifstream::failure &e) {
         std::cerr << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ: " << e.what() << std::endl;
         std::cout << fragmentShaderPath << " " << vertexShaderPath << '\n';
         throw std::runtime_error("Shader File not readable");
@@ -476,18 +469,20 @@ __host__ void Scene::loadShader(){
 __host__ void Scene::checkShaderCompileError(unsigned int shader, const std::string &type) {
     GLint success;
     GLchar infoLog[1024];
-    if(type != "PROGRAM"){
+    if(type != "PROGRAM") {
         glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-        if(!success){
+        if(!success) {
             glGetShaderInfoLog(shader, 1024, nullptr, infoLog);
-            std::cerr << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n" << infoLog
+            std::cerr << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n"
+                      << infoLog
                       << "\n -- --------------------------------------------------- -- " << std::endl;
         }
-    }else{
+    } else {
         glGetProgramiv(shader, GL_LINK_STATUS, &success);
-        if(!success){
+        if(!success) {
             glGetProgramInfoLog(shader, 1024, NULL, infoLog);
-            std::cerr << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n" << infoLog
+            std::cerr << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n"
+                      << infoLog
                       << "\n -- --------------------------------------------------- -- " << std::endl;
         }
     }

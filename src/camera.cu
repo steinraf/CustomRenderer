@@ -7,47 +7,41 @@
 
 __device__ __host__ Camera::Camera(Vector3f origin, Vector3f lookAt, Vector3f _up, float vFOV,
                                    float aspectRatio, float aperture, float focusDist)
-        : origin(origin), lensRadius(aperture / 2.0f){
+    : origin(origin), lensRadius(aperture / 2.0f) {
 
 
-
-
-
-    constexpr int noriConvert = 1; // -1 for nori, 1 for correct handedness
+    constexpr int noriConvert = 1;// -1 for nori, 1 for correct handedness
 
 
     front = (lookAt - origin).normalized();
-    right = noriConvert*(_up.cross(-front)).normalized();
-    up = front.cross(noriConvert*-right);
+    right = noriConvert * (_up.cross(-front)).normalized();
+    up = front.cross(noriConvert * -right);
 
-    const float halfHeight = tan(vFOV * M_PIf * 0.5f / 180.0f);
+    const float halfHeight = tan(vFOV / aspectRatio * M_PIf * 0.5f / 180.0f);
     const float halfWidth = aspectRatio * halfHeight;
 
     const Vector3f halfU = halfWidth * focusDist * right;
     const Vector3f halfV = halfHeight * focusDist * up;
 
-    upperLeft = origin
-                - halfU
-                + halfV
-                + focusDist * front;
+    upperLeft = origin - halfU + halfV + focusDist * front;
 
 
     horizontal = 2.0f * halfU;
     vertical = -2.0f * halfV;
 }
 
-__device__ Ray3f Camera::getRay(float s, float t, const Vector2f &sample) const{
+__device__ Ray3f Camera::getRay(float s, float t, const Vector2f &sample) const {
 
     //sample = ((0.5x, -0.5*aspect*y, 1z) + (1.0, -1.0f/aspect, 0.f) * perspective).inverse()
 
 
     const Vector2f randomDisk = lensRadius * Warp::squareToUniformDisk(sample);
-//    const Vector2f randomDisk = lensRadius * Warp::squareToUniformSquare(sample);
-//    const Vector3f triaSample =  Warp::squareToUniformTriangle(sample);
-//    const Vector3f triaPoint = lensRadius * (   Vector3f{-0.5, -0.5, 0} * triaSample[0] +
-//                                                Vector3f{-0.5,  0.5, 0} * triaSample[1] +
-//                                                Vector3f{ 0.5,  0.5, 0} * triaSample[2] );
-//    const Vector2f randomDisk{triaPoint[0], triaPoint[1]};
+    //    const Vector2f randomDisk = lensRadius * Warp::squareToUniformSquare(sample);
+    //    const Vector3f triaSample =  Warp::squareToUniformTriangle(sample);
+    //    const Vector3f triaPoint = lensRadius * (   Vector3f{-0.5, -0.5, 0} * triaSample[0] +
+    //                                                Vector3f{-0.5,  0.5, 0} * triaSample[1] +
+    //                                                Vector3f{ 0.5,  0.5, 0} * triaSample[2] );
+    //    const Vector2f randomDisk{triaPoint[0], triaPoint[1]};
 
 
     const Vector3f offset = right * randomDisk[0] + up * randomDisk[1];

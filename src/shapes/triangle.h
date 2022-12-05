@@ -5,12 +5,12 @@
 #pragma once
 
 
-#include "../utility/ray.h"
-#include "../hittable.h"
-#include "../bsdf.h"
 #include "../acceleration/aabb.h"
+#include "../bsdf.h"
+#include "../hittable.h"
+#include "../utility/ray.h"
 
-struct ShapeQueryRecord{
+struct ShapeQueryRecord {
     Vector3f ref;
     Vector3f p;
     Vector3f n;
@@ -19,38 +19,33 @@ struct ShapeQueryRecord{
 
     /// Empty constructor
     __device__ constexpr ShapeQueryRecord() noexcept
-        :ref(), p(), n(), pdf(0.f){
-
+        : ref(), p(), n(), pdf(0.f) {
     }
 
     /// Data structure with ref to call sampleSurface()
     __device__ constexpr ShapeQueryRecord(const Vector3f &ref_) noexcept
         : ref(ref_), p(), n(), pdf(0.f) {
-
     }
 
     /// Data structure with ref and p to call pdfSurface()
     __device__ constexpr ShapeQueryRecord(const Vector3f &ref_, const Vector3f &p_) noexcept
         : ref(ref_), p(p_), n(), pdf(0.f) {
-
     }
 };
 
 
-class Triangle{
+class Triangle {
 public:
-
     constexpr Triangle() noexcept = default;
 
     __device__ __host__ constexpr Triangle(
             const Vector3f &p0, const Vector3f &p1, const Vector3f &p2,
             const Vector2f &uv0, const Vector2f &uv1, const Vector2f &uv2,
             const Vector3f &n0, const Vector3f &n1, const Vector3f &n2) noexcept
-            : p0(p0), p1(p1), p2(p2),
-              uv0(uv0), uv1(uv1), uv2(uv2),
-              n0(n0), n1(n1), n2(n2),
-              boundingBox(p0, p1, p2){
-
+        : p0(p0), p1(p1), p2(p2),
+          uv0(uv0), uv1(uv1), uv2(uv2),
+          n0(n0), n1(n1), n2(n2),
+          boundingBox(p0, p1, p2) {
     }
 
     //Nori Triangle Ray3f intersect
@@ -67,7 +62,7 @@ public:
         float det = edge1.dot(pvec);
 
 
-        if(det > -EPSILON && det < EPSILON){
+        if(det > -EPSILON && det < EPSILON) {
             return false;
         }
 
@@ -78,7 +73,7 @@ public:
 
         /* Calculate U parameter and test bounds */
         float u = tvec.dot(pvec) * inv_det;
-        if(u < 0.f || u > 1.f){
+        if(u < 0.f || u > 1.f) {
             return false;
         }
 
@@ -87,32 +82,20 @@ public:
 
         /* Calculate V parameter and test bounds */
         float v = r.getDirection().dot(qvec) * inv_det;
-        if(v < 0.f || u + v > 1.f){
+        if(v < 0.f || u + v > 1.f) {
             return false;
         }
 
 
         float t = edge2.dot(qvec) * inv_det;
 
+        its.uv = {u, v};// This gets overwritten in the next step to be mesh-global uv, and not barycentric
+        its.t = t;
 
-        if(t >= r.minDist && t <= r.maxDist){
-            const Vector3f bary{1 - u - v, u, v};
-            its.p =             bary[0] * p0 + bary[1] * p1 + bary[2] * p2;
-            its.shFrame = Frame{bary[0] * n0 + bary[1] * n1 + bary[2] * n2};
-//            its.triangle = this;
-            its.uv = {u, v};
-            its.t = t;
-
-            return true;
-        }
-
-        return false;
+        return t >= r.minDist && t <= r.maxDist;
     }
 
-    __device__ constexpr void setHitInformation(const Ray3f &ray, Intersection its) const {
-        //TODO set precise rayIntersect Info here
-
-
+    __device__ constexpr void setHitInformation(const Ray3f &ray, Intersection &its) const {
 
         float u = its.uv[0];
         float v = its.uv[1];
@@ -121,29 +104,26 @@ public:
 
         its.p =             bary[0] * p0 + bary[1] * p1 + bary[2] * p2;
         its.shFrame = Frame{bary[0] * n0 + bary[1] * n1 + bary[2] * n2};
-        //TODO compute proper texture coords
 
-//        its.triangle = this;
+        its.uv =            bary[0] * uv0+ bary[1] * uv1+ bary[2] * uv2;
     }
 
-    [[nodiscard]]__host__ __device__ constexpr inline float getArea() const noexcept{
+    [[nodiscard]] __host__ __device__ constexpr inline float getArea() const noexcept {
         return 0.5f * (p1 - p0).cross(p2 - p0).norm();
     }
 
-    [[nodiscard]] __device__ constexpr inline Vector3f getCoordinate(const Vector3f &bary) const noexcept{
+    [[nodiscard]] __device__ constexpr inline Vector3f getCoordinate(const Vector3f &bary) const noexcept {
         return bary[0] * p0 + bary[1] * p1 + bary[2] * p2;
     }
 
-    [[nodiscard]] __device__ constexpr inline Vector3f getNormal(const Vector3f &bary)  const noexcept{
+    [[nodiscard]] __device__ constexpr inline Vector3f getNormal(const Vector3f &bary) const noexcept {
         return bary[0] * n0 + bary[1] * n1 + bary[2] * n2;
     }
 
-//private:
+    //private:
     Vector3f p0, p1, p2;
     Vector2f uv0, uv1, uv2;
     Vector3f n0, n1, n2;
 
     AABB boundingBox;
-
 };
-

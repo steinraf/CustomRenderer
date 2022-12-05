@@ -4,9 +4,9 @@
 
 #include "meshLoader.h"
 #include "vector.h"
-#include "../cudaHelpers.h"
 #include <thrust/transform_scan.h>
-HostMeshInfo loadMesh(const std::filesystem::path &filePath, const Affine3f &transform) noexcept(false){
+
+HostMeshInfo loadMesh(const std::filesystem::path &filePath, const Affine3f &transform) noexcept(false) {
 
     std::cout << "Reading mesh " + filePath.filename().string() + " ...\n";
     std::ifstream file(filePath, std::ios::in);
@@ -33,38 +33,38 @@ HostMeshInfo loadMesh(const std::filesystem::path &filePath, const Affine3f &tra
     thrust::host_vector<int> normalIndices3;
 
 
-    while(std::getline(file, lineString)){
+    while(std::getline(file, lineString)) {
         std::istringstream line{lineString};
         std::string start;
 
         line >> start;
 
-        if(start == "v"){
+        if(start == "v") {
             float x, y, z;
             line >> x >> y >> z;
             vertices.push_back(Vector3f{x, y, z}.applyTransform(transform));
-//            std::cout << filePath << ", found coord x y z " << x << ' ' << y << ' ' << z << '\n';
+            //            std::cout << filePath << ", found coord x y z " << x << ' ' << y << ' ' << z << '\n';
 
 
-        }else if(start == "vt"){
+        } else if(start == "vt") {
             float u, v, w;
             line >> u >> v >> w;
             textures.push_back({u, v});
-//            std::cout << filePath << ", found texture u v w " << u << ' ' << v << ' ' << w << '\n';
-        }else if(start == "vn"){
+            //            std::cout << filePath << ", found texture u v w " << u << ' ' << v << ' ' << w << '\n';
+        } else if(start == "vn") {
             float x, y, z;
             line >> x >> y >> z;
             normals.push_back(Vector3f{x, y, z}.applyTransform(transform, true));
 
-        }else if(start == "f"){
+        } else if(start == "f") {
             std::string e1, e2, e3, e4;
             line >> e1 >> e2 >> e3 >> e4;
 
             std::istringstream s1(e1), s2(e2), s3(e3);
 
             int v1, v2, v3,
-                t1, t2, t3,
-                n1, n2, n3;
+                    t1, t2, t3,
+                    n1, n2, n3;
 
             char delim;
 
@@ -84,7 +84,7 @@ HostMeshInfo loadMesh(const std::filesystem::path &filePath, const Affine3f &tra
             normalIndices2.push_back(n2 - 1);
             normalIndices3.push_back(n3 - 1);
 
-            if(!e4.empty()){
+            if(!e4.empty()) {
                 int v4, t4, n4;
                 std::istringstream s4(e4);
                 s4 >> v4 >> delim >> t4 >> delim >> n4;
@@ -103,30 +103,28 @@ HostMeshInfo loadMesh(const std::filesystem::path &filePath, const Affine3f &tra
                 normalIndices3.push_back(n4 - 1);
                 normalIndices1.push_back(n1 - 1);
                 normalIndices2.push_back(n3 - 1);
-
             }
         }
     }
 
 
-    if(normals.size() == 0){
+    if(normals.size() == 0) {
         normals.resize(vertexIndices1.size());
         std::cout << "\tNo normals found. Interpolating...\n";
-        for(size_t i = 0; i < vertexIndices1.size(); ++i){
-            const Vector3f  p0 = vertices[vertexIndices1[i]],
-                            p1 = vertices[vertexIndices2[i]],
-                            p2 = vertices[vertexIndices3[i]];
-            normals[i] = ((p1-p0).cross(p2-p0)).normalized();
-//            std::cout << "NM Idx " << normalIndices1[i] << '\n';
-//            std::cout << "vn " << normals[i][0] << ' ' << normals[i][1] << ' ' << normals[i][2] << '\n';
+        for(size_t i = 0; i < vertexIndices1.size(); ++i) {
+            const Vector3f p0 = vertices[vertexIndices1[i]],
+                           p1 = vertices[vertexIndices2[i]],
+                           p2 = vertices[vertexIndices3[i]];
+            normals[i] = ((p1 - p0).cross(p2 - p0)).normalized();
+            //            std::cout << "NM Idx " << normalIndices1[i] << '\n';
+            //            std::cout << "vn " << normals[i][0] << ' ' << normals[i][1] << ' ' << normals[i][2] << '\n';
         }
-
     }
 
-    if(textures.size() == 0){
+    if(textures.size() == 0) {
         textures.resize(textureIndices1.size());
         std::cout << "\tNo textures found. Interpolating...\n";
-        for(size_t i = 0; i < textureIndices1.size(); ++i){
+        for(size_t i = 0; i < textureIndices1.size(); ++i) {
             textures[i] = {0.f, 0.f};
         }
     }
@@ -137,8 +135,7 @@ HostMeshInfo loadMesh(const std::filesystem::path &filePath, const Affine3f &tra
             normals,
             {vertexIndices1, vertexIndices2, vertexIndices3},
             {textureIndices1, textureIndices2, textureIndices3},
-            {normalIndices1, normalIndices2, normalIndices3}
-    };
+            {normalIndices1, normalIndices2, normalIndices3}};
 }
 
 
@@ -147,18 +144,16 @@ DeviceMeshInfo meshToGPU(const HostMeshInfo &mesh) noexcept {
 
     std::vector<Triangle> hostTriangles(numTriangles);
 
-    const auto &[
-            vertices,
-            textures,
-            normals,
-            vertexIndexList,
-            textureIndexList,
-            normalIndexList] = mesh;
-
+    const auto &[vertices,
+                 textures,
+                 normals,
+                 vertexIndexList,
+                 textureIndexList,
+                 normalIndexList] = mesh;
 
 
 #pragma omp parallel for
-    for(size_t i = 0; i < numTriangles; ++i){
+    for(size_t i = 0; i < numTriangles; ++i) {
         hostTriangles[i] = {
                 vertices[vertexIndexList.first[i]],
                 vertices[vertexIndexList.second[i]],
@@ -169,7 +164,7 @@ DeviceMeshInfo meshToGPU(const HostMeshInfo &mesh) noexcept {
                 normals[normalIndexList.first[i]],
                 normals[normalIndexList.second[i]],
                 normals[normalIndexList.third[i]],
-//                BSDF{Material::DIFFUSE}
+                //                BSDF{Material::DIFFUSE}
         };
     }
 
@@ -187,7 +182,7 @@ DeviceMeshInfo meshToGPU(const HostMeshInfo &mesh) noexcept {
                                                    triangleToAABB, aabb, aabbAddition);
 
     float totalTriaArea = thrust::transform_reduce(deviceTriangles.begin(), deviceTriangles.end(),
-                                                  triangleToArea, 0.f, thrust::plus<float>());
+                                                   triangleToArea, 0.f, thrust::plus<float>());
 
     assert(isfinite(totalTriaArea));
 
@@ -201,10 +196,10 @@ DeviceMeshInfo meshToGPU(const HostMeshInfo &mesh) noexcept {
 
     //TODO maybe try to only compute total BB once (but morton codes require normalize with BB)
 
-//    printf("Bounding box of total scene is (%f, %f, %f), (%f, %f, %f)\n",
-//            maxBoundingBox.min[0], maxBoundingBox.min[1], maxBoundingBox.min[2],
-//           maxBoundingBox.max[0], maxBoundingBox.max[1], maxBoundingBox.max[2]
-//    );
+    //    printf("Bounding box of total scene is (%f, %f, %f), (%f, %f, %f)\n",
+    //            maxBoundingBox.min[0], maxBoundingBox.min[1], maxBoundingBox.min[2],
+    //           maxBoundingBox.max[0], maxBoundingBox.max[1], maxBoundingBox.max[2]
+    //    );
 
     TriangleToMortonCode triangleToMortonCode(maxBoundingBox);
 

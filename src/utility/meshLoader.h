@@ -4,26 +4,26 @@
 
 #pragma once
 
-#include <fstream>
 #include <filesystem>
+#include <fstream>
 
-#include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
+#include <thrust/host_vector.h>
 #include <thrust/sort.h>
 
-#include "../cudaHelpers.h"
-#include "vector.h"
-#include "../shapes/triangle.h"
 #include "../acceleration/bvh.h"
+#include "../cudaHelpers.h"
+#include "../shapes/triangle.h"
+#include "vector.h"
 
 
-struct TriangleIndexList{
+struct TriangleIndexList {
     thrust::host_vector<int> first;
     thrust::host_vector<int> second;
     thrust::host_vector<int> third;
 };
 
-struct HostMeshInfo{
+struct HostMeshInfo {
     thrust::host_vector<Vector3f> vertices;
     thrust::host_vector<Vector2f> textures;
     thrust::host_vector<Vector3f> normals;
@@ -32,16 +32,15 @@ struct HostMeshInfo{
     TriangleIndexList normalsIndices;
 };
 
-struct DeviceMeshInfo{
+struct DeviceMeshInfo {
     thrust::device_vector<Triangle> triangles;
     thrust::device_vector<uint32_t> mortonCodes;
     thrust::device_vector<float> areaCDF;
     float totalArea;
 
-    [[nodiscard]] auto toTuple() const noexcept{
+    [[nodiscard]] auto toTuple() const noexcept {
         return std::tuple{triangles, mortonCodes, areaCDF, totalArea};
     }
-
 };
 
 
@@ -49,44 +48,42 @@ HostMeshInfo loadMesh(const std::filesystem::path &filePath, const Affine3f &tra
 
 DeviceMeshInfo meshToGPU(const HostMeshInfo &mesh) noexcept;
 
-struct TriaToAABB{
+struct TriaToAABB {
     __host__ __device__ constexpr AABB operator()(const Triangle &tria) const noexcept {
         return tria.boundingBox;
     }
 };
 
 
-
-struct AABBAdder{
-    __device__ constexpr AABB operator()(const AABB &a1, const AABB &a2) const noexcept{
+struct AABBAdder {
+    __device__ constexpr AABB operator()(const AABB &a1, const AABB &a2) const noexcept {
         return a1 + a2;
     }
 };
 
-struct TriaToArea{
+struct TriaToArea {
     __host__ __device__ constexpr float operator()(const Triangle &tria) const noexcept {
         return tria.getArea();
     }
 };
 
-struct TriangleToCDF{
+struct TriangleToCDF {
 private:
     float totalArea;
+
 public:
     __device__ __host__ explicit TriangleToCDF(float totalArea) noexcept
-        :totalArea(totalArea){
-
+        : totalArea(totalArea) {
     }
 
     __host__ __device__ constexpr float operator()(const Triangle &tria) const noexcept {
-        return tria.getArea()/totalArea;
+        return tria.getArea() / totalArea;
     }
 };
 
-struct TriangleToMortonCode{
+struct TriangleToMortonCode {
     __device__ __host__ explicit TriangleToMortonCode(const AABB &ref) noexcept
-        : lower(ref.min), dims(ref.max - ref.min){
-
+        : lower(ref.min), dims(ref.max - ref.min) {
     }
 
     // https://www.pbr-book.org/3ed-2018/Primitives_and_Intersection_Acceleration/Bounding_Volume_Hierarchies#LeftShift3
@@ -99,7 +96,7 @@ struct TriangleToMortonCode{
         return x;
     }
 
-    __device__ constexpr uint32_t operator()(const Triangle &tria) const noexcept{
+    __device__ constexpr uint32_t operator()(const Triangle &tria) const noexcept {
         int numBits = 10;
         const Vector3f normalized = static_cast<float>(1u << numBits) * (tria.boundingBox.getCenter() - lower) / dims;
 
@@ -117,16 +114,17 @@ private:
 };
 
 template<typename Primitive>
-__host__ BLAS<Primitive> * getMeshFromFile(const std::string &filename, thrust::device_vector<Primitive> &deviceTrias,
-                                            thrust::device_vector<float> &areaCDF, float &totalArea, const Affine3f &transform,
-                                            BSDF *deviceBSDF, AreaLight *deviceEmitter = nullptr){
+__host__ BLAS<Primitive> *getMeshFromFile(const std::string &filename, thrust::device_vector<Primitive> &deviceTrias,
+                                          thrust::device_vector<float> &areaCDF, float &totalArea,
+                                          const Affine3f &transform,
+                                          BSDF *deviceBSDF, AreaLight *deviceEmitter = nullptr) {
     clock_t startGeometryBVH = clock();
 
-//    if(!radiance.isZero())
-//        std::cout << "\tLoading Emitter with radiance " << radiance << "...\n";
+    //    if(!radiance.isZero())
+    //        std::cout << "\tLoading Emitter with radiance " << radiance << "...\n";
 
     auto mesh = loadMesh(filename, transform);
-    auto[deviceTriangles, deviceMortonCodes, deviceCDF, area] = meshToGPU(mesh).toTuple();
+    auto [deviceTriangles, deviceMortonCodes, deviceCDF, area] = meshToGPU(mesh).toTuple();
     totalArea = area;
     Primitive *deviceTriaPtr = deviceTriangles.data().get();
 
@@ -144,15 +142,15 @@ __host__ BLAS<Primitive> * getMeshFromFile(const std::string &filename, thrust::
 
     AccelerationNode<Primitive> *bvhTotalNodes;
     checkCudaErrors(cudaMalloc((void **) &bvhTotalNodes,
-                               sizeof(AccelerationNode<Primitive>) * (2 * numTriangles - 1))); //n-1 internal, n leaf
+                               sizeof(AccelerationNode<Primitive>) * (2 * numTriangles - 1)));//n-1 internal, n leaf
     checkCudaErrors(cudaMalloc((void **) &bvh, sizeof(BLAS<Primitive>)));
 
     //    printf("BLAS has allocation range of (%p, %p)\n", bvhTotalNodes, bvhTotalNodes + (2 * numTriangles - 1));
 
 
-
     cudaHelpers::constructBVH<<<(numTriangles + 1024 - 1) /
-                                1024, 1024>>>(bvhTotalNodes, deviceTriaPtr, deviceMortonCodes.data().get(), numTriangles);
+                                        1024,
+                                1024>>>(bvhTotalNodes, deviceTriaPtr, deviceMortonCodes.data().get(), numTriangles);
 
 
     checkCudaErrors(cudaGetLastError());
@@ -193,6 +191,3 @@ __host__ BLAS<Primitive> * getMeshFromFile(const std::string &filename, thrust::
 
     return bvh;
 };
-
-
-

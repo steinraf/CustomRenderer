@@ -4,27 +4,24 @@
 
 #pragma once
 
-#include <string>
-#include <map>
+#include <cassert>
 #include <filesystem>
 #include <iostream>
-#include <cassert>
+#include <map>
+#include <string>
 
-#include "pugixml.hpp"
-#include "../utility/vector.h"
 #include "../bsdf.h"
+#include "../utility/vector.h"
+#include "pugixml.hpp"
 
 
-
-struct SceneRepresentation{
-    explicit SceneRepresentation(const std::filesystem::path &file) noexcept(false){
+struct SceneRepresentation {
+    explicit SceneRepresentation(const std::filesystem::path &file) noexcept(false) {
         pugi::xml_document doc;
         pugi::xml_parse_result result = doc.load_file(file.c_str());
 
 
-
-
-        if (!result){
+        if(!result) {
             std::cout << "XML [" << file.string() << "] parsed with errors\n";
             std::cout << "Error description: " << result.description() << "\n";
             std::cout << "Error offset: " << result.offset << "\n\n";
@@ -34,15 +31,15 @@ struct SceneRepresentation{
 
         std::cout << "Started parsing " << root.name() << '\n';
 
-        if(std::string(root.name()) != "scene"){
+        if(std::string(root.name()) != "scene") {
             throw std::runtime_error("Unrecognized XML file root\n");
         }
 
-        for(const auto& node : root.children()){
+        for(const auto &node: root.children()) {
 
-            if (node.type() == pugi::node_comment || node.type() == pugi::node_declaration)
+            if(node.type() == pugi::node_comment || node.type() == pugi::node_declaration)
                 continue;
-            if (node.type() != pugi::node_element)
+            if(node.type() != pugi::node_element)
                 throw std::runtime_error("Unknown XML Node encounted.");
 
             const std::string &name = node.name();
@@ -52,235 +49,267 @@ struct SceneRepresentation{
             std::cout << '\n';
 
 
-            if(name == "default"){
+            if(name == "default") {
                 addDefault(node);
-            }else if(name == "integrator"){
+            } else if(name == "integrator") {
                 setIntegrator(node);
-            }else if(name == "sensor"){
+            } else if(name == "sensor") {
                 setSensor(node);
-            }else if(name == "shape"){
-                if(node.child("emitter")){
+            } else if(name == "shape") {
+                if(node.child("emitter")) {
                     addEmitter(node);
-                }else{
+                } else {
                     addMesh(node);
                 }
-            }else{
-                    throw std::runtime_error("Unrecognized node name \"" + name + "\" while parsing XML.");
+            } else {
+                throw std::runtime_error("Unrecognized node name \"" + name + "\" while parsing XML.");
             }
         }
     }
 
-    void inline addDefault(const pugi::xml_node &node) noexcept{
+    void inline addDefault(const pugi::xml_node &node) noexcept {
         map[node.attribute("name").value()] = node.attribute("value").value();
-        std::cout << "\t\t" << "Added mapping " << node.attribute("name").value() << " -> " << node.attribute("value").value() << '\n';
+        std::cout << "\t\t"
+                  << "Added mapping " << node.attribute("name").value() << " -> "
+                  << node.attribute("value").value() << '\n';
     }
 
-    void inline setIntegrator(const pugi::xml_node &node) noexcept(false){
+    void inline setIntegrator(const pugi::xml_node &node) noexcept(false) {
         if(getString(node.attribute("type")) != "path")
             throw std::runtime_error("Integrator must be path, not \"" + getString(node.attribute("type")) + "\".");
         std::cout << "\t\t path\n";
 
-        for(const auto& child : node.children()){
+        for(const auto &child: node.children()) {
             const std::string &childName = child.name();
-            if(childName == "integer"){
+            if(childName == "integer") {
                 if(getString(child.attribute("name")) != "max_depth")
-                    throw std::runtime_error("Unrecognized integrator integer option " + getString(child.attribute("name")));
+                    throw std::runtime_error(
+                            "Unrecognized integrator integer option " + getString(child.attribute("name")));
 
                 sceneInfo.maxRayDepth = std::stof(getString(child.attribute("value")));
                 std::cout << "\t\tMaxRayDepth: \n\t\t\t" << sceneInfo.maxRayDepth << '\n';
-            }else{
+            } else {
                 throw std::runtime_error("Non-Integer child found in integrator.");
             }
         }
-
-
     }
 
     void inline setSensor(const pugi::xml_node &node) noexcept(false) {
         if(getString(node.attribute("type")) != "perspective")
             throw std::runtime_error("Sensor must be perspective, not \"" + getString(node.attribute("type")) + "\" .");
 
-        for(const auto& child : node.children()){
+        for(const auto &child: node.children()) {
             const std::string &childName = child.name();
-            if(childName == "float"){
+            if(childName == "float") {
                 auto attribName = getString(child.attribute("name"));
-                if(attribName == "fov"){
+                if(attribName == "fov") {
                     cameraInfo.fov = std::stof(getString(child.attribute("value")));
                     std::cout << "\t\tFOV: \n\t\t\t" << cameraInfo.fov << '\n';
-                }else if(attribName == "aperture"){
+                } else if(attribName == "aperture") {
                     cameraInfo.aperture = std::stof(getString(child.attribute("value")));
                     std::cout << "\t\tAperture: \n\t\t\t" << cameraInfo.aperture << '\n';
-                }else{
+                } else {
                     throw std::runtime_error("Unrecognized sensor float option " + getString(child.attribute("name")));
                 }
-            }else if(childName == "transform"){
-                std::cout << "\t\t" << "Transform: \n";
+            } else if(childName == "transform") {
+                std::cout << "\t\t"
+                          << "Transform: \n";
                 auto lookAt = child.child("lookat");
-                if(lookAt){
+                if(lookAt) {
                     cameraInfo.target = getVector3f(lookAt, "target", "\t\t\t");
                     cameraInfo.origin = getVector3f(lookAt, "origin", "\t\t\t");
                     cameraInfo.up = getVector3f(lookAt, "up", "\t\t\t");
-                }else{
+                } else {
                     throw std::runtime_error("Sensor Transform must contain lookAt.");
                 }
 
-            }else if(childName == "sampler"){
+            } else if(childName == "sampler") {
 
-                std::cout << "\t\t" << "Sampler: " << '\n';
+                std::cout << "\t\t"
+                          << "Sampler: " << '\n';
 
                 if(getString(child.attribute("type")) != "independent")
-                    throw std::runtime_error("Sampler type must be independent, not \"" + getString(child.attribute("type")) + "\".");
+                    throw std::runtime_error(
+                            "Sampler type must be independent, not \"" + getString(child.attribute("type")) + "\".");
 
                 auto sampleCount = child.child("integer");
                 if(getString(sampleCount.attribute("name")) != "sample_count")
-                    throw std::runtime_error("Encountered unknown attribute \"" + getString(sampleCount.attribute("name")) + "\" in sampler.");
+                    throw std::runtime_error(
+                            "Encountered unknown attribute \"" + getString(sampleCount.attribute("name")) +
+                            "\" in sampler.");
                 sceneInfo.samplePerPixel = std::stoi(getString(sampleCount.attribute("value")));
-                std::cout << "\t\t\t" << "SampleCount: " << sceneInfo.samplePerPixel << '\n';
-            }else if(childName == "film"){
+                std::cout << "\t\t\t"
+                          << "SampleCount: " << sceneInfo.samplePerPixel << '\n';
+            } else if(childName == "film") {
 
                 if(getString(child.attribute("type")) != "hdrfilm")
-                    throw std::runtime_error("Invalid Film type \"" + getString(child.attribute("type")) + "\" encountered.");
+                    throw std::runtime_error(
+                            "Invalid Film type \"" + getString(child.attribute("type")) + "\" encountered.");
 
-                for(const auto& filmChild : child.children()){
+                for(const auto &filmChild: child.children()) {
                     const std::string &filmChildName = filmChild.name();
-                    if(filmChildName == "rfilter"){
+                    if(filmChildName == "rfilter") {
                         std::cerr << "WARNING, IGNORING FILTERS\n";
-                    }else if(filmChildName == "integer"){
-                        if(getString(filmChild.attribute("name")) == "width"){
+                    } else if(filmChildName == "integer") {
+                        if(getString(filmChild.attribute("name")) == "width") {
                             sceneInfo.width = std::stoi(getString(filmChild.attribute("value")));
-                            std::cout << "\t\t\t" << "Width: " << sceneInfo.width << '\n';
-                        }else if(getString(filmChild.attribute("name")) == "height"){
+                            std::cout << "\t\t\t"
+                                      << "Width: " << sceneInfo.width << '\n';
+                        } else if(getString(filmChild.attribute("name")) == "height") {
                             sceneInfo.height = std::stoi(getString(filmChild.attribute("value")));
-                            std::cout << "\t\t\t" << "Height: " << sceneInfo.height << '\n';
-                        }else{
-                            throw std::runtime_error("Unknown integer option \"" + getString(filmChild.attribute("name")) + "\"for hdrfilm encountered.");
+                            std::cout << "\t\t\t"
+                                      << "Height: " << sceneInfo.height << '\n';
+                        } else {
+                            throw std::runtime_error(
+                                    "Unknown integer option \"" + getString(filmChild.attribute("name")) +
+                                    "\"for hdrfilm encountered.");
                         }
-                    }else{
+                    } else {
                         throw std::runtime_error("Unknown option \"" + filmChildName + "\" for hdrfilm encountered.");
                     }
                 }
-            }else{
+            } else {
                 throw std::runtime_error("Invalid child tag \"" + childName + "\" found for sensor.");
             }
         }
-
     }
 
-    void inline addFilename(const std::string &name, bool isEmitter=false){
-        if(isEmitter){
+    void inline addFilename(const std::string &name, bool isEmitter = false) {
+        if(isEmitter) {
             emitterInfos.back().filename = name;
             std::cout << "\t\tFilename: " << emitterInfos.back().filename << '\n';
-        }else{
+        } else {
             meshInfos.back().filename = name;
             std::cout << "\t\tFilename: " << meshInfos.back().filename << '\n';
         }
     }
 
-    void inline addTextureFilename(const std::string &name, bool isEmitter=false){
-        if(isEmitter){
+    void inline addTextureFilename(const std::string &name, bool isEmitter = false) {
+        if(isEmitter) {
             emitterInfos.back().textureName = name;
             std::cout << "\t\tTexture: " << emitterInfos.back().textureName << '\n';
-        }else{
+        } else {
             meshInfos.back().textureName = name;
             std::cout << "\t\tTexture: " << meshInfos.back().textureName << '\n';
         }
     }
 
-    void addBSDF(const pugi::xml_node &node, bool isEmitter=false){
+    void addBSDF(const pugi::xml_node &node, bool isEmitter = false) {
         const std::string attribName = getString(node.attribute("type"));
         std::cout << "\t\tMaterial:\n";
-        if(attribName == "diffuse"){
+        if(attribName == "diffuse") {
             const auto color = node.child("rgb");
-            if(getString(color.attribute("name")) != "reflectance")
-                throw std::runtime_error("Invalid Tag \"" + getString(color.attribute("name")) + "\"found for material.");
+            assert(color ||
+                   (isEmitter && !emitterInfos.back().textureName.empty()) ||
+                   (!isEmitter && !meshInfos.back().textureName.empty()));
             std::cout << "\t\t\tBSDF: DIFFUSE\n";
-            if(isEmitter){
-                emitterInfos.back().bsdf = {Material::DIFFUSE, getVector3f(color, "value", "\t\t\t", "reflectance")};
-            }else{
-                meshInfos.back().bsdf = {Material::DIFFUSE, getVector3f(color, "value", "\t\t\t", "reflectance")};
+            if(isEmitter) {
+                if(emitterInfos.back().textureName.empty()) {
+                    if(getString(color.attribute("name")) != "reflectance")
+                        throw std::runtime_error(
+                                "Invalid Tag \"" + getString(color.attribute("name")) + "\"found for material.");
+                    emitterInfos.back().bsdf = {Material::DIFFUSE, getVector3f(color, "value", "\t\t\t", "reflectance")};
+
+                } else {
+                    emitterInfos.back().bsdf = {Material::DIFFUSE, emitterInfos.back().textureName};
+                }
+            } else {
+                if(meshInfos.back().textureName.empty()) {
+                    if(getString(color.attribute("name")) != "reflectance")
+                        throw std::runtime_error(
+                                "Invalid Tag \"" + getString(color.attribute("name")) + "\"found for material.");
+
+                    meshInfos.back().bsdf = {Material::DIFFUSE, getVector3f(color, "value", "\t\t\t", "reflectance")};
+                } else {
+                    meshInfos.back().bsdf = {Material::DIFFUSE, meshInfos.back().textureName};
+                }
             }
-        }else if(attribName == "mirror"){
+        } else if(attribName == "mirror") {
             std::cout << "\t\t\tBSDF: MIRROR\n";
-            if(isEmitter){
+            if(isEmitter) {
                 emitterInfos.back().bsdf = {Material::MIRROR, Color3f{0.f}};
-            }else{
+            } else {
                 meshInfos.back().bsdf = {Material::MIRROR, Color3f{0.f}};
             }
-        }else if(attribName == "dielectric"){
+        } else if(attribName == "dielectric") {
             std::cout << "\t\t\tBSDF: DIELECTRIC\n";
-            if(isEmitter){
+            if(isEmitter) {
                 emitterInfos.back().bsdf = {Material::DIELECTRIC, Color3f{0.f}};
-            }else{
+            } else {
                 meshInfos.back().bsdf = {Material::DIELECTRIC, Color3f{0.f}};
             }
-        }else{
+        } else {
             throw std::runtime_error("Invalid Material \"" + getString(node.attribute("type")) + "\".");
         }
     }
 
-    void inline addMesh(const pugi::xml_node &node) noexcept(false){
+    void inline addMesh(const pugi::xml_node &node) noexcept(false) {
         if(getString(node.attribute("type")) != "obj")
             throw std::runtime_error("Error while parsing shape. Only .obj files are supported.");
 
         meshInfos.emplace_back();
 
-        for(const auto& child : node.children()){
+        for(const auto &child: node.children()) {
             const std::string &childName = child.name();
-            if(childName == "string"){
-                if(getString(child.attribute("name")) == "filename"){
+            if(childName == "string") {
+                if(getString(child.attribute("name")) == "filename") {
                     addFilename(getString(child.attribute("value")));
-                }else if(getString(child.attribute("name")) == "texture"){
+                } else if(getString(child.attribute("name")) == "texture") {
                     addTextureFilename(getString(child.attribute("value")));
-                }else{
-                    throw std::runtime_error("Unknown mesh string option \"" + getString(child.attribute("name")) + "\" found.");
+                } else {
+                    throw std::runtime_error(
+                            "Unknown mesh string option \"" + getString(child.attribute("name")) + "\" found.");
                 }
-            }else if(childName == "bsdf"){
+            } else if(childName == "bsdf") {
                 addBSDF(child);
-            }else if(childName == "transform"){
+            } else if(childName == "transform") {
                 createTransform(child);
-            }else{
+            } else {
                 throw std::runtime_error("Invalid Tag \"" + childName + "\" found for shape.");
             }
         }
     }
 
-    void inline addEmitter(const pugi::xml_node &node) noexcept(false){
+    void inline addEmitter(const pugi::xml_node &node) noexcept(false) {
         if(getString(node.attribute("type")) != "obj")
             throw std::runtime_error("Error while parsing shape. Only .obj files are supported.");
 
         emitterInfos.emplace_back();
 
-        for(const auto& child : node.children()){
+        for(const auto &child: node.children()) {
             const std::string &childName = child.name();
-            if(childName == "string"){
+            if(childName == "string") {
                 addFilename(getString(child.attribute("value")), true);
-            }else if(childName == "bsdf"){
+            } else if(childName == "bsdf") {
                 addBSDF(child, true);
-            }else if(childName == "emitter"){
+            } else if(childName == "emitter") {
                 if(getString(child.attribute("type")) != "area")
-                    throw std::runtime_error("Invalid Emitter \"" + getString(child.attribute("type")) + "\". Only area is supported.");
+                    throw std::runtime_error(
+                            "Invalid Emitter \"" + getString(child.attribute("type")) + "\". Only area is supported.");
 
                 const auto color = child.child("rgb");
                 if(getString(color.attribute("name")) != "radiance")
-                    throw std::runtime_error("Invalid Tag \"" + getString(color.attribute("name")) + "\" found for emitter.");
+                    throw std::runtime_error(
+                            "Invalid Tag \"" + getString(color.attribute("name")) + "\" found for emitter.");
 
                 std::cout << "\t\tEmitter:\n";
                 std::cout << "\t\t\tType: Area\n";
 
-//                meshInfos.back().bsdf = {Material::DIFFUSE, getVector3f(color, "value", "\t\t\t", "reflectance")};
+                //                meshInfos.back().bsdf = {Material::DIFFUSE, getVector3f(color, "value", "\t\t\t", "reflectance")};
 
                 emitterInfos.back().radiance = getVector3f(color, "value", "\t\t\t", "radiance");
 
-            }else if(childName == "transform"){
+            } else if(childName == "transform") {
                 createTransform(child, true);
-            }else{
+            } else {
                 throw std::runtime_error("Invalid Tag \"" + childName + "\" found for shape.");
             }
         }
     }
 
 
-    [[nodiscard]] Vector3f inline getVector3f(pugi::xml_node node, const std::string &name, const std::string &indents="", const std::string &outName = "") const noexcept{
+    [[nodiscard]] Vector3f inline getVector3f(pugi::xml_node node, const std::string &name, const std::string &indents = "",
+                                              const std::string &outName = "") const noexcept {
         auto attrib = node.attribute(name.c_str());
         const std::string targetS = getString(attrib);
         std::cout << indents << (outName.empty() ? name : outName) << ": {" << targetS << "}\n";
@@ -288,17 +317,17 @@ struct SceneRepresentation{
         return Vector3f{targetS};
     }
 
-    [[nodiscard]] std::string getString(const pugi::xml_attribute& attrib) const noexcept{
+    [[nodiscard]] std::string getString(const pugi::xml_attribute &attrib) const noexcept {
         if(attrib.value()[0] == '$')
             return map.at(std::string(attrib.value()).substr(1));
 
         return attrib.value();
     }
 
-    void inline createTransform(const pugi::xml_node &transform, bool isEmitter=false) noexcept(false) {
+    void inline createTransform(const pugi::xml_node &transform, bool isEmitter = false) noexcept(false) {
 
 
-        Affine3f &currentTransform = [&]() -> Affine3f &{
+        Affine3f &currentTransform = [&]() -> Affine3f & {
             if(isEmitter)
                 return emitterInfos.back().transform;
             else
@@ -307,34 +336,33 @@ struct SceneRepresentation{
 
 
         std::cout << "\t\tTransform: \n";
-        for(auto &child : transform.children()){
-            const std::string & tfChildName = child.name();
-            if(tfChildName == "translate"){
+        for(auto &child: transform.children()) {
+            const std::string &tfChildName = child.name();
+            if(tfChildName == "translate") {
                 currentTransform = Affine3f(getVector3f(child, "value", "\t\t\t", "translation")) * currentTransform;
-            }else if(tfChildName == "scale"){
-                currentTransform = Affine3f(Matrix3f::fromDiag(getVector3f(child, "value", "\t\t\t", "scale"))) * currentTransform;
-            }else if(tfChildName == "rotateAxis"){
+            } else if(tfChildName == "scale") {
+                currentTransform =
+                        Affine3f(Matrix3f::fromDiag(getVector3f(child, "value", "\t\t\t", "scale"))) * currentTransform;
+            } else if(tfChildName == "rotateAxis") {
                 const float angle = std::stof(child.attribute("angle").value());
-                currentTransform = Affine3f({
-                                                    getVector3f(child, "axis", "\t\t\t", "rotation axis"),
-                                                    angle
-                                            }) * currentTransform;
+                currentTransform = Affine3f({getVector3f(child, "axis", "\t\t\t", "rotation axis"),
+                                             angle}) *
+                                   currentTransform;
                 std::cout << "\t\t\trotation angle: " << angle << "°\n";
-            }else if(tfChildName == "matrix"){
+            } else if(tfChildName == "matrix") {
                 throw std::runtime_error("Matrix transforms are not implemented yet.");
                 //TODO implement matrix transform
-            }else{
+            } else {
                 throw std::runtime_error("Invalid Tag \"" + tfChildName + "\" found for transform");
             }
         }
     }
 
-//private:
+    //private:
 
-    struct CameraInfo{
+    struct CameraInfo {
         CameraInfo()
-            :target(0.f, 0.f, -1.f), origin(0.f), up(0.f, 1.f, 0.f), fov(30), aperture(0.f){
-
+            : target(0.f, 0.f, -1.f), origin(0.f), up(0.f, 1.f, 0.f), fov(30), aperture(0.f) {
         }
 
         Vector3f target, origin, up;
@@ -344,9 +372,9 @@ struct SceneRepresentation{
     CameraInfo cameraInfo;
 
 
-
-    struct MeshInfo{
+    struct MeshInfo {
         MeshInfo() = default;
+
         std::string filename;
         std::string textureName;
         Affine3f transform;
@@ -355,8 +383,9 @@ struct SceneRepresentation{
 
     std::vector<MeshInfo> meshInfos{};
 
-    struct EmitterInfo{
+    struct EmitterInfo {
         EmitterInfo() = default;
+
         std::string filename;
         std::string textureName;
         Affine3f transform;
@@ -366,10 +395,9 @@ struct SceneRepresentation{
 
     std::vector<EmitterInfo> emitterInfos{};
 
-    struct SceneInfo{
+    struct SceneInfo {
         SceneInfo()
-            :samplePerPixel(4), width(100), height(100), maxRayDepth(6){
-
+            : samplePerPixel(4), width(100), height(100), maxRayDepth(6) {
         }
 
         int samplePerPixel;
@@ -381,6 +409,5 @@ struct SceneRepresentation{
 
 
 private:
-    std::unordered_map<std::string ,std::string> map;
-
+    std::unordered_map<std::string, std::string> map;
 };

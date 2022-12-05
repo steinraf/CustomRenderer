@@ -7,17 +7,18 @@
 #include "vector.h"
 
 //Nori Frame
-class Frame{
+class Frame {
 private:
     Vector3f s, t;
+
 public:
     Vector3f n;
 
     Frame() = default;
 
     __device__ constexpr explicit Frame(const Vector3f &n) noexcept
-        :n(n.normalized()){
-        if (abs(n[0]) > abs(n[1])) {
+        : n(n.normalized()) {
+        if(abs(n[0]) > abs(n[1])) {
             const float invLen = 1.0f / sqrt(n[0] * n[0] + n[2] * n[2]);
             t = Vector3f(n[2] * invLen, 0.0f, -n[0] * invLen).normalized();
         } else {
@@ -27,7 +28,7 @@ public:
         s = t.cross(n).normalized();
     }
 
-    __device__ constexpr Vector3f toLocal(const Vector3f &v) const noexcept{
+    __device__ constexpr Vector3f toLocal(const Vector3f &v) const noexcept {
         return {v.dot(s), v.dot(t), v.dot(n)};
     }
 
@@ -35,7 +36,7 @@ public:
         return s * v[0] + t * v[1] + n * v[2];
     }
 
-    __device__ static constexpr inline float cosTheta(const Vector3f &v) noexcept{
+    __device__ static constexpr inline float cosTheta(const Vector3f &v) noexcept {
         return v[2];
     }
 };

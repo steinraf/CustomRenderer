@@ -4,11 +4,11 @@
 
 #pragma once
 
-#include "utility/vector.h"
 #include "utility/ray.h"
+#include "utility/vector.h"
 
 
-class Camera{
+class Camera {
 public:
     __host__ __device__ Camera(Vector3f origin, Vector3f lookAt, Vector3f _up, float vFOV, float aspectRatio,
                                float aperture,
@@ -23,5 +23,4 @@ private:
     Vector3f right, up, front;
 
     float lensRadius;
-
 };

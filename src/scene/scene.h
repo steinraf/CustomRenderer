@@ -10,33 +10,32 @@
 
 #include "sceneLoader.h"
 
-#include "pngwriter.h"
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 #include "cuda_gl_interop.h"
-
-
+#include "pngwriter.h"
 
 
 #include "../cudaHelpers.h"
-#include "../utility/vector.h"
 #include "../utility/meshLoader.h"
+#include "../utility/vector.h"
 
-enum Device{
+
+enum Device {
     CPU,
     GPU
 };
 
-struct PixelInfo{
+struct PixelInfo {
     Color3f color;
     Vector3f intersection;
     Vector3f normal;
 };
 
 
-class Scene{
+class Scene {
 public:
-    __host__ explicit Scene(SceneRepresentation &&sceneRepr, Device= CPU);
+    __host__ explicit Scene(SceneRepresentation &&sceneRepr, Device = CPU);
 
     __host__ ~Scene();
 
@@ -48,20 +47,19 @@ public:
 
 
 private:
-
     __host__ void initOpenGL();
 
     __host__ void OpenGLDraw(Vector3f *deviceVector, volatile bool &isRendering);
 
     __host__ void loadShader();
 
-    __host__ static void checkShaderCompileError(unsigned int shader, const std::string &type) ;
+    __host__ static void checkShaderCompileError(unsigned int shader, const std::string &type);
 
     const std::string fragmentShaderPath = "/home/steinraf/ETH/CG/CustomRenderer/shaders/fragmentShader.glsl";
     const std::string vertexShaderPath = "/home/steinraf/ETH/CG/CustomRenderer/shaders/vertexShader.glsl";
 
     SceneRepresentation sceneRepresentation;
-//    HostMeshInfo mesh;
+    //    HostMeshInfo mesh;
 
     const unsigned int blockSizeX = 16, blockSizeY = 16;
 
@@ -104,7 +102,4 @@ private:
     GLFWwindow *window;
 
     struct cudaGraphicsResource *cudaPBOResource;
-
 };
-
-
