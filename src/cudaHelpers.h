@@ -378,7 +378,7 @@ namespace cudaHelpers {
     }
 
     template<typename Primitive>
-    __device__ Color3f constexpr PathMAS(const Ray3f &ray, TLAS<Primitive> *scene, int maxRayDepth, Sampler &sampler) noexcept {
+    __device__ Color3f constexpr PathMAS(const Ray3f &ray, TLAS<Primitive> *scene, int maxRayDepth, Sampler &sampler, FeatureBuffer &featureBuffer) noexcept {
         Intersection its;
 
 
@@ -392,6 +392,12 @@ namespace cudaHelpers {
 
             if(!scene->rayIntersect(currentRay, its))
                 return Li;
+
+            if(numBounces == 0) {
+                featureBuffer.position = its.p;
+                featureBuffer.normal = its.shFrame.n;
+                featureBuffer.albedo = its.mesh->getBSDF()->getAlbedo(its.uv);
+            }
 
             if(its.mesh->isEmitter())
                 Li += t * its.mesh->getEmitter()->eval({currentRay.o, its.p, its.shFrame.n});
@@ -568,7 +574,7 @@ namespace cudaHelpers {
 
         //        return DirectMAS(ray, scene, sampler);
         //        return DirectMIS(ray, scene, sampler);
-        //        return PathMAS(ray, scene, maxRayDepth, sampler);
+//                return PathMAS(ray, scene, maxRayDepth, sampler, featureBuffer);
         return PathMIS(ray, scene, maxRayDepth, sampler, featureBuffer);
         //        return normalMapper(ray, scene, sampler);
         //        return depthMapper(ray, scene, sampler);
@@ -648,10 +654,10 @@ namespace cudaHelpers {
             totalColor += currentColor;
 
 
-            if(subSamples > 16 && (m2 / static_cast<float>(subSamples - 1)).norm() < 0.001) {
-                actualSamples = subSamples;
-                break;
-            }
+//            if(subSamples > 16 && (m2 / static_cast<float>(subSamples - 1)).norm() < 0.001) {
+//                actualSamples = subSamples;
+//                break;
+//            }
         }
 
         //        while((m2/static_cast<float>(numSubsamples - 1)).norm() > 0.1 && actualSamples < 2 * numSubsamples){

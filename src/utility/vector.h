@@ -103,7 +103,7 @@ public:
     [[nodiscard]] __host__ __device__ constexpr inline int asColor(size_t i) const noexcept;
 
     [[nodiscard]] __host__ __device__ constexpr inline Vector3f
-    applyTransform(const struct Affine3f &transform, bool isTranslationInvariant = false) const noexcept;
+    applyTransform(const struct Matrix4f &transform, bool isTranslationInvariant = false) const noexcept;
 
 
     __host__ __device__ constexpr inline Vector3f &clamp(float minimum, float maximum) noexcept;
@@ -154,7 +154,7 @@ public:
 
         auto u = axis.normalized();
         const float cosT = cos(theta), sinT = sin(theta);
-        //        assert(theta >= -2 * M_PIf && theta <= 2 * M_PIf && "rotation should be in radians");
+        assert(theta >= -2 * M_PIf && theta <= 2 * M_PIf && "rotation should be in radians from [-2PI,2PI]");
         *this = Matrix3f{
                 {cosT + u[0] * u[0] * (1 - cosT), u[0] * u[1] * (1 - cosT) - u[2] * sinT, u[0] * u[2] * (1 - cosT) + u[1] * sinT},
                 {u[0] * u[1] * (1 - cosT) + u[2] * sinT, cosT + u[1] * u[1] * (1 - cosT), u[1] * u[2] * (1 - cosT) - u[0] * sinT},
@@ -172,6 +172,20 @@ public:
         return fromDiag(Vector3f{1.f});
     }
 
+    [[nodiscard]] __host__ __device__ constexpr Vector3f operator[](size_t idx) const noexcept{
+        switch(idx){
+            case 0:
+                return row1;
+            case 1:
+                return row2;
+            case 2:
+                return row3;
+            default:
+                assert(false && "Index out of bounds.");
+                return row3;
+        }
+    }
+
 private:
     Vector3f row1;
     Vector3f row2;
@@ -179,35 +193,63 @@ private:
 };
 
 //TODO maybe change to quaternion representation
-struct Affine3f {
-
-    __host__ __device__ constexpr Affine3f(const Matrix3f &rotation, const Vector3f &translation) noexcept
-        : rotation(rotation), translation(translation) {
+struct Matrix4f{
+    __host__ __device__ constexpr Matrix4f() noexcept
+        :mat{   {1.f, 0.f, 0.f, 0.f},
+                {0.f, 1.f, 0.f, 0.f},
+                {0.f, 0.f, 1.f, 0.f},
+                {0.f, 0.f, 0.f, 1.f}
+          }{
+    }
+    __host__ __device__ constexpr explicit Matrix4f(const Matrix3f &r) noexcept
+        :mat{   {r[0][0], r[0][1], r[0][2], 0.f},
+                {r[1][0], r[1][1], r[1][2], 0.f},
+                {r[2][0], r[2][1], r[2][2], 0.f},
+                {0.f, 0.f, 0.f, 1.f}
+          }{
+    }
+    __host__ __device__ constexpr explicit Matrix4f(const Vector3f &t) noexcept
+        :mat{   {1.f, 0.f, 0.f, t[0]},
+                {0.f, 1.f, 0.f, t[1]},
+                {0.f, 0.f, 1.f, t[2]},
+                {0.f, 0.f, 0.f, 1.f }
+          }{
     }
 
-    __host__ __device__ constexpr explicit Affine3f(const Matrix3f &rotation) noexcept
-        : rotation(rotation), translation(0.f) {
+    __host__ __device__ constexpr Matrix4f(const Matrix3f &r, const Vector3f &t) noexcept
+        :mat{   {r[0][0], r[0][1], r[0][2], t[0]},
+                {r[1][0], r[1][1], r[1][2], t[1]},
+                {r[2][0], r[2][1], r[2][2], t[2]},
+                {0.f, 0.f, 0.f, 1.f}
+          }{
     }
 
-    __host__ __device__ constexpr explicit Affine3f(const Vector3f &translation) noexcept
-        : rotation(Matrix3f::makeIdentity()), translation(translation) {
+    __host__ __device__ constexpr explicit Matrix4f(float a[4][4]) noexcept
+        :mat{   {a[0][0], a[0][1], a[0][2], a[0][3]},
+                {a[1][0], a[1][1], a[1][2], a[1][3]},
+                {a[2][0], a[2][1], a[2][2], a[2][3]},
+                {a[3][0], a[3][1], a[3][2], a[3][3]}
+          }{
+
     }
 
-    __host__ __device__ constexpr Affine3f() noexcept
-        : rotation(Matrix3f::makeIdentity()), translation(0.f) {
+    __host__ __device__ constexpr Matrix4f operator*(const Matrix4f &o) const noexcept{
+        float matrix[4][4] {};
+        for (int i = 0; i < 4; ++i) {
+            for(int j = 0; j < 4; ++j) {
+                float num = 0;
+                for(int k = 0; k < 4; ++k) {
+                    num += mat[i][k] * o.mat[k][j];
+                }
+                matrix[i][j] = num;
+            }
+        }
+        return Matrix4f{matrix};
     }
 
-    [[nodiscard]] __host__ __device__ constexpr Affine3f operator*(const Affine3f &other) const noexcept {
-        return {
-                rotation * other.rotation,
-                rotation * other.translation + translation};
-    }
-
-
-    Matrix3f rotation;
-    Vector3f translation;
+//private:
+    float mat[4][4];
 };
-
 
 __host__ __device__ constexpr inline Vector3f operator*(float t, const Vector3f &v) noexcept;
 
@@ -396,11 +438,24 @@ __host__ __device__ constexpr inline bool Vector3f::operator!=(const Vector3f &v
 }
 
 __host__ __device__ constexpr Vector3f
-Vector3f::applyTransform(const Affine3f &transform, bool isTranslationInvariant) const noexcept {
-    if(isTranslationInvariant)
-        return transform.rotation * (*this);
-    else
-        return transform.rotation * (*this) + transform.translation;
+Vector3f::applyTransform(const Matrix4f &transform, bool isTranslationInvariant) const noexcept {
+    float v[4] {};
+
+    for(int i = 0; i < 4; ++i){
+        float sum = 0.f;
+        for(int j = 0; j < 3; ++j){
+            sum += transform.mat[i][j] * data[j];
+        }
+        if(!isTranslationInvariant)
+            sum += transform.mat[i][3];
+        v[i] = sum;
+    }
+
+    float divisor = 1.f;
+    if(!isTranslationInvariant && v[3] != 0.f)
+        divisor = 1.f/v[3];
+
+    return Vector3f{v[0], v[1], v[2]}*divisor;
 }
 
 __host__ __device__ constexpr float Vector3f::maxCoeff() const noexcept {

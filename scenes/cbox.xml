@@ -21,10 +21,12 @@
 
 
 		<sampler type="independent">
-			<integer name="sample_count" value="64"/>
+			<integer name="sample_count" value="512"/>
 		</sampler>
 
 		<film type="hdrfilm">
+<!--			<integer name="height" value="10"/>-->
+<!--			<integer name="width" value="10"/>-->
 			<integer name="height" value="600"/>
 			<integer name="width" value="800"/>
 <!--			<integer name="height" value="2160"/>-->

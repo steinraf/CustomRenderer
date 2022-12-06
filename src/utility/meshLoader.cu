@@ -6,7 +6,7 @@
 #include "vector.h"
 #include <thrust/transform_scan.h>
 
-HostMeshInfo loadMesh(const std::filesystem::path &filePath, const Affine3f &transform) noexcept(false) {
+HostMeshInfo loadMesh(const std::filesystem::path &filePath, const Matrix4f &transform) noexcept(false) {
 
     std::cout << "Reading mesh " + filePath.filename().string() + " ...\n";
     std::ifstream file(filePath, std::ios::in);

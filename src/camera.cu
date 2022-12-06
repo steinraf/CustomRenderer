@@ -17,7 +17,7 @@ __device__ __host__ Camera::Camera(Vector3f origin, Vector3f lookAt, Vector3f _u
     right = noriConvert * (_up.cross(-front)).normalized();
     up = front.cross(noriConvert * -right);
 
-    const float halfHeight = tan(vFOV / aspectRatio * M_PIf * 0.5f / 180.0f);
+    const float halfHeight = tan(vFOV / aspectRatio * M_PIf / 360.0f);
     const float halfWidth = aspectRatio * halfHeight;
 
     const Vector3f halfU = halfWidth * focusDist * right;
@@ -31,8 +31,6 @@ __device__ __host__ Camera::Camera(Vector3f origin, Vector3f lookAt, Vector3f _u
 }
 
 __device__ Ray3f Camera::getRay(float s, float t, const Vector2f &sample) const {
-
-    //sample = ((0.5x, -0.5*aspect*y, 1z) + (1.0, -1.0f/aspect, 0.f) * perspective).inverse()
 
 
     const Vector2f randomDisk = lensRadius * Warp::squareToUniformDisk(sample);
@@ -49,5 +47,5 @@ __device__ Ray3f Camera::getRay(float s, float t, const Vector2f &sample) const 
     const Vector3f pos = origin + offset;
 
 
-    return {pos, upperLeft + s * horizontal + t * vertical - pos};
+    return {pos, upperLeft + s * horizontal + t * vertical + offset - origin};// - pos};
 }

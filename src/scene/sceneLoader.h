@@ -327,7 +327,7 @@ struct SceneRepresentation {
     void inline createTransform(const pugi::xml_node &transform, bool isEmitter = false) noexcept(false) {
 
 
-        Affine3f &currentTransform = [&]() -> Affine3f & {
+        Matrix4f &currentTransform = [&]() -> Matrix4f & {
             if(isEmitter)
                 return emitterInfos.back().transform;
             else
@@ -339,13 +339,13 @@ struct SceneRepresentation {
         for(auto &child: transform.children()) {
             const std::string &tfChildName = child.name();
             if(tfChildName == "translate") {
-                currentTransform = Affine3f(getVector3f(child, "value", "\t\t\t", "translation")) * currentTransform;
+                currentTransform = Matrix4f(getVector3f(child, "value", "\t\t\t", "translation")) * currentTransform;
             } else if(tfChildName == "scale") {
                 currentTransform =
-                        Affine3f(Matrix3f::fromDiag(getVector3f(child, "value", "\t\t\t", "scale"))) * currentTransform;
+                        Matrix4f(Matrix3f::fromDiag(getVector3f(child, "value", "\t\t\t", "scale"))) * currentTransform;
             } else if(tfChildName == "rotateAxis") {
                 const float angle = std::stof(child.attribute("angle").value());
-                currentTransform = Affine3f({getVector3f(child, "axis", "\t\t\t", "rotation axis"),
+                currentTransform = Matrix4f({getVector3f(child, "axis", "\t\t\t", "rotation axis"),
                                              angle}) *
                                    currentTransform;
                 std::cout << "\t\t\trotation angle: " << angle << "°\n";
@@ -377,7 +377,7 @@ struct SceneRepresentation {
 
         std::string filename;
         std::string textureName;
-        Affine3f transform;
+        Matrix4f transform;
         BSDF bsdf;
     };
 
@@ -388,7 +388,7 @@ struct SceneRepresentation {
 
         std::string filename;
         std::string textureName;
-        Affine3f transform;
+        Matrix4f transform;
         BSDF bsdf;
         Vector3f radiance;
     };

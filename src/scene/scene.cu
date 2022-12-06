@@ -255,6 +255,10 @@ __host__ void Scene::renderCPU() {
                                        sceneRepresentation.sceneInfo.height, 3, (float *) hostImageBuffer);
     assert(didHDR);
 
+    const bool didHDRDenoised = stbi_write_hdr(hdrPathDenoised.c_str(), sceneRepresentation.sceneInfo.width,
+                                       sceneRepresentation.sceneInfo.height, 3, (float *) hostImageBufferDenoised);
+    assert(didHDRDenoised);
+
 
     pngwriter png(sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height, 1., pngPath.c_str());
     pngwriter pngDenoised(sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height, 1.,
