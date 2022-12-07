@@ -57,7 +57,7 @@ public:
 
 
     AreaLight *emitter;
-    BSDF *bsdf;
+    BSDF bsdf;
 
     Triangle *firstTriangle;
 
@@ -66,7 +66,7 @@ public:
     float totalArea;
 
     __device__ constexpr explicit BLAS(AccelerationNode<Primitive> *bvhTotalNodes, float totalArea, const float *cdf,
-                                       const size_t _numPrimitives, AreaLight *emitter, BSDF *bsdf) noexcept
+                                       const size_t _numPrimitives, AreaLight *emitter, BSDF bsdf) noexcept
         : root(bvhTotalNodes), cdf(cdf), numPrimitives(_numPrimitives), bsdf(bsdf), emitter(emitter),
           totalArea(totalArea) {
 
@@ -161,8 +161,6 @@ public:
         return firstTriangle + idx;
     }
 
-    //TODO make generic over primitives
-    //TODO add shadow Rays
     [[nodiscard]] __device__ bool
     rayIntersect(const Ray3f &_r, Intersection &its, bool isShadowRay = false) const noexcept {
         Ray3f r = _r;
@@ -218,7 +216,7 @@ public:
         return hasHit;
     }
 
-    [[nodiscard]] __device__ constexpr BSDF *getBSDF() const noexcept {
+    [[nodiscard]] __device__ constexpr const BSDF &getBSDF() const noexcept {
         return bsdf;
     }
 
@@ -277,15 +275,12 @@ public:
         Intersection record;
         bool hasHit = false;
 
-        //TODO make shadow ray work
-
         for(int i = 0; i < numMeshes; ++i) {
             if(meshBlasArr[i]->rayIntersect(r, record, isShadowRay)) {
                 if(isShadowRay)
                     return true;
                 hasHit = true;
                 r.maxDist = record.t;
-                //                assert(!record.emitter);
             }
         }
 
@@ -295,7 +290,6 @@ public:
                     return true;
                 hasHit = true;
                 r.maxDist = record.t;
-                //                assert(record.emitter);
             }
         }
 
@@ -312,7 +306,7 @@ public:
         assert(numEmitters > 0);
 
 
-        //TODO maybe weigh by radiance?
+        //TODO maybe weight by radiance?
 
         const size_t idx = CustomRenderer::min(static_cast<int>(floor(numEmitters * sample)), numEmitters - 1);
 

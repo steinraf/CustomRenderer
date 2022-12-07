@@ -16,15 +16,10 @@ class Triangle;
 struct Intersection {
     Vector3f p;
     Frame shFrame;
-    //    Vector3f n;
 
-    //    class Triangle const *triangle;
-    //    class AreaLight const *emitter;
     BLAS<Triangle> const *mesh;
 
     Vector2f uv;
 
     float t;
-
-    //TODO add textures?
 };

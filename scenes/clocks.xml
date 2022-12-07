@@ -5,11 +5,11 @@
 
     <sensor type="perspective" id="camera">
 
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <lookat target="489.857, -114.686, 503.183"
                     o="490.447, -114.755, 503.987"
                     up    ="0.0407857, 0.99762, 0.0555876"/>
-        </sampleToCamera>
+        </transform>
         <sampler type="independent">
             <integer name="sample_count" value="$spp"/>
         </sampler>

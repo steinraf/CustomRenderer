@@ -86,20 +86,27 @@ class BSDF {
     float m_intIOR, m_extIOR;
 
 public:
-    __device__ __host__ BSDF() noexcept
+    __device__ __host__ constexpr BSDF() noexcept
         : material(Material::DIFFUSE), texture(Vector3f{0.f}), m_intIOR(1.5046f), m_extIOR(1.000277f) {
     }
 
-    __device__ __host__ BSDF(Material mat, Color3f albedo) noexcept
+    __device__ __host__ constexpr BSDF(Material mat, Color3f albedo) noexcept
         : material(mat), texture(albedo), m_intIOR(1.5046f), m_extIOR(1.000277f) {
     }
 
-    __host__ BSDF(Material mat, const std::filesystem::path &texturePath) noexcept
+    __device__ __host__ BSDF(Material mat, const std::filesystem::path &texturePath) noexcept
         : material(mat), texture(texturePath), m_intIOR(1.5046f), m_extIOR(1.000277f) {
     }
 
+    //Overload to make nori-syntax possible
+    __device__ __host__ const BSDF* operator->() const noexcept {
+        return this;
+    }
+    __device__ __host__ BSDF* operator->() noexcept {
+        return this;
+    }
+
     [[nodiscard]] __device__ constexpr Color3f getAlbedo(const Vector2f &uv) const noexcept {
-        //TODO add UV as input
         return texture.eval(uv);
     }
 
@@ -146,7 +153,6 @@ public:
 
                 bsdfQueryRecord.eta = 1.0f;
 
-                //TODO add support for textures
                 return texture.eval(bsdfQueryRecord.uv);
             case Material::MIRROR:
                 if(Frame::cosTheta(bsdfQueryRecord.wi) <= 0)
@@ -162,7 +168,6 @@ public:
 
                 return Color3f{1.0f};
             case Material::DIELECTRIC:
-                //TODO check Why(and if) sus scene dielectric is incorrect
                 float extIOR = m_extIOR, intIOR = m_intIOR, cosThetaI = Frame::cosTheta(bsdfQueryRecord.wi);
                 Vector3f normal{0.f, 0.f, 1.f};
                 if(Frame::cosTheta(bsdfQueryRecord.wi) < 0) {

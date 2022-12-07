@@ -1,4 +1,5 @@
-<scene>
+<scene version='3.0.0'>
+
 	<integrator type="path">
 		<integer name="max_depth" value="200"/>
 	</integrator>
@@ -8,15 +9,11 @@
 		<float name="aperture" value="0.0"/>
 
 
-		<sampleToCamera name="to_world">
-<!--			target="0.0, -266.260231 -9990.68841"-->
-<!--			target="0.0, -266.260231, -9990.68841"-->
+		<transform name="to_world">
 			<lookat target="0.0, 0.759461, -0.58607 "
 					origin="0.0, 0.919769, 5.41159"
 					up="0, 1, 0"/>
-		</sampleToCamera>
-
-
+		</transform>
 
 		<sampler type="independent">
 			<integer name="sample_count" value="64"/>
@@ -60,10 +57,10 @@
 	<shape type="obj" id="sus">
 		<string name="filename" value="scenes/obj/sus.obj"/>
 
-		<sampleToCamera name="to_world">
+		<transform name="to_world">
 			<scale value="0.003263, 0.003263, 0.003263"/>
 			<translate value="-0.421400, 0, 0"/>
-		</sampleToCamera>
+		</transform>
 
 		<bsdf type="dielectric"/>
 	</shape>
@@ -71,40 +68,26 @@
 	<shape type="obj" id="sus1">
 		<string name="filename" value="scenes/obj/sus.obj"/>
 
-		<sampleToCamera name="to_world">
+		<transform name="to_world">
 			<scale value="0.003263, 0.003263, 0.003263"/>
-			<!--			<rotateAxis axis="1, 0, 0" angle="30"/>-->
 			<translate value="0, 0, -0.3"/>
-		</sampleToCamera>
+		</transform>
 		<bsdf type="mirror"/>
 	</shape>
 
-<!--	<shape type="obj" id="ajax">-->
-<!--		<sampleToCamera name="to_world">-->
-<!--			<scale value="0.03263, 0.03263, 0.03263"/>-->
-<!--				<rotateAxis axis="0, 1, 0" angle="90"/>-->
-<!--			<translate value="0.6, 0, -0.3"/>-->
-<!--		</sampleToCamera>-->
-<!--		<string name="filename" value="scenes/obj/ajax.obj"/>-->
-<!--&lt;!&ndash;		<bsdf type="dielectric"/>&ndash;&gt;-->
-<!--		<bsdf type="diffuse">-->
-<!--			<rgb name="reflectance" value="0.3, 0.3, 0.3"/>-->
-<!--		</bsdf>-->
-
-<!--	</shape>-->
 
 	<shape type="obj" id="sus2">
 		<string name="filename" value="scenes/obj/sus.obj"/>
 
-		<sampleToCamera name="to_world">
+		<transform name="to_world">
 			<scale value="0.003263, 0.003263, 0.003263"/>
 			<translate value="0.445800, 0, 0"/>
-		</sampleToCamera>
+		</transform>
 
-		<string name="texture" value="scenes/envmap/beach.hdr"/>
+<!--		<string name="texture" value="scenes/envmap/beach.hdr"/>-->
 
 		<bsdf type="diffuse">
-			<!--			<rgb name="reflectance" value="0.725, 0.71, 0.68"/>-->
+			<rgb name="reflectance" value="0.630, 0.065, 0.05"/>
 		</bsdf>
 	</shape>
 

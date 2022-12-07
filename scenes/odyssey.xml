@@ -8,11 +8,11 @@
         <float name="fov" value="39.3077"/>
 
 
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <lookat origin="20, 20, 50"
                     target="0, 4, 0"
                     up="0, 1, 0"/>
-        </sampleToCamera>
+        </transform>
 
 
 
@@ -29,10 +29,10 @@
 
     <!-- monolith -->
     <shape type="obj" id="monolith">
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <translate value="0, 0.5, 0"/>
             <scale value="1, 9, 4"/>
-        </sampleToCamera>
+        </transform>
 
         <string name="filename" value="scenes/obj/cube.obj"/>
         <bsdf type="diffuse">
@@ -43,10 +43,10 @@
     <!-- floor -->
     <shape type="obj" id="floor">
         <string name="filename" value="scenes/obj/cube.obj"/>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <translate value="0, -0.5, 0"/>
             <scale value="25, 1, 18"/>
-        </sampleToCamera>
+        </transform>
         <bsdf type="diffuse">
             <rgb name="reflectance" value="0.85, 0.85, 0.85"/>
         </bsdf>
@@ -54,11 +54,11 @@
 
     <shape type="obj" id="emitter">
         <string name="filename" value="scenes/obj/cube.obj"/>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <translate value="0, 0.5, 0"/>
             <scale value="1, 10, 18"/>
             <translate value="-12, 0, 0"/>
-        </sampleToCamera>
+        </transform>
         <bsdf type="diffuse">
             <rgb name="reflectance" value="0.0, 0.0, 0.0"/>
         </bsdf>

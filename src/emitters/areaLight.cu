@@ -6,12 +6,6 @@
 #include "../shapes/triangle.h"
 #include "areaLight.h"
 
-//__host__ __device__ AreaLight::AreaLight(const Color3f &radiance) noexcept
-//    :radiance(radiance), blas(nullptr){
-////        assert(blas);
-////        printf("Initialized Area Light with radiance (%f, %f, %f)\n", blas->radiance[0], blas->radiance[1], blas->radiance[2]);
-////        printf("THIS: %p\n", this);
-//}
 
 __device__ float AreaLight::pdf(const EmitterQueryRecord &emitterQueryRecord) const noexcept {
     assert(blas);

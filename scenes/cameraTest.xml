@@ -8,7 +8,7 @@
         <float name="aperture" value="25"/>
 
 
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <!--			<scale value="-1,1,1"/>-->
             <!--			target="0.445800, 0.332100, 0.376700"-->
             <!--			target="0, 0.893051, 4.41198"-->
@@ -18,7 +18,7 @@
             <lookat target="0.0, 0.0, 0.0"
                     origin="0.0, 0.0, 2.5"
                     up="0, 1, 0"/>
-        </sampleToCamera>
+        </transform>
 
 
 
@@ -38,9 +38,9 @@
     <shape type="obj">
         <string name="filename" value="scenes/obj/rightwall.obj"/>
 
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.000001, 0.000001, 0.000001"/>
-        </sampleToCamera>
+        </transform>
 
         <bsdf type="diffuse">
             <rgb name="reflectance" value="0.161, 0.133, 0.427"/>
@@ -52,972 +52,972 @@
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.55, -0.4, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
     <string name="filename" value="scenes/obj/square.obj"/>
     <emitter type="area">
         <rgb name="radiance" value="1500, 1500, 1500"/>
     </emitter>
-    <sampleToCamera name="to_world">
+    <transform name="to_world">
         <scale value="0.01, 0.01, 0.01"/>
         <translate value="-0.55, -0.3, 0"/>
-    </sampleToCamera>
+    </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.55, -0.2, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.55, -0.1, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.55, 0.0, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.55, 0.1, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.55, 0.2, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.55, 0.3, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.55, 0.4, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.45, -0.4, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.45, -0.3, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.45, -0.2, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.45, -0.1, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.45, 0.0, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.45, 0.1, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.45, 0.2, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.45, 0.3, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.45, 0.4, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.35, -0.4, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.35, -0.3, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.35, -0.2, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.35, -0.1, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.35, 0.0, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.35, 0.1, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.35, 0.2, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.35, 0.3, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.35, 0.4, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.25, -0.4, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.25, -0.3, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.25, -0.2, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.25, -0.1, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.25, 0.0, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.25, 0.1, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.25, 0.2, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.25, 0.3, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.25, 0.4, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.15, -0.4, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.15, -0.3, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.15, -0.2, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.15, -0.1, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.15, 0.0, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.15, 0.1, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.15, 0.2, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.15, 0.3, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.15, 0.4, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.05, -0.4, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.05, -0.3, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.05, -0.2, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.05, -0.1, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.05, 0.0, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.05, 0.1, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.05, 0.2, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.05, 0.3, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="-0.05, 0.4, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.05, -0.4, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.05, -0.3, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.05, -0.2, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.05, -0.1, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.05, 0.0, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.05, 0.1, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.05, 0.2, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.05, 0.3, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.05, 0.4, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.15, -0.4, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.15, -0.3, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.15, -0.2, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.15, -0.1, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.15, 0.0, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.15, 0.1, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.15, 0.2, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.15, 0.3, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.15, 0.4, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.25, -0.4, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.25, -0.3, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.25, -0.2, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.25, -0.1, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.25, 0.0, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.25, 0.1, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.25, 0.2, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.25, 0.3, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.25, 0.4, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.35, -0.4, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.35, -0.3, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.35, -0.2, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.35, -0.1, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.35, 0.0, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.35, 0.1, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.35, 0.2, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.35, 0.3, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.35, 0.4, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.45, -0.4, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.45, -0.3, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.45, -0.2, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.45, -0.1, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.45, 0.0, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.45, 0.1, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.45, 0.2, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.45, 0.3, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.45, 0.4, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.55, -0.4, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.55, -0.3, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.55, -0.2, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.55, -0.1, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.55, 0.0, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.55, 0.1, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.55, 0.2, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.55, 0.3, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape><shape type="obj">
         <string name="filename" value="scenes/obj/square.obj"/>
         <emitter type="area">
             <rgb name="radiance" value="1500, 1500, 1500"/>
         </emitter>
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <scale value="0.01, 0.01, 0.01"/>
             <translate value="0.55, 0.4, 0"/>
-        </sampleToCamera>
+        </transform>
     </shape>
 </scene>

@@ -56,9 +56,8 @@ namespace cudaHelpers {
                     return array[(j + height + dy) % height * width + (i + width + dx) % width];
                 case BOUNDARY::REFLECTING:
                     //TODO implement?
-                    //                    const int toXBoundary = CustomRenderer::min(j + dx)
                     assert(false && "Not implemented.");
-                    break;
+//                    break;
                 case BOUNDARY::ZERO:
                     if(i >= 0 && i < width && j >= 0 && j < height)
                         return array[j*width + i];
@@ -99,9 +98,10 @@ namespace cudaHelpers {
         //        output[pixelIndex] = Vector3f{powf(static_cast<float>(featureBuffer[pixelIndex].numSubSamples)/(2*numSamples), 2.f)};
 
 
-//        if(featureBuffer[pixelIndex].variance.maxCoeff() > 0.1) {
-//            output[pixelIndex] = 0.25 * getNeighbour(input, 0, -1) + 0.25 * getNeighbour(input, 1, 0) + 0.25 * getNeighbour(input, 0, 1) + 0.25 * getNeighbour(input, -1, 0);
-//        } else {
+        if(featureBuffer[pixelIndex].variance.maxCoeff() > 0.1) {
+            output[pixelIndex] = 0.25 * getNeighbour(input, 0, -1) + 0.25 * getNeighbour(input, 1, 0) + 0.25 * getNeighbour(input, 0, 1) + 0.25 * getNeighbour(input, -1, 0);
+        }
+//        else {
 //            output[pixelIndex] = input[pixelIndex];
 //        }
 

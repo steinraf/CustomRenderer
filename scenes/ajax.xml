@@ -5,11 +5,11 @@
     <integrator type='path'/>
 
     <sensor type="perspective" id="camera">
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <lookat target="-64.8161, 47.2211, 23.8576"
                     origin="-65.6055, 47.5762, 24.3583"
                     up    ="0.299858, 0.934836, -0.190177"/>
-        </sampleToCamera>
+        </transform>
         <sampler type="independent">
             <integer name="sample_count" value="$spp"/>
         </sampler>

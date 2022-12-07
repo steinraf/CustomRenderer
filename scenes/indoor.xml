@@ -9,12 +9,12 @@
 	</integrator>
 	<sensor type="perspective">
 		<float name="fov" value="90" />
-		<sampleToCamera name="to_world">
+		<transform name="to_world">
 			<lookat target="-1, 0, 0"
 					o="2.25009, 1.31171, 6.17872"
 					up    ="0, 1, 0"/>
 <!--			<matrix value="-0.900688 -0.0159147 -0.434176 2.25009 0 0.999329 -0.0366305 1.31171 0.434467 -0.0329926 -0.900083 6.17872 0 0 0 1" />-->
-		</sampleToCamera>
+		</transform>
 		<sampler type="independent">
 			<integer name="sample_count" value="$spp" />
 		</sampler>
@@ -28,9 +28,9 @@
 		
 	</shape>
 <!--	<shape type="rectangle" id="Walls_0001">-->
-<!--		<sampleToCamera name="to_world">-->
+<!--		<transform name="to_world">-->
 <!--			<matrix value="1.82938 0 0 -0.142806 0 1.69577 -6.85958e-008 1.52932 0 -6.85958e-008 3.26505 8.18283 0 0 0 1" />-->
-<!--		</sampleToCamera>-->
+<!--		</transform>-->
 <!--	</shape>-->
 	<shape type="obj" id="CandleHolders_0001">
 		<string name="filename" value="scenes/models/Mesh113.obj" />
@@ -983,9 +983,9 @@
 		
 	</shape>
 <!--	<shape type="rectangle">-->
-<!--		<sampleToCamera name="to_world">-->
+<!--		<transform name="to_world">-->
 <!--			<matrix value="0.422647 0 0 0.213572 0 0.821719 1.40628e-008 1.96307 0 1.40628e-008 0.5 0.383951 0 0 0 1" />-->
-<!--		</sampleToCamera>-->
+<!--		</transform>-->
 <!--		<bsdf type="twosided">-->
 <!--			<bsdf type="diffuse">-->
 <!--				<rgb name="reflectance" value="0, 0, 0" />-->
@@ -996,9 +996,9 @@
 <!--		</emitter>-->
 <!--	</shape>-->
 <!--	<shape type="rectangle">-->
-<!--		<sampleToCamera name="to_world">-->
+<!--		<transform name="to_world">-->
 <!--			<matrix value="0.280021 -1.05076e-008 0.240387 -1.03113 6.71125e-009 0.841037 1.75988e-008 1.96592 -0.153536 1.75988e-008 0.438422 0.659918 0 0 0 1" />-->
-<!--		</sampleToCamera>-->
+<!--		</transform>-->
 <!--		<bsdf type="twosided">-->
 <!--			<bsdf type="diffuse">-->
 <!--				<rgb name="reflectance" value="0, 0, 0" />-->
@@ -1009,9 +1009,9 @@
 <!--		</emitter>-->
 <!--	</shape>-->
 <!--	<shape type="rectangle">-->
-<!--		<sampleToCamera name="to_world">-->
+<!--		<transform name="to_world">-->
 <!--			<matrix value="0.280997 1.03849e-008 -0.23758 1.45584 -6.63289e-009 0.841037 1.75321e-008 1.96592 0.151743 1.75321e-008 0.43995 0.658936 0 0 0 1" />-->
-<!--		</sampleToCamera>-->
+<!--		</transform>-->
 <!--		<bsdf type="twosided">-->
 <!--			<bsdf type="diffuse">-->
 <!--				<rgb name="reflectance" value="0, 0, 0" />-->
@@ -1022,9 +1022,9 @@
 <!--		</emitter>-->
 <!--	</shape>-->
 <!--	<shape type="rectangle">-->
-<!--		<sampleToCamera name="to_world">-->
+<!--		<transform name="to_world">-->
 <!--			<matrix value="-1.52674 -3.30012e-015 7.54979e-008 -0.149774 1.00769e-014 0.964701 6.40241e-008 2.03104 -2.30532e-007 6.40241e-008 -0.5 8.14201 0 0 0 1" />-->
-<!--		</sampleToCamera>-->
+<!--		</transform>-->
 <!--		<bsdf type="twosided">-->
 <!--			<bsdf type="diffuse">-->
 <!--				<rgb name="reflectance" value="0, 0, 0" />-->

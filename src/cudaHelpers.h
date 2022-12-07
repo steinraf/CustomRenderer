@@ -141,13 +141,10 @@ namespace cudaHelpers {
                 childA,
                 childB,
                 nullptr,
-                /*(childA && childB && childA->isLeaf && childB->isLeaf) ? childA->boundingBox + childB->boundingBox : */
-                AABB{},//somehow this optimization does not always work :oof:
+                AABB{},
                 false,
         };
 
-        //        if(i == 0)
-        //            printf("children of %p are %p and %p", bvhNodes[i], childA, childB);
     }
 
     template<typename Primitive>
@@ -234,7 +231,7 @@ namespace cudaHelpers {
     template<typename Primitive>
     __global__ void
     initBVH(BLAS<Primitive> *bvh, AccelerationNode<Primitive> *bvhTotalNodes, float totalArea, const float *cdf,
-            size_t numPrimitives, AreaLight *emitter, BSDF *bsdf) {
+            size_t numPrimitives, AreaLight *emitter, BSDF bsdf) {
         int i, j, pixelIndex;
         if(!cudaHelpers::initIndices(i, j, pixelIndex, 1, 1)) return;
 
@@ -660,27 +657,6 @@ namespace cudaHelpers {
 //            }
         }
 
-        //        while((m2/static_cast<float>(numSubsamples - 1)).norm() > 0.1 && actualSamples < 2 * numSubsamples){
-        //            const float s = (iFloat + sampler.getSample1D()) / (widthFloat - 1);
-        //            const float t = (jFloat + sampler.getSample1D()) / (heightFloat - 1);
-        //
-        //            const auto ray = cam.getRay(s, t, sampler.getSample2D());
-        //
-        //
-        //
-        //            const Vector3f currentColor = getColor(ray, tlas, maxRayDepth, sampler, tmpBuffer);
-        //
-        //
-        //
-        //            const Vector3f delta = currentColor - mean;
-        //            mean += delta / static_cast<float>(actualSamples + 1);
-        //            const Vector3f delta2 = currentColor - mean;
-        //            m2 += delta * delta2;
-        //
-        //            totalColor += currentColor;
-        //            ++actualSamples;
-        //        }
-
 
         atomicAdd(progressCounter, 1);
         if(*progressCounter % 1000 == 0) {
@@ -692,16 +668,9 @@ namespace cudaHelpers {
             //            printf("Estimated Time left: %f (%f, %f) s\n", 100*progress/spentTime, progress, spentTime);
         }
 
-        //        if(subSamples % 8 == 0){
-        //            atomicAdd(progressCounter, 8 );
-        //            if(i == 8 && j == 8)
-        //                printf("Current Progress is %f% \n", 100.f*(*progressCounter)/(8*width*height));
-        //        }
-
-        const Vector3f biasedVariance = m2 / static_cast<float>(actualSamples);
+//        const Vector3f biasedVariance = m2 / static_cast<float>(actualSamples);
         const Vector3f unbiasedVariance = m2 / static_cast<float>(actualSamples - 1);
 
-        //        printf("Unbiased Variance is %f\n", unbiasedVariance.norm());
 
 
         totalColor /= static_cast<float>(actualSamples);

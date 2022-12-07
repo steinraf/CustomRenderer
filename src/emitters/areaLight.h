@@ -44,7 +44,7 @@ public:
 
     [[nodiscard]] __device__ constexpr Color3f eval(const EmitterQueryRecord &emitterQueryRecord) const noexcept {
         //        assert(blas);
-        if(emitterQueryRecord.n.dot(emitterQueryRecord.wi) > 0)
+        if(emitterQueryRecord.n.dot(emitterQueryRecord.wi) >= 0)
             return Color3f{0.f};
 
         return radiance;

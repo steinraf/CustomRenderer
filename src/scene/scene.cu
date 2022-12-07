@@ -62,15 +62,6 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) : sceneRepres
 
     auto numMeshes = sceneRepresentation.meshInfos.size();
 
-    std::vector<BSDF> hostMeshBSDFS(numMeshes);
-    for(size_t i = 0; i < numMeshes; ++i) {
-        hostMeshBSDFS[i] = sceneRepresentation.meshInfos[i].bsdf;
-    }
-
-    BSDF *deviceMeshBSDF;
-    checkCudaErrors(cudaMalloc(&deviceMeshBSDF, sizeof(BSDF) * numMeshes));
-    checkCudaErrors(cudaMemcpy(deviceMeshBSDF, hostMeshBSDFS.data(), sizeof(BSDF) * numMeshes, cudaMemcpyHostToDevice));
-
 
     std::vector<BLAS<Triangle> *> hostMeshBlasVector(numMeshes);
 
@@ -83,21 +74,10 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) : sceneRepres
                                                 hostDeviceMeshCDF[i],
                                                 totalMeshArea[i],
                                                 sceneRepr.meshInfos[i].transform,
-                                                deviceMeshBSDF + i);
+                                                sceneRepr.meshInfos[i].bsdf);
     }
 
     auto numEmitters = sceneRepresentation.emitterInfos.size();
-
-    std::vector<BSDF> hostEmitterBSDFS(numEmitters);
-    for(size_t i = 0; i < numEmitters; ++i) {
-        hostEmitterBSDFS[i] = sceneRepresentation.emitterInfos[i].bsdf;
-    }
-
-    BSDF *deviceEmitterBSDF;
-    checkCudaErrors(cudaMalloc(&deviceEmitterBSDF, sizeof(BSDF) * numEmitters));
-    checkCudaErrors(
-            cudaMemcpy(deviceEmitterBSDF, hostEmitterBSDFS.data(), sizeof(BSDF) * numEmitters, cudaMemcpyHostToDevice));
-
 
     std::vector<BLAS<Triangle> *> hostEmitterBlasVector(numEmitters);
 
@@ -119,7 +99,7 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) : sceneRepres
                                                    hostDeviceEmitterCDF[i],
                                                    totalEmitterArea[i],
                                                    sceneRepr.emitterInfos[i].transform,
-                                                   deviceEmitterBSDF + i,
+                                                   sceneRepr.emitterInfos[i].bsdf,
                                                    deviceAreaLights + i);
     }
 

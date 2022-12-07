@@ -1,4 +1,4 @@
-<scene>
+<scene version='3.0.0'>
 	<integrator type="path">
 		<integer name="max_depth" value="200"/>
 	</integrator>
@@ -8,7 +8,7 @@
 		<float name="aperture" value="0.0"/>
 
 
-		<sampleToCamera name="to_world">
+		<transform name="to_world">
 <!--			<scale value="-1,1,1"/>-->
 <!--			target="0.445800, 0.332100, 0.376700"-->
 <!--			target="0, 0.893051, 4.41198"-->
@@ -16,12 +16,12 @@
 			<lookat target="0, 0.893051, 4.41198"
 					origin="0, 0.919769, 5.41159"
 					up="0, 1, 0"/>
-		</sampleToCamera>
+		</transform>
 
 
 
 		<sampler type="independent">
-			<integer name="sample_count" value="512"/>
+			<integer name="sample_count" value="2048"/>
 		</sampler>
 
 		<film type="hdrfilm">
@@ -63,10 +63,10 @@
 	<shape type="obj">
 		<string name="filename" value="scenes/obj/sphere.obj"/>
 
-		<sampleToCamera name="to_world">
+		<transform name="to_world">
 			<scale value="0.3263, 0.3263, 0.3263"/>
 			<translate value="-0.421400, 0.332100, -0.280000"/>
-		</sampleToCamera>
+		</transform>
 
 		<bsdf type="mirror"/>
 	</shape>
@@ -74,10 +74,10 @@
 	<shape type="obj">
 		<string name="filename" value="scenes/obj/sphere.obj"/>
 
-		<sampleToCamera name="to_world">
+		<transform name="to_world">
 			<scale value="0.3263, 0.3263, 0.3263"/>
 			<translate value="0.445800, 0.332100, 0.376700"/>
-		</sampleToCamera>
+		</transform>
 
 
 <!--		<bsdf type="diffuse">-->

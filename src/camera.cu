@@ -12,7 +12,7 @@ __device__ __host__ Camera::Camera(Vector3f origin, Vector3f lookAt, Vector3f _u
     const float k = tan(vFOV * M_PIf / 360.f);
 
 
-        sampleToCamera = Matrix4f{
+    sampleToCamera = Matrix4f{
             2*k   , 0.f           , 0.f                      , -k,
             0.f , -2*k/aspectRatio, 0.f                      , k/aspectRatio,
             0.f , 0.f           , 0.f                      , 1.f,
@@ -60,7 +60,5 @@ __device__ Ray3f Camera::getRay(float s, float t, const Vector2f &sample) const 
             (pFinal-origin).normalized(),
             near,
             far};
-
-    //TODO fix blur
 
 }

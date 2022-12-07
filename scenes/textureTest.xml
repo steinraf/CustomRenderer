@@ -8,11 +8,11 @@
         <float name="aperture" value="0.0"/>
 
 
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <lookat target="0, 0, 4.5"
                     origin="0, 0, 5.5"
                     up="0, 1, 0"/>
-        </sampleToCamera>
+        </transform>
 
 
 
@@ -30,10 +30,10 @@
     <shape type="obj" id="plane">
         <string name="filename" value="scenes/obj/plane.obj"/>
 
-        <sampleToCamera name="to_world">
+        <transform name="to_world">
             <rotateAxis axis="1, 0, 0" angle="90"/>
             <rotateAxis axis="0, 0, -1" angle="-90"/>
-        </sampleToCamera>
+        </transform>
         <string name="texture" value="scenes/envmap/chapel.hdr"/>
         <bsdf type="diffuse"/>
     </shape>
@@ -42,10 +42,10 @@
     <shape type="obj">
         <string name="filename" value="scenes/obj/light.obj"/>
 
-        <sampleToCamera>
+        <transform>
             <translate value="0, 5, -5"/>
             <rotateAxis axis="1, 0, 0" angle="90"/>
-        </sampleToCamera>
+        </transform>
 
         <emitter type="area">
             <rgb name="radiance" value="500, 500, 500"/>
