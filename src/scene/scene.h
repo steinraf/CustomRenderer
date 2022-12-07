@@ -90,8 +90,8 @@ private:
     Camera deviceCamera;
 
 
-    TLAS<Triangle> *meshAccelerationStructure;
-    TLAS<Triangle> *emitterAccelerationStructure;
+    TLAS *meshAccelerationStructure;
+    TLAS *emitterAccelerationStructure;
 
     curandState *deviceCurandState;
 

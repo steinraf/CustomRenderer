@@ -8,17 +8,18 @@
 
 #include "../bsdf.h"
 #include "../emitters/areaLight.h"
+#include "../emitters/environmentEmitter.h"
 #include "../hittable.h"
 #include "../utility/ray.h"
 
-template<typename Primitive>
+//template<typename Primitive>
 struct AccelerationNode {
     __device__ __host__ constexpr AccelerationNode() noexcept
-        : left(nullptr), right(nullptr), primitive(nullptr), boundingBox(AABB{}), isLeaf(false){};
+        : left(nullptr), right(nullptr), triangle(nullptr), boundingBox(AABB{}), isLeaf(false){};
 
     __device__ __host__ constexpr AccelerationNode(AccelerationNode *left, AccelerationNode *right,
-                                                   Primitive *primitive, AABB boundingBox, bool isLeaf) noexcept
-        : left(left), right(right), primitive(primitive), boundingBox(boundingBox), isLeaf(isLeaf) {
+                                                   Triangle *triangle, AABB boundingBox, bool isLeaf) noexcept
+        : left(left), right(right), triangle(triangle), boundingBox(boundingBox), isLeaf(isLeaf) {
 
         assert(left != this && right != this);
 
@@ -35,17 +36,17 @@ struct AccelerationNode {
 
     AccelerationNode *left;
     AccelerationNode *right;
-    Primitive *primitive;
+    Triangle *triangle;
     AABB boundingBox;// Only needs to be set if not leaf
     bool isLeaf = false;
 };
 
 
 //Bottom Layer Acceleration structure, holds primitives
-template<typename Primitive>
+//template<typename Primitive>
 class BLAS {
 private:
-    typedef AccelerationNode<Primitive> *NodePtr;
+    typedef AccelerationNode *NodePtr;
     //    typedef Node *NodePtr;
 
     NodePtr root;
@@ -65,10 +66,10 @@ public:
 public:
     float totalArea;
 
-    __device__ constexpr explicit BLAS(AccelerationNode<Primitive> *bvhTotalNodes, float totalArea, const float *cdf,
+    __device__ constexpr explicit BLAS(AccelerationNode *bvhTotalNodes, float totalArea, const float *cdf,
                                        const size_t _numPrimitives, AreaLight *emitter, BSDF bsdf) noexcept
         : root(bvhTotalNodes), cdf(cdf), numPrimitives(_numPrimitives), bsdf(bsdf), emitter(emitter),
-          totalArea(totalArea) {
+          totalArea(totalArea), firstTriangle(bvhTotalNodes[numPrimitives - 1].triangle) {
 
         //IF THINGS GET CHANGED HERE, REMEMBER TO CHANGE IN COPY CONSTRUCTOR AS WELL
         numPrimitives = _numPrimitives;
@@ -77,8 +78,6 @@ public:
         assert(!bvhTotalNodes[numPrimitives - 2].isLeaf);
         assert(bvhTotalNodes[numPrimitives - 1].isLeaf);
 
-        firstTriangle = bvhTotalNodes[numPrimitives - 1].primitive;
-
         //        printf("Initializing blas %p with numPrimitives %lu\n", this, numPrimitives);
 
 
@@ -86,7 +85,7 @@ public:
     }
 
 
-    __device__ constexpr BLAS<Primitive> &operator=(const BLAS<Primitive> &blas) noexcept {
+    __device__ constexpr BLAS &operator=(const BLAS &blas) noexcept {
 
         root = blas.root;
         cdf = blas.cdf;
@@ -103,7 +102,6 @@ public:
         totalArea = blas.totalArea;
 
         if(emitter) {
-            //            printf("Setting blas %p for emitter %p for %p primitives\n", this, emitter, &numPrimitives);
             emitter->setBlas(this);
         }
 
@@ -111,26 +109,14 @@ public:
     }
 
 
-    [[nodiscard]] __device__ constexpr Primitive *sample(float &sampleValue) const noexcept {
+    [[nodiscard]] __device__ constexpr Triangle *sample(float &sampleValue) const noexcept {
 
-
-        //        printf("Sampling blas %p with numPrimitives %lu\n", this, numPrimitives);
-        //        printf("numPrimitives %p -> %lu\n", this, numPrimitives);
-        //
-        //        printf("Triangle area is %f\n", firstTriangle->getArea());
-
-
-        //        assert(false);
 
         const float *begin = &cdf[0], *end = &cdf[numPrimitives];
         size_t count = end - begin, step = 0;
 
-
-        //        printf("Starting: Begin is %p, end is %p\n", begin, end);
-
         const float *it = nullptr;
         while(count > 0) {
-            //            printf("Begin is %p, end is %p\n", begin, end);
             it = begin;
             step = count / 2;
             it += step;
@@ -144,10 +130,7 @@ public:
 
         const size_t idx = begin - &cdf[0];
 
-        //        printf("Index is %lu\n", idx);
-
         assert(numPrimitives >= 2);
-
         assert((*(begin + 1) - *(begin)) != 0);
 
         if(begin == &cdf[0]) {
@@ -181,12 +164,12 @@ public:
             assert(idx < stackSize);
 
             if(currentNode->isLeaf) {
-                if(currentNode->primitive->rayIntersect(r, its)) {
+                if(currentNode->triangle->rayIntersect(r, its)) {
                     if(isShadowRay)
                         return true;
                     hasHit = true;
                     r.maxDist = its.t;
-                    hitTriangle = currentNode->primitive;
+                    hitTriangle = currentNode->triangle;
                     its.mesh = this;
                 }
                 currentNode = stack[--idx];
@@ -194,8 +177,8 @@ public:
                 assert(currentNode->left && currentNode->right);
                 NodePtr left = currentNode->left;
                 NodePtr right = currentNode->right;
-                bool continueLeft = left->boundingBox.rayIntersect(r);  // && !right->isLeaf;
-                bool continueRight = right->boundingBox.rayIntersect(r);// && !right->isLeaf;
+                bool continueLeft = left->boundingBox.rayIntersect(r);
+                bool continueRight = right->boundingBox.rayIntersect(r);
 
                 if(!continueLeft && !continueRight) {
                     currentNode = stack[--idx];// Pop stack
@@ -229,8 +212,7 @@ public:
         return 1.f / totalArea;
     }
 
-    __device__ constexpr void
-    sampleSurface(ShapeQueryRecord &shapeQueryRecord, const Vector2f &pointSample) const noexcept {
+    __device__ constexpr void sampleSurface(ShapeQueryRecord &shapeQueryRecord, const Vector2f &pointSample) const noexcept {
         Vector2f s = pointSample;
 
         const auto triangle = sample(s[0]);
@@ -251,29 +233,35 @@ public:
 
 //TODO make logarithmic traversal as well
 //Top Layer Acceleration structure, holds BLAS<Primitive>
-template<typename Primitive>
+//template<typename Primitive>
 class TLAS {
     //private:
 public:
-    BLAS<Primitive> **meshBlasArr;
+    BLAS **meshBlasArr;
     int numMeshes;
 
-    BLAS<Primitive> **emitterBlasArr;
+    BLAS **emitterBlasArr;
     int numEmitters;
 
 public:
-    __device__ constexpr TLAS(BLAS<Primitive> **meshBlasArr, int numBLAS,
-                              BLAS<Primitive> **emitterBlasArr, int numEmitters) noexcept
+    __device__ constexpr TLAS(BLAS **meshBlasArr, int numBLAS,
+                              BLAS **emitterBlasArr, int numEmitters) noexcept
         : meshBlasArr(meshBlasArr), numMeshes(numBLAS),
           emitterBlasArr(emitterBlasArr), numEmitters(numEmitters) {
         printf("TLAS contains %i meshes and %i emitters.\n", numMeshes, numEmitters);
     }
 
-    [[nodiscard]] __device__ bool
-    rayIntersect(const Ray3f &_r, Intersection &rec, bool isShadowRay = false) const noexcept {
+    [[nodiscard]] __device__ bool constexpr rayIntersect(const Ray3f &_r, Intersection &rec, bool isShadowRay = false) const noexcept {
         Ray3f r = _r;
+
+        //Adaptive ray epsilon
+//        if (r.minDist == EPSILON)
+//            r.minDist = CustomRenderer::max(r.minDist, r.minDist * r.getOrigin().absValues().maxCoeff());
+
         Intersection record;
         bool hasHit = false;
+
+
 
         for(int i = 0; i < numMeshes; ++i) {
             if(meshBlasArr[i]->rayIntersect(r, record, isShadowRay)) {

@@ -14,7 +14,7 @@ private:
 public:
     Vector3f n;
 
-    Frame() = default;
+    constexpr Frame() = default;
 
     __device__ constexpr explicit Frame(const Vector3f &n) noexcept
         : n(n.normalized()) {

@@ -8,7 +8,7 @@
 #include "utility/ray.h"
 #include "utility/vector.h"
 
-template<typename Primitive>
+//template<typename Primitive>
 class BLAS;
 
 class Triangle;
@@ -17,9 +17,11 @@ struct Intersection {
     Vector3f p;
     Frame shFrame;
 
-    BLAS<Triangle> const *mesh;
-
     Vector2f uv;
 
-    float t;
+    BLAS const *mesh = nullptr;
+
+    float t = 0.f;
+
+    constexpr Intersection() = default;
 };

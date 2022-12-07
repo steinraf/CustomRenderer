@@ -76,12 +76,12 @@ struct AABB {
 
     [[nodiscard]] __device__ constexpr AABB operator+(const AABB &other) const noexcept {
         return {
-                Vector3f{-FLT_EPSILON} + Vector3f{CustomRenderer::min(min[0], other.min[0]),
-                                                  CustomRenderer::min(min[1], other.min[1]),
-                                                  CustomRenderer::min(min[2], other.min[2])},
-                Vector3f{FLT_EPSILON} + Vector3f{CustomRenderer::max(max[0], other.max[0]),
-                                                 CustomRenderer::max(max[1], other.max[1]),
-                                                 CustomRenderer::max(max[2], other.max[2])},
+                Vector3f{-EPSILON} + Vector3f{  CustomRenderer::min(min[0], other.min[0]),
+                                                CustomRenderer::min(min[1], other.min[1]),
+                                                CustomRenderer::min(min[2], other.min[2])},
+                Vector3f{+EPSILON} + Vector3f{  CustomRenderer::max(max[0], other.max[0]),
+                                                CustomRenderer::max(max[1], other.max[1]),
+                                                CustomRenderer::max(max[2], other.max[2])},
         };
     }
 

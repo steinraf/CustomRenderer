@@ -94,7 +94,7 @@ public:
         : material(mat), texture(albedo), m_intIOR(1.5046f), m_extIOR(1.000277f) {
     }
 
-    __device__ __host__ BSDF(Material mat, const std::filesystem::path &texturePath) noexcept
+    __host__ BSDF(Material mat, const std::filesystem::path &texturePath) noexcept
         : material(mat), texture(texturePath), m_intIOR(1.5046f), m_extIOR(1.000277f) {
     }
 

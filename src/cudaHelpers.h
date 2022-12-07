@@ -103,145 +103,20 @@ namespace cudaHelpers {
     }
 
 
-    template<typename Primitive>
-    __global__ void
-    constructBVH(AccelerationNode<Primitive> *bvhNodes, Primitive *primitives, const uint32_t *mortonCodes,
-                 int numPrimitives) {
+//    template<typename Primitive>
+    __global__ void constructBVH(AccelerationNode *bvhNodes, Triangle *primitives, const uint32_t *mortonCodes, int numPrimitives);
 
-        const int i = blockDim.x * blockIdx.x + threadIdx.x;
+    __device__ AABB getBoundingBox(AccelerationNode *root) noexcept;
 
-        if(i > numPrimitives - 1) return;
+    __global__ void computeBVHBoundingBoxes(AccelerationNode *bvhNodes) ;
 
-
-        // [0, numPrimitives-2]                    -> internal nodes
-        // [numPrimitives-1, (2*numPrimitives)-1]     -> leaf nodes
-        bvhNodes[numPrimitives - 1 + i] = {
-                nullptr,
-                nullptr,
-                &primitives[i],
-                primitives[i].boundingBox,
-                true,
-        };
-
-
-        if(i == numPrimitives - 1) return;
-
-
-        auto [first, last] = determineRange(mortonCodes, numPrimitives, i);
-
-        int split = findSplit(mortonCodes, first, last, numPrimitives);
-
-        AccelerationNode<Primitive> *childA = (split == first) ? &bvhNodes[numPrimitives - 1 + split]
-                                                               : &bvhNodes[split];
-        AccelerationNode<Primitive> *childB = (split + 1 == last) ? &bvhNodes[numPrimitives - 1 + split + 1]
-                                                                  : &bvhNodes[split +
-                                                                              1];
-
-        bvhNodes[i] = {
-                childA,
-                childB,
-                nullptr,
-                AABB{},
-                false,
-        };
-
-    }
-
-    template<typename Primitive>
-    __device__ AABB getBoundingBox(AccelerationNode<Primitive> *root) {
-
-        typedef AccelerationNode<Primitive> *NodePtr;
-
-        constexpr int stackSize = 1024;
-        NodePtr stack[stackSize];
-        int idx = 0;
-        stack[0] = root;
-
-        assert(root);
-
-        NodePtr currentNode;
-
-        do {
-
-            //            printf("STACK: "); for(int tmp = 0; tmp < idx+1; ++tmp) printf("| %p ", stack[tmp]);
-            //            printf("\n");
-
-            assert(idx < stackSize);
-
-            currentNode = stack[idx];
-
-            NodePtr left = currentNode->left;
-            NodePtr right = currentNode->right;
-
-            assert(left && right);
-
-
-            //            printf("Left bounding box (%f, %f, %f) -> (%f, %f, %f)\n",
-            //                   left->boundingBox.min[0], left->boundingBox.min[1], left->boundingBox.min[2],
-            //                   left->boundingBox.max[0], left->boundingBox.max[1], left->boundingBox.max[2]);
-            //
-            //            printf("Right bounding box (%f, %f, %f) -> (%f, %f, %f)\n",
-            //                   right->boundingBox.min[0], right->boundingBox.min[1], right->boundingBox.min[2],
-            //                   right->boundingBox.max[0], right->boundingBox.max[1], right->boundingBox.max[2]);
-
-            if(left->hasBoundingBox() && right->hasBoundingBox()) {
-                //                for(int tmp = 0; tmp < idx; ++tmp) printf("\t");
-                //                printf("oB %p\n", currentNode);
-                assert(!left->boundingBox.isEmpty() && !right->boundingBox.isEmpty());
-                currentNode->boundingBox = left->boundingBox + right->boundingBox;
-                //                printf("New bounding box (%f, %f, %f) -> (%f, %f, %f)\n",
-                //                       currentNode->boundingBox.min[0], currentNode->boundingBox.min[1], currentNode->boundingBox.min[2],
-                //                       currentNode->boundingBox.max[0], currentNode->boundingBox.max[1], currentNode->boundingBox.max[2]);
-                --idx;
-            } else if(right->hasBoundingBox()) {
-                //                for(int tmp = 0; tmp < idx; ++tmp) printf("\t");
-                //                printf("Le %p\n", currentNode);
-                stack[++idx] = left;
-            } else if(left->hasBoundingBox()) {
-                //                for(int tmp = 0; tmp < idx; ++tmp) printf("\t");
-                //                printf("Ri %p\n", currentNode);
-                stack[++idx] = right;
-            } else {
-                //                for(int tmp = 0; tmp < idx; ++tmp) printf("\t");
-                //                printf("Bo %p\n", currentNode);
-
-                stack[++idx] = right;
-                stack[++idx] = left;
-            }
-        } while(idx >= 0);
-
-        return root->boundingBox;
-    }
-
-    template<typename Primitive>
-    __global__ void computeBVHBoundingBoxes(AccelerationNode<Primitive> *bvhNodes) {
-        int i, j, pixelIndex;
-        if(!cudaHelpers::initIndices(i, j, pixelIndex, 1, 1)) return;
-
-        //        printf("Starting BLAS BB Computation...\n");
-
-
-        const AABB &totalBoundingBox = getBoundingBox(&bvhNodes[0]);
-
-        printf("\tTotal bounding box is (%f, %f, %f) -> (%f, %f, %f)\n",
-               totalBoundingBox.min[0], totalBoundingBox.min[1], totalBoundingBox.min[2],
-               totalBoundingBox.max[0], totalBoundingBox.max[1], totalBoundingBox.max[2]);
-    }
-
-    template<typename Primitive>
-    __global__ void
-    initBVH(BLAS<Primitive> *bvh, AccelerationNode<Primitive> *bvhTotalNodes, float totalArea, const float *cdf,
-            size_t numPrimitives, AreaLight *emitter, BSDF bsdf) {
-        int i, j, pixelIndex;
-        if(!cudaHelpers::initIndices(i, j, pixelIndex, 1, 1)) return;
-
-        *bvh = BLAS<Primitive>{bvhTotalNodes, totalArea, cdf, numPrimitives, emitter, bsdf};
-    }
+//    template<typename Primitive>
+    __global__ void initBVH(BLAS *bvh, AccelerationNode *bvhTotalNodes, float totalArea, const float *cdf,
+            size_t numPrimitives, AreaLight *emitter, BSDF bsdf);
 
     __global__ void freeVariables();
 
-    template<typename Primitive>
-    __device__ Color3f constexpr DirectMAS(const Ray3f &ray, TLAS<Primitive> *scene, Sampler &sampler) noexcept {
+     __device__ Color3f constexpr DirectMAS(const Ray3f &ray, TLAS *scene, Sampler &sampler) noexcept {
         Intersection its;
         if(!scene->rayIntersect(ray, its))
             return Color3f{0.f};
@@ -282,8 +157,7 @@ namespace cudaHelpers {
         return sample;
     }
 
-    template<typename Primitive>
-    __device__ Color3f constexpr DirectMIS(const Ray3f &ray, TLAS<Primitive> *scene, Sampler &sampler) {
+    __device__ Color3f constexpr DirectMIS(const Ray3f &ray, TLAS *scene, Sampler &sampler) {
         Intersection its;
         if(!scene->rayIntersect(ray, its))
             return Color3f{0.f};
@@ -374,8 +248,7 @@ namespace cudaHelpers {
         return sample + emsWeight * emsSample + masWeight * masSample;
     }
 
-    template<typename Primitive>
-    __device__ Color3f constexpr PathMAS(const Ray3f &ray, TLAS<Primitive> *scene, int maxRayDepth, Sampler &sampler, FeatureBuffer &featureBuffer) noexcept {
+    __device__ Color3f constexpr PathMAS(const Ray3f &ray, TLAS *scene, int maxRayDepth, Sampler &sampler, FeatureBuffer &featureBuffer) noexcept {
         Intersection its;
 
 
@@ -421,8 +294,7 @@ namespace cudaHelpers {
         }
     }
 
-    template<typename Primitive>
-    __device__ Color3f constexpr PathMIS(const Ray3f &ray, TLAS<Primitive> *scene, int maxRayDepth, Sampler &sampler,
+    __device__ Color3f constexpr PathMIS(const Ray3f &ray, TLAS *scene, int maxRayDepth, Sampler &sampler,
                                          FeatureBuffer &featureBuffer) noexcept {
         Intersection its;
 
@@ -511,8 +383,7 @@ namespace cudaHelpers {
         }
     }
 
-    template<typename Primitive>
-    __device__ Color3f constexpr normalMapper(const Ray3f &ray, TLAS<Primitive> *scene, Sampler &sampler) noexcept {
+    __device__ Color3f constexpr normalMapper(const Ray3f &ray, TLAS *scene, Sampler &sampler) noexcept {
         Intersection its;
         Color3f Li{0.f};
         if(!scene->rayIntersect(ray, its))
@@ -522,8 +393,8 @@ namespace cudaHelpers {
         return its.shFrame.n.absValues();
     }
 
-    template<typename Primitive>
-    __device__ Color3f constexpr checkerboard(const Ray3f &ray, TLAS<Primitive> *scene, int maxRayDepth, Sampler &sampler,
+//    template<typename Primitive>
+    __device__ Color3f constexpr checkerboard(const Ray3f &ray, TLAS *scene, int maxRayDepth, Sampler &sampler,
                                               FeatureBuffer &featureBuffer) noexcept {
         Intersection its;
 
@@ -542,8 +413,9 @@ namespace cudaHelpers {
         auto a = static_cast<int>(floorf(p[0]));
         auto b = static_cast<int>(floorf(p[1]));
 
-        auto mod = [](int a, int b) {
+        auto mod = [] __device__ (int a, int b) -> int {
             const int r = a % b;
+
             return (r < 0) ? r + b : r;
         };
 
@@ -553,8 +425,8 @@ namespace cudaHelpers {
         return m_value2;
     }
 
-    template<typename Primitive>
-    __device__ Color3f constexpr depthMapper(const Ray3f &ray, TLAS<Primitive> *scene, Sampler &sampler) noexcept {
+//    template<typename Primitive>
+    __device__ Color3f constexpr depthMapper(const Ray3f &ray, TLAS *scene, Sampler &sampler) noexcept {
         Intersection its;
         Color3f Li{0.f};
         if(!scene->rayIntersect(ray, its))
@@ -564,8 +436,8 @@ namespace cudaHelpers {
     }
 
 
-    template<typename Primitive>
-    __device__ Color3f constexpr getColor(const Ray3f &ray, TLAS<Primitive> *scene, int maxRayDepth, Sampler &sampler,
+//    template<typename Primitive>
+    __device__ Color3f constexpr getColor(const Ray3f &ray, TLAS *scene, int maxRayDepth, Sampler &sampler,
                                           FeatureBuffer &featureBuffer) noexcept {
 
 
@@ -578,18 +450,9 @@ namespace cudaHelpers {
         //        return checkerboard(ray, scene, maxRayDepth, sampler, featureBuffer);
     }
 
-    template<typename Primitive>
-    __global__ void
-    //    constructTLAS(AccelerationNode<Blas<Primitive>> *tlas, Blas<Primitive> *meshBlasArr, int numMeshes){
-    constructTLAS(TLAS<Primitive> *tlas,
-                  BLAS<Primitive> **meshBlasArr, size_t numMeshes,
-                  BLAS<Primitive> **emitterBlasArr, size_t numEmitters) {
-
-        int i, j, pixelIndex;
-        if(!cudaHelpers::initIndices(i, j, pixelIndex, 1, 1)) return;
-
-        *tlas = TLAS(meshBlasArr, numMeshes, emitterBlasArr, numEmitters);
-    }
+//    template<typename Primitive>
+    __global__ void constructTLAS(TLAS *tlas, BLAS **meshBlasArr, size_t numMeshes,
+                                  BLAS **emitterBlasArr, size_t numEmitters) ;
 
     template<typename T>
     [[nodiscard]] __host__ T *hostVecToDeviceRawPtr(std::vector<T> hostVec) noexcept(false) {
@@ -605,82 +468,8 @@ namespace cudaHelpers {
     __global__ void denoise(Vector3f *input, Vector3f *output, FeatureBuffer *featureBuffer, int width, int height,
                             Vector3f cameraOrigin = Vector3f{0.f});
 
-    template<typename Primitive>
-    __global__ void
-    render(Vector3f *output, Camera cam, TLAS<Primitive> *tlas, int width, int height, int numSubsamples,
-           int maxRayDepth,
-           curandState *globalRandState, FeatureBuffer *featureBuffer, unsigned *progressCounter) {
-        int i, j, pixelIndex;
-        if(!initIndices(i, j, pixelIndex, width, height)) return;
-
-
-        auto sampler = Sampler(&globalRandState[pixelIndex]);
-
-        const auto iFloat = static_cast<float>(i);
-        const auto jFloat = static_cast<float>(j);
-
-        const auto widthFloat = static_cast<float>(width);
-        const auto heightFloat = static_cast<float>(height);
-
-        Color3f totalColor{0.0f};
-
-        //welfords algorithm to compute variance
-        Color3f mean{0.f}, m2{0.f};
-
-        FeatureBuffer tmpBuffer;
-        //TODO add variance computations
-
-        int actualSamples = numSubsamples;
-
-        for(int subSamples = 0; subSamples < numSubsamples; ++subSamples) {
-
-            const float s = (iFloat + sampler.getSample1D()) / (widthFloat - 1);
-            const float t = (jFloat + sampler.getSample1D()) / (heightFloat - 1);
-
-            const auto ray = cam.getRay(s, t, sampler.getSample2D());
-
-
-            const Vector3f currentColor = getColor(ray, tlas, maxRayDepth, sampler, tmpBuffer);
-
-
-            const Vector3f delta = currentColor - mean;
-            mean += delta / static_cast<float>(subSamples + 1);
-            const Vector3f delta2 = currentColor - mean;
-            m2 += delta * delta2;
-
-            totalColor += currentColor;
-
-
-//            if(subSamples > 16 && (m2 / static_cast<float>(subSamples - 1)).norm() < 0.001) {
-//                actualSamples = subSamples;
-//                break;
-//            }
-        }
-
-
-        atomicAdd(progressCounter, 1);
-        if(*progressCounter % 1000 == 0) {
-            const float progress = 100.f * (*progressCounter) / (width * height);
-            printf("Current progress is %f%\r", progress);
-
-            //            const float spentTime = ((double) (clock() - renderStart)) / CLOCKS_PER_SEC;
-            //
-            //            printf("Estimated Time left: %f (%f, %f) s\n", 100*progress/spentTime, progress, spentTime);
-        }
-
-//        const Vector3f biasedVariance = m2 / static_cast<float>(actualSamples);
-        const Vector3f unbiasedVariance = m2 / static_cast<float>(actualSamples - 1);
-
-
-
-        totalColor /= static_cast<float>(actualSamples);
-
-        featureBuffer[pixelIndex] = tmpBuffer;
-        output[pixelIndex] = totalColor;
-
-        featureBuffer[pixelIndex].variance = unbiasedVariance;
-        featureBuffer[pixelIndex].numSubSamples = actualSamples;
-    }
+    __global__ void render(Vector3f *output, Camera cam, TLAS *tlas, int width, int height, int numSubsamples,
+           int maxRayDepth, curandState *globalRandState, FeatureBuffer *featureBuffer, unsigned *progressCounter);
 
 
 }// namespace cudaHelpers

@@ -17,17 +17,14 @@ struct ShapeQueryRecord {
 
     float pdf;
 
-    /// Empty constructor
     __device__ constexpr ShapeQueryRecord() noexcept
         : ref(), p(), n(), pdf(0.f) {
     }
 
-    /// Data structure with ref to call sampleSurface()
     __device__ constexpr ShapeQueryRecord(const Vector3f &ref_) noexcept
         : ref(ref_), p(), n(), pdf(0.f) {
     }
 
-    /// Data structure with ref and p to call pdfSurface()
     __device__ constexpr ShapeQueryRecord(const Vector3f &ref_, const Vector3f &p_) noexcept
         : ref(ref_), p(p_), n(), pdf(0.f) {
     }
@@ -53,41 +50,43 @@ public:
 
 
         /* Find vectors for two edges sharing v[0] */
-        Vector3f edge1 = p1 - p0, edge2 = p2 - p0;
+        const Vector3f edge1 = p1 - p0, edge2 = p2 - p0;
 
         /* Begin calculating determinant - also used to calculate U parameter */
-        Vector3f pvec = r.getDirection().cross(edge2);
+        const Vector3f pvec = r.getDirection().cross(edge2);
 
         /* If determinant is near zero, ray lies in plane of triangle */
-        float det = edge1.dot(pvec);
+        const float det = edge1.dot(pvec);
 
 
-        if(det > -EPSILON && det < EPSILON) {
+
+
+        if(det > -FLT_EPSILON && det < FLT_EPSILON) {
             return false;
         }
 
-        float inv_det = 1.f / det;
+        const float inv_det = 1.f / det;
 
         /* Calculate distance from v[0] to ray o */
-        Vector3f tvec = r.getOrigin() - p0;
+        const Vector3f tvec = r.getOrigin() - p0;
 
         /* Calculate U parameter and test bounds */
-        float u = tvec.dot(pvec) * inv_det;
+        const float u = tvec.dot(pvec) * inv_det;
         if(u < 0.f || u > 1.f) {
             return false;
         }
 
         /* Prepare to test V parameter */
-        Vector3f qvec = tvec.cross(edge1);
+        const Vector3f qvec = tvec.cross(edge1);
 
         /* Calculate V parameter and test bounds */
-        float v = r.getDirection().dot(qvec) * inv_det;
+        const float v = r.getDirection().dot(qvec) * inv_det;
         if(v < 0.f || u + v > 1.f) {
             return false;
         }
 
 
-        float t = edge2.dot(qvec) * inv_det;
+        const float t = edge2.dot(qvec) * inv_det;
 
         if(t >= r.minDist && t <= r.maxDist){
             its.uv = {u, v};
@@ -108,7 +107,6 @@ public:
 
         its.p =             bary[0] * p0 + bary[1] * p1 + bary[2] * p2;
         its.shFrame = Frame{bary[0] * n0 + bary[1] * n1 + bary[2] * n2};
-
         its.uv =            bary[0] * uv0+ bary[1] * uv1+ bary[2] * uv2;
     }
 
@@ -124,7 +122,7 @@ public:
         return bary[0] * n0 + bary[1] * n1 + bary[2] * n2;
     }
 
-    //private:
+//private:
     Vector3f p0, p1, p2;
     Vector2f uv0, uv1, uv2;
     Vector3f n0, n1, n2;

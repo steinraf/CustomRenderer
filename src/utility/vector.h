@@ -1,6 +1,6 @@
 #pragma once
 
-#define EPSILON 0.00001f
+#define EPSILON 0.0001f
 
 #include <charconv>
 #include <cmath>

@@ -54,8 +54,8 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) : sceneRepres
     checkCudaErrors(cudaGetLastError());
 
 
-    checkCudaErrors(cudaMalloc(&meshAccelerationStructure, sizeof(TLAS<Triangle>)));
-    checkCudaErrors(cudaMalloc(&emitterAccelerationStructure, sizeof(TLAS<Triangle>)));
+    checkCudaErrors(cudaMalloc(&meshAccelerationStructure, sizeof(TLAS)));
+    checkCudaErrors(cudaMalloc(&emitterAccelerationStructure, sizeof(TLAS)));
 
     // No need to sync because can run independently
     //    checkCudaErrors(cudaDeviceSynchronize());
@@ -63,7 +63,7 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) : sceneRepres
     auto numMeshes = sceneRepresentation.meshInfos.size();
 
 
-    std::vector<BLAS<Triangle> *> hostMeshBlasVector(numMeshes);
+    std::vector<BLAS *> hostMeshBlasVector(numMeshes);
 
 
     clock_t meshLoadStart = clock();
@@ -79,7 +79,7 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) : sceneRepres
 
     auto numEmitters = sceneRepresentation.emitterInfos.size();
 
-    std::vector<BLAS<Triangle> *> hostEmitterBlasVector(numEmitters);
+    std::vector<BLAS *> hostEmitterBlasVector(numEmitters);
 
     std::vector<AreaLight> hostAreaLights(numEmitters);
     for(size_t i = 0; i < numEmitters; ++i) {
@@ -109,8 +109,8 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) : sceneRepres
               << " seconds.\n";
 
 
-    BLAS<Triangle> **deviceBlasArr = cudaHelpers::hostVecToDeviceRawPtr(hostMeshBlasVector);
-    BLAS<Triangle> **deviceEmitterBlasArr = cudaHelpers::hostVecToDeviceRawPtr(hostEmitterBlasVector);
+    BLAS **deviceBlasArr = cudaHelpers::hostVecToDeviceRawPtr(hostMeshBlasVector);
+    BLAS **deviceEmitterBlasArr = cudaHelpers::hostVecToDeviceRawPtr(hostEmitterBlasVector);
 
     cudaHelpers::constructTLAS<<<1, 1>>>(meshAccelerationStructure,
                                          deviceBlasArr, numMeshes,

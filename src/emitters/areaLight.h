@@ -37,7 +37,7 @@ public:
 
     AreaLight() = default;
 
-    __device__ void constexpr setBlas(const class BLAS<Triangle> *newBlas) {
+    __device__ void constexpr setBlas(const class BLAS *newBlas) {
         blas = newBlas;
     }
 
@@ -67,5 +67,5 @@ public:
 
     //private:
     Color3f radiance;
-    const BLAS<Triangle> *blas;
+    const BLAS *blas;
 };

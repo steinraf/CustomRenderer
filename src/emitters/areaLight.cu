@@ -20,9 +20,6 @@ __device__ float AreaLight::pdf(const EmitterQueryRecord &emitterQueryRecord) co
 
 __device__ Color3f AreaLight::sample(EmitterQueryRecord &emitterQueryRecord, const Vector2f &sample) const noexcept {
 
-    //    printf("AreaEmitter BLAS NumPrimitives is %lu\n", blas->numPrimitives);
-
-
     assert(isEmitter());
 
 
@@ -31,15 +28,6 @@ __device__ Color3f AreaLight::sample(EmitterQueryRecord &emitterQueryRecord, con
 
     assert(blas);
     blas->sampleSurface(sRec, sample);
-
-    //    printf("Sampled surface\n");
-
-    //    assert(emitterQueryRecord.p != emitterQueryRecord.ref);
-
-    //    printf("p(%f, %f, %f), ref(%f, %f, %f)\n",
-    //           sRec.p[0], sRec.p[1], sRec.p[2],
-    //           emitterQueryRecord.ref[0], emitterQueryRecord.ref[1], emitterQueryRecord.ref[2]
-    //    );
 
 
     emitterQueryRecord.p = sRec.p;

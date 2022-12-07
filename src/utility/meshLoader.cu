@@ -213,3 +213,82 @@ DeviceMeshInfo meshToGPU(const HostMeshInfo &mesh) noexcept {
 
     return {deviceTriangles, mortonCodes, areaCDF, totalTriaArea};
 }
+
+
+__host__ BLAS *getMeshFromFile(const std::string &filename, thrust::device_vector<Triangle> &deviceTrias,
+                               thrust::device_vector<float> &areaCDF, float &totalArea,
+                               const Matrix4f &transform,
+                               BSDF bsdf, AreaLight *deviceEmitter) noexcept(false) {
+    clock_t startGeometryBVH = clock();
+
+    //    if(!radiance.isZero())
+    //        std::cout << "\tLoading Emitter with radiance " << radiance << "...\n";
+
+    auto mesh = loadMesh(filename, transform);
+    auto [deviceTriangles, deviceMortonCodes, deviceCDF, area] = meshToGPU(mesh).toTuple();
+    totalArea = area;
+    Triangle *deviceTriaPtr = deviceTriangles.data().get();
+
+    const size_t numTriangles = mesh.vertexIndices.first.size();
+
+    std::cout << "\tLoading Geometry took "
+              << ((double) (clock() - startGeometryBVH)) / CLOCKS_PER_SEC
+              << " seconds.\n";
+
+    std::cout << "\tManaging " << numTriangles << " triangles.\n";
+
+    clock_t bvhConstructStart = clock();
+
+    BLAS *bvh;
+
+    AccelerationNode *bvhTotalNodes;
+    checkCudaErrors(cudaMalloc((void **) &bvhTotalNodes,
+                               sizeof(AccelerationNode) * (2 * numTriangles - 1)));//n-1 internal, n leaf
+    checkCudaErrors(cudaMalloc((void **) &bvh, sizeof(BLAS)));
+
+    //    printf("BLAS has allocation range of (%p, %p)\n", bvhTotalNodes, bvhTotalNodes + (2 * numTriangles - 1));
+
+
+    cudaHelpers::constructBVH<<<(numTriangles + 1024 - 1) /
+                                        1024,
+                                1024>>>(bvhTotalNodes, deviceTriaPtr, deviceMortonCodes.data().get(), numTriangles);
+
+
+    checkCudaErrors(cudaGetLastError());
+    checkCudaErrors(cudaDeviceSynchronize());
+
+    std::cout << "\tBLAS construction took "
+              << ((double) (clock() - bvhConstructStart)) / CLOCKS_PER_SEC
+              << " seconds.\n";
+
+    clock_t bvhBoundingBox = clock();
+
+    cudaHelpers::computeBVHBoundingBoxes<<<1, 1>>>(bvhTotalNodes);
+
+    checkCudaErrors(cudaGetLastError());
+    checkCudaErrors(cudaDeviceSynchronize());
+
+    std::cout << "\tBLAS boundingBox Compute took "
+              << ((double) (clock() - bvhBoundingBox)) / CLOCKS_PER_SEC
+              << " seconds.\n";
+
+    clock_t initBVHTime = clock();
+
+    cudaHelpers::initBVH<<<1, 1>>>(bvh, bvhTotalNodes, totalArea, deviceCDF.data().get(), numTriangles, deviceEmitter, bsdf);
+
+    checkCudaErrors(cudaGetLastError());
+    checkCudaErrors(cudaDeviceSynchronize());
+
+    std::cout << "\tBLAS init took "
+              << ((double) (clock() - initBVHTime)) / CLOCKS_PER_SEC
+              << " seconds.\n";
+
+    std::cout << "\tLoading Geometry and BLAS construction took "
+              << ((double) (clock() - startGeometryBVH)) / CLOCKS_PER_SEC
+              << " seconds.\n";
+
+    deviceTrias = std::move(deviceTriangles);
+    areaCDF = std::move(deviceCDF);
+
+    return bvh;
+}

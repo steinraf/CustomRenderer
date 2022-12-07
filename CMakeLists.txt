@@ -57,7 +57,7 @@ add_executable(CustomRenderer
         src/emitters/areaLight.cu
         src/utility/frame.h
         src/textures/imageTexture.cu
-        src/textures/imageTexture.h)
+        src/textures/imageTexture.h src/emitters/environmentEmitter.h)
 
 add_dependencies(CustomRenderer pugixml)
 
