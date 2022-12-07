@@ -52,7 +52,6 @@ add_executable(CustomRenderer
         src/utility/meshLoader.cu
         src/bsdf.h
         src/acceleration/aabb.h
-        src/utility/vector.cu
         src/scene/sceneLoader.h
         src/emitters/areaLight.h
         src/emitters/areaLight.cu

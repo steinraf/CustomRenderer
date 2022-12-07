@@ -4,17 +4,17 @@
 	</integrator>
 
 	<sensor type="perspective">
-		<float name="fov" value="30.7856"/>
-		<float name="aperture" value="0.1"/>
+		<float name="fov" value="27.7856"/>
+		<float name="aperture" value="0.0"/>
 
 
-		<transform name="to_world">
+		<sampleToCamera name="to_world">
 <!--			target="0.0, -266.260231 -9990.68841"-->
 <!--			target="0.0, -266.260231, -9990.68841"-->
 			<lookat target="0.0, 0.759461, -0.58607 "
 					origin="0.0, 0.919769, 5.41159"
 					up="0, 1, 0"/>
-		</transform>
+		</sampleToCamera>
 
 
 
@@ -60,10 +60,10 @@
 	<shape type="obj" id="sus">
 		<string name="filename" value="scenes/obj/sus.obj"/>
 
-		<transform name="to_world">
+		<sampleToCamera name="to_world">
 			<scale value="0.003263, 0.003263, 0.003263"/>
 			<translate value="-0.421400, 0, 0"/>
-		</transform>
+		</sampleToCamera>
 
 		<bsdf type="dielectric"/>
 	</shape>
@@ -71,20 +71,20 @@
 	<shape type="obj" id="sus1">
 		<string name="filename" value="scenes/obj/sus.obj"/>
 
-		<transform name="to_world">
+		<sampleToCamera name="to_world">
 			<scale value="0.003263, 0.003263, 0.003263"/>
 			<!--			<rotateAxis axis="1, 0, 0" angle="30"/>-->
 			<translate value="0, 0, -0.3"/>
-		</transform>
+		</sampleToCamera>
 		<bsdf type="mirror"/>
 	</shape>
 
 <!--	<shape type="obj" id="ajax">-->
-<!--		<transform name="to_world">-->
+<!--		<sampleToCamera name="to_world">-->
 <!--			<scale value="0.03263, 0.03263, 0.03263"/>-->
 <!--				<rotateAxis axis="0, 1, 0" angle="90"/>-->
 <!--			<translate value="0.6, 0, -0.3"/>-->
-<!--		</transform>-->
+<!--		</sampleToCamera>-->
 <!--		<string name="filename" value="scenes/obj/ajax.obj"/>-->
 <!--&lt;!&ndash;		<bsdf type="dielectric"/>&ndash;&gt;-->
 <!--		<bsdf type="diffuse">-->
@@ -96,10 +96,10 @@
 	<shape type="obj" id="sus2">
 		<string name="filename" value="scenes/obj/sus.obj"/>
 
-		<transform name="to_world">
+		<sampleToCamera name="to_world">
 			<scale value="0.003263, 0.003263, 0.003263"/>
 			<translate value="0.445800, 0, 0"/>
-		</transform>
+		</sampleToCamera>
 
 		<string name="texture" value="scenes/envmap/beach.hdr"/>
 

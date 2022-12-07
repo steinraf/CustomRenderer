@@ -9,25 +9,31 @@ __device__ __host__ Camera::Camera(Vector3f origin, Vector3f lookAt, Vector3f _u
                                    float aspectRatio, float aperture, float focusDist)
     : origin(origin), lensRadius(aperture / 2.0f) {
 
+    const float k = tan(vFOV * M_PIf / 360.f);
+
+
+        sampleToCamera = Matrix4f{
+            2*k   , 0.f           , 0.f                      , -k,
+            0.f , -2*k/aspectRatio, 0.f                      , k/aspectRatio,
+            0.f , 0.f           , 0.f                      , 1.f,
+            0.f , 0.f           , (near-far)/(near*far)   , 1.f/near
+        };
+
 
     constexpr int noriConvert = 1;// -1 for nori, 1 for correct handedness
 
 
     front = (lookAt - origin).normalized();
     right = noriConvert * (_up.cross(-front)).normalized();
-    up = front.cross(noriConvert * -right);
+    up = front.cross(noriConvert * -right).normalized();
 
-    const float halfHeight = tan(vFOV / aspectRatio * M_PIf / 360.0f);
-    const float halfWidth = aspectRatio * halfHeight;
+    cameraToWorld = Matrix4f{
+            right[0], up[0], front[0], origin[0],
+            right[1], up[1], front[1], origin[1],
+            right[2], up[2], front[2], origin[2],
+            0.f, 0.f, 0.f, 1.f,
+    };
 
-    const Vector3f halfU = halfWidth * focusDist * right;
-    const Vector3f halfV = halfHeight * focusDist * up;
-
-    upperLeft = origin - halfU + halfV + focusDist * front;
-
-
-    horizontal = 2.0f * halfU;
-    vertical = -2.0f * halfV;
 }
 
 __device__ Ray3f Camera::getRay(float s, float t, const Vector2f &sample) const {
@@ -44,8 +50,17 @@ __device__ Ray3f Camera::getRay(float s, float t, const Vector2f &sample) const 
 
     const Vector3f offset = right * randomDisk[0] + up * randomDisk[1];
 
-    const Vector3f pos = origin + offset;
+    const Vector3f nearP = (Vector3f{s, t, 0.f}.applyTransform(sampleToCamera)).normalized();
 
+    const Vector3f pFinal = nearP.applyTransform(cameraToWorld);
 
-    return {pos, upperLeft + s * horizontal + t * vertical + offset - origin};// - pos};
+    const Vector3f o = Vector3f{randomDisk[0], randomDisk[1], 0.f}.applyTransform(cameraToWorld);
+
+    return {o,
+            (pFinal-origin).normalized(),
+            near,
+            far};
+
+    //TODO fix blur
+
 }

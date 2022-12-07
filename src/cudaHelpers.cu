@@ -93,7 +93,7 @@ namespace cudaHelpers {
 
         //        output[pixelIndex] = Vector3f{(featureBuffer[pixelIndex].position-cameraOrigin).norm()/200};
 //                output[pixelIndex] = featureBuffer[pixelIndex].normal.absValues();
-                output[pixelIndex] = featureBuffer[pixelIndex].albedo;
+//                output[pixelIndex] = featureBuffer[pixelIndex].albedo;
         //        output[pixelIndex] = featureBuffer[pixelIndex].variance;
         //        constexpr float numSamples = 512.f;
         //        output[pixelIndex] = Vector3f{powf(static_cast<float>(featureBuffer[pixelIndex].numSubSamples)/(2*numSamples), 2.f)};

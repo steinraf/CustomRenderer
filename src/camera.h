@@ -18,9 +18,12 @@ public:
 
 private:
     Vector3f origin;
-    Vector3f upperLeft;
-    Vector3f horizontal, vertical;
     Vector3f right, up, front;
 
+    Matrix4f sampleToCamera;
+    Matrix4f cameraToWorld;
+
     float lensRadius;
+    const float far = 1000.f;
+    const float near = 0.0001;
 };

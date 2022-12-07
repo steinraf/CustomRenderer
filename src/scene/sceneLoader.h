@@ -111,7 +111,7 @@ struct SceneRepresentation {
                 } else {
                     throw std::runtime_error("Unrecognized sensor float option " + getString(child.attribute("name")));
                 }
-            } else if(childName == "transform") {
+            } else if(childName == "sampleToCamera") {
                 std::cout << "\t\t"
                           << "Transform: \n";
                 auto lookAt = child.child("lookat");
@@ -262,7 +262,7 @@ struct SceneRepresentation {
                 }
             } else if(childName == "bsdf") {
                 addBSDF(child);
-            } else if(childName == "transform") {
+            } else if(childName == "sampleToCamera") {
                 createTransform(child);
             } else {
                 throw std::runtime_error("Invalid Tag \"" + childName + "\" found for shape.");
@@ -299,7 +299,7 @@ struct SceneRepresentation {
 
                 emitterInfos.back().radiance = getVector3f(color, "value", "\t\t\t", "radiance");
 
-            } else if(childName == "transform") {
+            } else if(childName == "sampleToCamera") {
                 createTransform(child, true);
             } else {
                 throw std::runtime_error("Invalid Tag \"" + childName + "\" found for shape.");
@@ -351,9 +351,9 @@ struct SceneRepresentation {
                 std::cout << "\t\t\trotation angle: " << angle << "°\n";
             } else if(tfChildName == "matrix") {
                 throw std::runtime_error("Matrix transforms are not implemented yet.");
-                //TODO implement matrix transform
+                //TODO implement matrix sampleToCamera
             } else {
-                throw std::runtime_error("Invalid Tag \"" + tfChildName + "\" found for transform");
+                throw std::runtime_error("Invalid Tag \"" + tfChildName + "\" found for sampleToCamera");
             }
         }
     }
