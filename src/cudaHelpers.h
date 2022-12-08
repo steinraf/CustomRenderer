@@ -103,14 +103,12 @@ namespace cudaHelpers {
     }
 
 
-//    template<typename Primitive>
     __global__ void constructBVH(AccelerationNode *bvhNodes, Triangle *primitives, const uint32_t *mortonCodes, int numPrimitives);
 
     __device__ AABB getBoundingBox(AccelerationNode *root) noexcept;
 
     __global__ void computeBVHBoundingBoxes(AccelerationNode *bvhNodes) ;
 
-//    template<typename Primitive>
     __global__ void initBVH(BLAS *bvh, AccelerationNode *bvhTotalNodes, float totalArea, const float *cdf,
             size_t numPrimitives, AreaLight *emitter, BSDF bsdf);
 
@@ -309,9 +307,13 @@ namespace cudaHelpers {
 
 
         while(true) {
+            assert(currentRay.getDirection().norm() != 0.f);
 
             if(!scene->rayIntersect(currentRay, its)) {
-                return Li;
+                if(t.norm() > EPSILON)
+                    return Li + t * scene->environmentEmitter.eval(currentRay);
+                else
+                    return Li;
             }
 
             if(numBounces == 0) {
@@ -346,8 +348,12 @@ namespace cudaHelpers {
 
             float successProbability = fmin(t.maxCoeff(), 0.99f);
             //                if((++numBounces > 3) && sampler->next1D() > successProbability)
-            if(sampler.getSample1D() >= successProbability || numBounces > maxRayDepth)
-                return Li;
+            if(sampler.getSample1D() >= successProbability || numBounces > maxRayDepth){
+                if(t.norm() > EPSILON)
+                    return Li + t * scene->environmentEmitter.eval(currentRay);
+                else
+                    return Li;
+            }
 
             t /= successProbability;
 
@@ -360,14 +366,20 @@ namespace cudaHelpers {
 
             currentRay = {
                     its.p,
-                    its.shFrame.toWorld(bsdfQueryRecord.wo)};
+                    its.shFrame.toWorld(bsdfQueryRecord.wo)
+            };
 
 
             const float masPDF = its.mesh->getBSDF()->pdf(bsdfQueryRecord);
 
             Intersection masEmitterIntersect;
-            if(!scene->rayIntersect(currentRay, masEmitterIntersect))
-                return Li;
+            if(!scene->rayIntersect(currentRay, masEmitterIntersect)){
+                if(t.norm() > EPSILON)
+                    return Li + t * scene->environmentEmitter.eval(currentRay);
+                else
+                    return Li;
+                //TODO handle case where bsfd sample returns zero better
+            }
 
             if(masEmitterIntersect.mesh->isEmitter()) {
                 const float emsPDF = masEmitterIntersect.mesh->getEmitter()->pdf({currentRay.o,
@@ -393,7 +405,6 @@ namespace cudaHelpers {
         return its.shFrame.n.absValues();
     }
 
-//    template<typename Primitive>
     __device__ Color3f constexpr checkerboard(const Ray3f &ray, TLAS *scene, int maxRayDepth, Sampler &sampler,
                                               FeatureBuffer &featureBuffer) noexcept {
         Intersection its;
@@ -419,13 +430,12 @@ namespace cudaHelpers {
             return (r < 0) ? r + b : r;
         };
 
-        if(mod(a + b, 2) == 0.f)
+        if(mod(a + b, 2) == 0.0)
             return m_value1;
 
         return m_value2;
     }
 
-//    template<typename Primitive>
     __device__ Color3f constexpr depthMapper(const Ray3f &ray, TLAS *scene, Sampler &sampler) noexcept {
         Intersection its;
         Color3f Li{0.f};
@@ -436,7 +446,6 @@ namespace cudaHelpers {
     }
 
 
-//    template<typename Primitive>
     __device__ Color3f constexpr getColor(const Ray3f &ray, TLAS *scene, int maxRayDepth, Sampler &sampler,
                                           FeatureBuffer &featureBuffer) noexcept {
 
@@ -450,9 +459,10 @@ namespace cudaHelpers {
         //        return checkerboard(ray, scene, maxRayDepth, sampler, featureBuffer);
     }
 
-//    template<typename Primitive>
-    __global__ void constructTLAS(TLAS *tlas, BLAS **meshBlasArr, size_t numMeshes,
-                                  BLAS **emitterBlasArr, size_t numEmitters) ;
+    __global__ void constructTLAS(TLAS *tlas,
+                                  BLAS **meshBlasArr, size_t numMeshes,
+                                  BLAS **emitterBlasArr, size_t numEmitters,
+                                  EnvironmentEmitter environmentEmitter) ;
 
     template<typename T>
     [[nodiscard]] __host__ T *hostVecToDeviceRawPtr(std::vector<T> hostVec) noexcept(false) {

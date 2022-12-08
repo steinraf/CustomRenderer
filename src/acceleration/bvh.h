@@ -12,7 +12,6 @@
 #include "../hittable.h"
 #include "../utility/ray.h"
 
-//template<typename Primitive>
 struct AccelerationNode {
     __device__ __host__ constexpr AccelerationNode() noexcept
         : left(nullptr), right(nullptr), triangle(nullptr), boundingBox(AABB{}), isLeaf(false){};
@@ -43,13 +42,10 @@ struct AccelerationNode {
 
 
 //Bottom Layer Acceleration structure, holds primitives
-//template<typename Primitive>
 class BLAS {
 private:
-    typedef AccelerationNode *NodePtr;
-    //    typedef Node *NodePtr;
 
-    NodePtr root;
+    AccelerationNode *root;
 
 
 public:
@@ -76,12 +72,8 @@ public:
 
 
         assert(!bvhTotalNodes[numPrimitives - 2].isLeaf);
-        assert(bvhTotalNodes[numPrimitives - 1].isLeaf);
+        assert( bvhTotalNodes[numPrimitives - 1].isLeaf);
 
-        //        printf("Initializing blas %p with numPrimitives %lu\n", this, numPrimitives);
-
-
-        //        printf("BVH LOG NUM: %f\n", log(numPrimitives));
     }
 
 
@@ -91,8 +83,6 @@ public:
         cdf = blas.cdf;
 
         numPrimitives = blas.numPrimitives;
-
-        //        printf("NumPrimitive after CC is %lu\n", numPrimitives);
 
         emitter = blas.emitter;
         bsdf = blas.bsdf;
@@ -111,34 +101,9 @@ public:
 
     [[nodiscard]] __device__ constexpr Triangle *sample(float &sampleValue) const noexcept {
 
-
-        const float *begin = &cdf[0], *end = &cdf[numPrimitives];
-        size_t count = end - begin, step = 0;
-
-        const float *it = nullptr;
-        while(count > 0) {
-            it = begin;
-            step = count / 2;
-            it += step;
-            if(*it < sampleValue) {
-                begin = ++it;
-                count -= step + 1;
-            } else {
-                count = step;
-            }
-        }
-
-        const size_t idx = begin - &cdf[0];
+        const size_t idx = Warp::sampleCDF(sampleValue, &cdf[0], &cdf[numPrimitives]);
 
         assert(numPrimitives >= 2);
-        assert((*(begin + 1) - *(begin)) != 0);
-
-        if(begin == &cdf[0]) {
-            sampleValue = (sampleValue) / (*(begin + 1) - *(begin));
-        } else {
-            sampleValue = (sampleValue - (*(begin - 1))) / (*begin - *(begin - 1));
-        }
-
         assert(sampleValue >= 0 && sampleValue <= 1);
 
         return firstTriangle + idx;
@@ -150,12 +115,12 @@ public:
         bool hasHit = false;
 
         constexpr int stackSize = 64;
-        NodePtr stack[stackSize];
+        AccelerationNode *stack[stackSize];
         int idx = 0;
 
         Triangle *hitTriangle = nullptr;
 
-        NodePtr currentNode = root;
+        AccelerationNode * currentNode = root;
 
         if(!root->boundingBox.rayIntersect(r))
             return false;
@@ -175,8 +140,8 @@ public:
                 currentNode = stack[--idx];
             } else {
                 assert(currentNode->left && currentNode->right);
-                NodePtr left = currentNode->left;
-                NodePtr right = currentNode->right;
+                AccelerationNode *left = currentNode->left;
+                AccelerationNode *right = currentNode->right;
                 bool continueLeft = left->boundingBox.rayIntersect(r);
                 bool continueRight = right->boundingBox.rayIntersect(r);
 
@@ -233,7 +198,7 @@ public:
 
 //TODO make logarithmic traversal as well
 //Top Layer Acceleration structure, holds BLAS<Primitive>
-//template<typename Primitive>
+
 class TLAS {
     //private:
 public:
@@ -243,20 +208,25 @@ public:
     BLAS **emitterBlasArr;
     int numEmitters;
 
+    EnvironmentEmitter environmentEmitter;
+
 public:
     __device__ constexpr TLAS(BLAS **meshBlasArr, int numBLAS,
-                              BLAS **emitterBlasArr, int numEmitters) noexcept
+                              BLAS **emitterBlasArr, int numEmitters,
+                              EnvironmentEmitter environmentEmitter) noexcept
         : meshBlasArr(meshBlasArr), numMeshes(numBLAS),
-          emitterBlasArr(emitterBlasArr), numEmitters(numEmitters) {
+          emitterBlasArr(emitterBlasArr), numEmitters(numEmitters),
+          environmentEmitter(environmentEmitter){
         printf("TLAS contains %i meshes and %i emitters.\n", numMeshes, numEmitters);
     }
 
     [[nodiscard]] __device__ bool constexpr rayIntersect(const Ray3f &_r, Intersection &rec, bool isShadowRay = false) const noexcept {
         Ray3f r = _r;
 
-        //Adaptive ray epsilon
-//        if (r.minDist == EPSILON)
-//            r.minDist = CustomRenderer::max(r.minDist, r.minDist * r.getOrigin().absValues().maxCoeff());
+
+        //Adaptive ray epsilon nori
+        if (r.minDist == EPSILON)
+            r.minDist = CustomRenderer::max(r.minDist, r.minDist * r.getOrigin().absValues().maxCoeff());
 
         Intersection record;
         bool hasHit = false;
@@ -290,8 +260,10 @@ public:
         return rayIntersect(_r, its, true);
     }
 
-    [[nodiscard]] __device__ constexpr AreaLight *getRandomEmitter(float sample) const noexcept {
+    [[nodiscard]] __device__ constexpr AreaLight *getRandomEmitter(float s) const noexcept {
         assert(numEmitters > 0);
+
+        float sample = s;
 
 
         //TODO maybe weight by radiance?

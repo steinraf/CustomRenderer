@@ -91,7 +91,7 @@ private:
 
 
     TLAS *meshAccelerationStructure;
-    TLAS *emitterAccelerationStructure;
+//    TLAS *emitterAccelerationStructure;
 
     curandState *deviceCurandState;
 

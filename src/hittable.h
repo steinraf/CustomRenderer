@@ -8,7 +8,6 @@
 #include "utility/ray.h"
 #include "utility/vector.h"
 
-//template<typename Primitive>
 class BLAS;
 
 class Triangle;

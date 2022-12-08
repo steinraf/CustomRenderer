@@ -61,8 +61,10 @@ struct SceneRepresentation {
                 } else {
                     addMesh(node);
                 }
-            } else {
-                throw std::runtime_error("Unrecognized node name \"" + name + "\" while parsing XML.");
+            } else if (name == "emitter") {
+                addEnvironmentEmitter(node);
+            }else {
+                    throw std::runtime_error("Unrecognized node name \"" + name + "\" while parsing XML.");
             }
         }
     }
@@ -307,6 +309,26 @@ struct SceneRepresentation {
         }
     }
 
+    void inline addEnvironmentEmitter(const pugi::xml_node &node){
+        if(getString(node.attribute("type")) != "envmap")
+            throw std::runtime_error("Error while parsing emitter. Only envmap type is supported.");
+
+        for(const auto &child: node.children()) {
+            const std::string &childName = child.name();
+            if(childName == "string") {
+                if(getString(child.attribute("name")) == "filename") {
+                    environmentInfo.texture = Texture{getString(child.attribute("value"))};
+                } else {
+                    throw std::runtime_error("Unknown envmap string option \"" + getString(child.attribute("name")) + "\" found.");
+                }
+            }else{
+                throw std::runtime_error("Unknown envmap child \"" + childName + "\" found.");
+            }
+
+        }
+
+    }
+
 
     [[nodiscard]] Vector3f inline getVector3f(pugi::xml_node node, const std::string &name, const std::string &indents = "",
                                               const std::string &outName = "") const noexcept {
@@ -407,6 +429,11 @@ struct SceneRepresentation {
 
     SceneInfo sceneInfo;
 
+    struct EnvironmentInfo{
+        Texture texture;
+    };
+
+    EnvironmentInfo environmentInfo;
 
 private:
     std::unordered_map<std::string, std::string> map;

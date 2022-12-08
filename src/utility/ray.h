@@ -19,6 +19,7 @@ public:
                                              float minDist = EPSILON,
                                              float maxDist = cuda::std::numeric_limits<float>::infinity()) noexcept
         : o(origin), d(direction), minDist(minDist), maxDist(maxDist) {
+//        assert(isfinite(d[0]) && isfinite(d[1]) && isfinite(d[2]));
     }
 
     [[nodiscard]] __device__ constexpr Vector3f atTime(float t) const noexcept { return o + t * d; }

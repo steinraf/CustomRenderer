@@ -172,13 +172,15 @@ namespace cudaHelpers {
                totalBoundingBox.max[0], totalBoundingBox.max[1], totalBoundingBox.max[2]);
     }
 
-    __global__ void constructTLAS(TLAS *tlas, BLAS **meshBlasArr, size_t numMeshes,
-                                  BLAS **emitterBlasArr, size_t numEmitters) {
+    __global__ void constructTLAS(TLAS *tlas,
+                                  BLAS **meshBlasArr, size_t numMeshes,
+                                  BLAS **emitterBlasArr, size_t numEmitters,
+                                  EnvironmentEmitter environmentEmitter) {
 
         int i, j, pixelIndex;
         if(!cudaHelpers::initIndices(i, j, pixelIndex, 1, 1)) return;
 
-        *tlas = TLAS(meshBlasArr, numMeshes, emitterBlasArr, numEmitters);
+        *tlas = TLAS(meshBlasArr, numMeshes, emitterBlasArr, numEmitters, environmentEmitter);
     }
 
     __global__ void denoise(Vector3f *input, Vector3f *output, FeatureBuffer *featureBuffer, int width, int height,

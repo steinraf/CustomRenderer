@@ -12,51 +12,108 @@
 
 
 class Texture {
-private:
+//private:
+public:
     Vector3f *deviceTexture = nullptr;
     int width, height;
     int dim;
     Vector3f radiance;
 
-public:
+//public:
+    float *deviceCDF;
+
+
+
     __host__ explicit Texture(const std::filesystem::path &imagePath) noexcept;
 
 
     __host__ __device__ constexpr explicit Texture(const Vector3f &radiance) noexcept
-        : width(0), height(0), dim(3), radiance(radiance) {
+        : width(0), height(0), dim(3), radiance(radiance), deviceCDF(nullptr) {
     }
 
     __host__ __device__ constexpr explicit Texture() noexcept
-        : Texture(Vector3f{0.f}) {
+        : Texture(Vector3f{0.0f, 0.0f, 0.0f}) {
     }
 
     [[nodiscard]] __device__ constexpr Color3f eval(const Vector2f &uv) const noexcept {
         if(deviceTexture) {
 
 //            Checkerboard
-                        Vector2f m_scale{0.1f, 0.1f}, m_delta{0.f, 0.f};
-                        Color3f m_value1{1.f}, m_value2{0.f};
+//            Vector2f m_scale{0.1f, 0.1f}, m_delta{0.f, 0.f};
+//            Color3f m_value1{1.f}, m_value2{0.f};
+//
+//            Vector2f p = uv / m_scale - m_delta;
+//
+//            auto a = static_cast<int>(floorf(p[0]));
+//            auto b = static_cast<int>(floorf(p[1]));
+//
+//            auto mod = [](int a, int b)->int{
+//                const int r = a % b;
+//                return (r < 0) ? r + b : r;
+//            };
+//
+//
+//            if(mod(a + b, 2) == 0)
+//                return m_value1;
+//
+//            return m_value2;
 
-                        Vector2f p = uv / m_scale - m_delta;
+            //TODO add sin(theta) factor
+//            printf("UVTexture: (%f, %f)\n", uv[0], uv[1]);
+#ifndef NDEBUG
+            if(!(uv[0] >= 0.f && uv[0] <= 1.f && uv[1] >= 0.f && uv[1] <= 1.f)){
+                printf("Failed UV (%f, %f)\n", uv[0], uv[1]);
+                //TODO find reason
+//                assert(false);
+            }
+#endif
+            const auto h = static_cast<float>(height);
+            const auto w = static_cast<float>(width);
 
-                        auto a = static_cast<int>(floorf(p[0]));
-                        auto b = static_cast<int>(floorf(p[1]));
 
-                        auto mod = [](int a, int b)->int{
-                            const int r = a % b;
-                            return (r < 0) ? r + b : r;
-                        };
+            const float x = CustomRenderer::clamp(uv[0] * (w-1.f), 0.f, w-1-0.01f);
 
+            const float y = CustomRenderer::clamp(h - 2 - uv[1] * (h-1.f), 0.f, h-1-0.01f);
 
-                        if(mod(a + b, 2) == 0)
-                            return m_value1;
+            const int x1 = std::floor(x), x2 = x1+1;
+            const int y1 = std::floor(y), y2 = y1+1;
+#ifndef NDEBUG
+            if(x1 < 0 || y1 < 0 || x2 >= w || y2 >= h){
+                printf("Wrong Coords (%f, %f) -> (%i, %i, %i, %i)\n", x, y, x1, x2, y1, y2);
+            }
+#endif
 
-                        return m_value2;
+            const float w1 = (x2-x)*(y2-y), w2 = (x-x1)*(y2-y), w3 = (x2-x)*(y-y1), w4 = (x-x1)*(y-y1);
 
-            //TODO mipmapping
-            return deviceTexture[(height - 1 - static_cast<int>(uv[1] * height)) * width + static_cast<int>(uv[0] * width)];
+            assert(w1 >= 0 && w2 >= 0 && w3 >= 0 && w4 >= 0);
+
+            return w1 * deviceTexture[y1*width + x1] +
+                   w2 * deviceTexture[y1*width + x2] +
+                   w3 * deviceTexture[y2*width + x1] +
+                   w4 * deviceTexture[y2*width + x2];
         } else {
             return radiance;
         }
+    }
+};
+
+struct ColorToRadiance{
+    __host__ __device__ constexpr float operator()(const Vector3f &vec) const noexcept {
+        return vec.norm();
+    }
+};
+
+
+struct ColorToCDF{
+private:
+    float totalArea;
+
+public:
+    __host__ __device__ explicit ColorToCDF(float totalArea) noexcept
+        : totalArea(totalArea) {
+    }
+
+    __host__ __device__ constexpr float operator()(const Vector3f &vec) const noexcept {
+        return vec.norm() / totalArea;
     }
 };

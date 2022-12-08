@@ -55,7 +55,7 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) : sceneRepres
 
 
     checkCudaErrors(cudaMalloc(&meshAccelerationStructure, sizeof(TLAS)));
-    checkCudaErrors(cudaMalloc(&emitterAccelerationStructure, sizeof(TLAS)));
+//    checkCudaErrors(cudaMalloc(&emitterAccelerationStructure, sizeof(TLAS)));
 
     // No need to sync because can run independently
     //    checkCudaErrors(cudaDeviceSynchronize());
@@ -114,7 +114,8 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) : sceneRepres
 
     cudaHelpers::constructTLAS<<<1, 1>>>(meshAccelerationStructure,
                                          deviceBlasArr, numMeshes,
-                                         deviceEmitterBlasArr, numEmitters);
+                                         deviceEmitterBlasArr, numEmitters,
+                                         EnvironmentEmitter{sceneRepresentation.environmentInfo.texture});
 
     checkCudaErrors(cudaGetLastError());
 

@@ -21,6 +21,11 @@ namespace CustomRenderer {
     [[nodiscard]] __host__ __device__ constexpr __forceinline__ T min(const T &a, const T &b) noexcept {
         return a < b ? a : b;
     }
+
+    template<typename T>
+    [[nodiscard]] __host__ __device__ constexpr __forceinline__ T clamp(const T &v, const T &mi, const T&ma) noexcept{
+        return max(min(ma, v), mi);
+    }
 }// namespace CustomRenderer
 
 
@@ -290,7 +295,7 @@ __host__ __device__ constexpr inline Vector3f Vector3f::normalized() const {
     float n = norm();
 #ifndef NDEBUG
     if(n == 0) {
-        printf("ERROR, Zero Vector is being normalized\n");
+        printf("ERROR, Zero Vector is being normalized %i\n ", __LINE__);
         return {1.f, 0.f, 0.f};
     }
 #endif
