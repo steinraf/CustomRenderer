@@ -11,8 +11,8 @@
 
 
 class EnvironmentEmitter {
-
-private:
+public:
+//private:
     Texture texture;
 
 public:
@@ -25,13 +25,10 @@ public:
 
         assert(ray.getDirection().norm() != 0.f);
         const Vector3f dir = ray.getDirection().normalized();
-
-//        const float u = CustomRenderer::clamp(acos(dir[2]) * M_1_PIf, -1.f, 1.f);
-//        const float v = atan2(dir[1], dir[0]) * 0.5f * M_1_PIf;
-
+\
         const float u = atan2(dir[0], -dir[2]) * 0.5f * M_1_PIf;
         const float v = CustomRenderer::clamp(acos(-dir[1]) * M_1_PIf, -1.f, 1.f);
-//        printf("UV: (%f, %f)\n", u, v);
+
         if(!::isfinite(u) || !::isfinite(v)){
 #ifndef NDEBUG
             printf("UV infinite for dir (%f, %f, %f)\n", ray.getDirection()[0], ray.getDirection()[1], ray.getDirection()[2]);
@@ -42,50 +39,30 @@ public:
         return texture.eval(Vector2f{(u < 0) ? (u + 1) : u, v});
     }
 
-    [[nodiscard]] __device__ constexpr float pdf(const EmitterQueryRecord &emitterQueryRecord) const noexcept{
-        return 1.f;
-    }
+    [[nodiscard]] __device__ Color3f constexpr sample(EmitterQueryRecord &emitterQueryRecord, const Vector3f &sample) const noexcept{
+
+        if(!texture.deviceCDF)
+            return texture.eval(Vector2f{0.f, 0.f});
+
+        const Vector3f dirSample = Warp::squareToUniformSphere(Vector2f{sample[0], sample[1]});
 
 
-    [[nodiscard]] __device__ Color3f constexpr sample(EmitterQueryRecord &emitterQueryRecord, const Vector2f &sample) const noexcept{
+        const size_t idx = Warp::sampleCDF(sample[2], texture.deviceCDF, texture.deviceCDF + (texture.width * texture.height - 1));
 
-        //TODO importance sample as emitter
-//        Vector3f ref;
-//        Vector3f p;
-//        Vector3f n;
-//        Vector3f wi;
-//        float pdf;
-//        Ray3f shadowRay;
 
-        //sampleSurface
+        const float u = (idx % texture.width)*1.f/texture.width;
+        const float v = (idx / texture.width)*1.f/texture.height;
 
-        const Vector3f dirSample = Warp::squareToUniformSphere(sample);
 
-        Vector2f s = sample;
+        emitterQueryRecord.shadowRay = Ray3f{
+                emitterQueryRecord.p,
+                dirSample,
+        };
 
-        assert(texture.deviceCDF);
-        const size_t idx = Warp::sampleCDF(s[0], &texture.deviceCDF[0], &texture.deviceCDF[texture.width * texture.height - 1]);
-
-        const float u = idx % texture.width;
-        const float v = idx / texture.width;
-
-        return texture.eval(Vector2f{u, v});
-
-//        emitterQueryRecord.p = sRec.p;
-//        emitterQueryRecord.wi = (emitterQueryRecord.p - emitterQueryRecord.ref).normalized();
-//        emitterQueryRecord.shadowRay = {
-//                emitterQueryRecord.ref,
-//                emitterQueryRecord.wi,
-//                EPSILON,
-//                (emitterQueryRecord.p - emitterQueryRecord.ref).norm() - EPSILON};
-//
-//
-//        emitterQueryRecord.n = sRec.n.normalized();
-//        emitterQueryRecord.pdf = pdf(emitterQueryRecord);
-//
-//        return eval(emitterQueryRecord) / emitterQueryRecord.pdf;
-
-        return Color3f{0.f};
+        //https://cs184.eecs.berkeley.edu/sp18/article/25
+        //TODO include pdf again
+        float pdf = 1;
+        return texture.eval(Vector2f{u, v})/(pdf * texture.width * texture.height*M_1_PIf*M_1_PIf/(2*sin(M_PIf*v)));
     }
 
 };

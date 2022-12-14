@@ -18,7 +18,7 @@ __device__ float AreaLight::pdf(const EmitterQueryRecord &emitterQueryRecord) co
     return (emitterQueryRecord.ref - emitterQueryRecord.p).squaredNorm() * blas->pdfSurface(sRec) / abs(emitterQueryRecord.n.dot(-emitterQueryRecord.wi) + EPSILON);
 }
 
-__device__ Color3f AreaLight::sample(EmitterQueryRecord &emitterQueryRecord, const Vector2f &sample) const noexcept {
+__device__ Color3f AreaLight::sample(EmitterQueryRecord &emitterQueryRecord, const Vector3f &sample) const noexcept {
 
     assert(isEmitter());
 

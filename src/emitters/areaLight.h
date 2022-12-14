@@ -54,7 +54,7 @@ public:
 
 
     [[nodiscard]] __device__ Color3f
-    sample(EmitterQueryRecord &emitterQueryRecord, const Vector2f &sample) const noexcept;
+    sample(EmitterQueryRecord &emitterQueryRecord, const Vector3f &sample) const noexcept;
 
 
     [[nodiscard]] __device__ constexpr bool isEmitter() const noexcept {

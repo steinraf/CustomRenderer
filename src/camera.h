@@ -23,7 +23,8 @@ private:
     Matrix4f sampleToCamera;
     Matrix4f cameraToWorld;
 
-    float lensRadius;
+    const float lensRadius;
+    const float focusDist;
     const float far = 1000.f;
     const float near = 0.0001;
 };

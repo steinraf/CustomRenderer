@@ -5,6 +5,7 @@
 #include "../cudaHelpers.h"
 #include "imageTexture.h"
 #include <thrust/device_vector.h>
+#include <thrust/host_vector.h>
 #include <thrust/transform_scan.h>
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -28,14 +29,17 @@ __host__ Texture::Texture(const std::filesystem::path &imagePath) noexcept {
 
 
     //TODO is this actually called Radiance?
-    ColorToRadiance colorToRadiance;
+    ColorToRadiance colorToRadiance(deviceTexture, width, height);
 
     thrust::device_ptr<Vector3f> deviceTexturePtr{deviceTexture};
     float totalSum = thrust::transform_reduce(deviceTexturePtr, deviceTexturePtr + width*height,
                                                     colorToRadiance, 0.f,  thrust::plus<float>());
 
+    //TODO remove
+    std::cout << "Total texture sum is " << totalSum << '\n';
 
-    ColorToCDF colorToCdf{totalSum};
+
+    ColorToCDF colorToCdf{deviceTexture, width, height, totalSum};
 
     thrust::transform_inclusive_scan(deviceTexturePtr, deviceTexturePtr + width*height,
                                      deviceCDF, colorToCdf, thrust::plus<float>());

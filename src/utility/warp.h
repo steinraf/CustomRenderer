@@ -115,7 +115,7 @@ namespace Warp {
         return {u, v, 1.f - u - v};
     }
 
-    [[nodiscard]] __device__ constexpr size_t sampleCDF(float &sample, const float *start, const float *ending) noexcept {
+    [[nodiscard]] __device__ constexpr size_t sampleCDF(float sample, const float *start, const float *ending) noexcept {
 
         const float *begin = start, *end = ending;
 
@@ -134,16 +134,23 @@ namespace Warp {
             }
         }
 
+
+        while(begin >= start && begin < ending){
+            if((*(begin + 1) - *begin) == 0){
+#ifndef NDEBUG
+                const int diff = begin - start;
+                printf("DEBUG: PDF difference is zero for %i, %f, %f\n", diff, *(begin + 1), *begin);
+#endif
+                ++begin;
+
+            }else{
+                break;
+            }
+        }
+        assert(begin >= start);
+
         const size_t idx = begin - start;
 
-
-        assert((*(begin + 1) - *(begin)) != 0);
-
-        if(begin == start) {
-            sample = sample / (*(begin + 1) - *(begin));
-        } else {
-            sample = (sample - (*(begin - 1))) / (*begin - *(begin - 1));
-        }
 
         return idx;
     }

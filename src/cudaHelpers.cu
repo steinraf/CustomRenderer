@@ -183,10 +183,133 @@ namespace cudaHelpers {
         *tlas = TLAS(meshBlasArr, numMeshes, emitterBlasArr, numEmitters, environmentEmitter);
     }
 
-    __global__ void denoise(Vector3f *input, Vector3f *output, FeatureBuffer *featureBuffer, int width, int height,
+    __device__ void bilateralFilterWiki(Vector3f *input, Vector3f *output, int i, int j, int width, int height){
+
+        auto getNeighbour = [i, j, width, height]__device__ (Vector3f *array, int dx, int dy,
+                                                             BOUNDARY boundary = BOUNDARY::PERIODIC) {
+            switch(boundary) {
+                case BOUNDARY::PERIODIC:
+                    return array[(j + height + dy) % height * width + (i + width + dx) % width];
+                case BOUNDARY::REFLECTING:
+                    //TODO implement?
+                    assert(false && "Not implemented.");
+                    //                    break;
+                case BOUNDARY::ZERO:
+                    if(i >= 0 && i < width && j >= 0 && j < height)
+                        return array[j*width + i];
+
+                    return Vector3f{0.f};
+            }
+        };
+
+        const int pixelIndex = j*width + i;
+
+        const int kernelWidth = width/200, kernelHeight = height/200;
+
+        float sum = 0.f;
+
+        Color3f currentColor{0.f};
+
+        float dVarInv = 1.f/(80*80);
+        float rVarInv = 1.f/(80*80);
+
+        for(int k = -kernelWidth/2; k < kernelWidth/2; ++k){
+            for(int l = -kernelHeight/2; l < kernelHeight/2; ++l){
+                const Color3f neighbourColor = getNeighbour(input, k, l);
+
+                const float w = expf(
+                        -(k*k + l*l)*0.5f*dVarInv
+                        -(input[pixelIndex] - neighbourColor).squaredNorm()*0.5f*rVarInv
+                    );
+//                const float w = -(input[pixelIndex] - neighbourColor).squaredNorm();
+                sum += w;
+                currentColor += w*neighbourColor;
+            }
+        }
+
+//        printf("Sum of weights is %f\n", sum);
+
+        output[pixelIndex] = currentColor/sum;
+
+
+    }
+
+    __device__ void bilateralFilterSlides(Vector3f *input, Vector3f *output, FeatureBuffer *featureBuffer, float *weights, int i, int j, int width, int height){
+
+
+        constexpr int kernelWidth = 21, kernelHeight = 21;
+        constexpr int neighbourWidth = 7, neighbourHeight = 7;
+
+        constexpr float k = 0.045;
+
+        const int pI = i, pJ = j;
+
+        for(int qI = CustomRenderer::max(0, pI-kernelWidth/2); qI < CustomRenderer::min(width, pI+kernelWidth/2); ++qI){
+            for(int qJ = CustomRenderer::max(0, pJ-kernelHeight/2); qJ < CustomRenderer::min(height, pJ+kernelHeight/2); ++qJ) {
+                float meanDist = 0.f;
+
+                for(int pX = CustomRenderer::max(0, pI - neighbourWidth / 2); pX < CustomRenderer::min(width, pI + neighbourWidth / 2); ++pX) {
+                    for(int pY = CustomRenderer::max(0, pJ - neighbourHeight / 2); pY < CustomRenderer::min(height, pJ + neighbourHeight / 2); ++pY) {
+
+                        const int pIndex = pY * width + pX;
+                        const float varP = featureBuffer[pIndex].variance.norm();
+
+                        for(int qX = CustomRenderer::max(0, qI - neighbourWidth / 2); qX < CustomRenderer::min(width, qI + neighbourWidth / 2); ++qX) {
+                            for(int qY = CustomRenderer::max(0, qJ - neighbourHeight / 2); qY < CustomRenderer::min(height, qJ + neighbourHeight / 2); ++qY) {
+
+                                const int qIndex = qY * width + qX;
+                                const float varQ = featureBuffer[qIndex].variance.norm();
+
+//                                float contrib = 0.f;
+                                for(int col = 0; col < 3; ++col)
+                                    meanDist += (powf(input[pIndex][col] - input[qIndex][col], 2) - (  featureBuffer[pIndex].variance[col] + CustomRenderer::min(featureBuffer[pIndex].variance[col], featureBuffer[qIndex].variance[col]))) / (EPSILON + k * k * (featureBuffer[pIndex].variance[col] +  featureBuffer[qIndex].variance[col]));
+
+//                                meanDist += contrib;
+                            }
+                        }
+                    }
+                }
+
+
+                meanDist /= 3 * neighbourHeight * neighbourWidth;
+
+                const float w = expf(-CustomRenderer::max(0.f, meanDist));
+
+                for(int pX = CustomRenderer::max(0, pI - neighbourWidth / 2); pX < CustomRenderer::min(width, pI + neighbourWidth / 2); ++pX) {
+                    for(int pY = CustomRenderer::max(0, pJ - neighbourHeight / 2); pY < CustomRenderer::min(height, pJ + neighbourHeight / 2); ++pY) {
+
+                        const int pIndex = pY * width + pX;
+
+                        for(int qX = CustomRenderer::max(0, qI - neighbourWidth / 2); qX < CustomRenderer::min(width, qI + neighbourWidth / 2); ++qX) {
+                            for(int qY = CustomRenderer::max(0, qJ - neighbourHeight / 2); qY < CustomRenderer::min(height, qJ + neighbourHeight / 2); ++qY) {
+
+                                const int qIndex = qY * width + qX;
+
+                                atomicAdd(weights + pIndex, w);
+                                Vector3f::atomicCudaAdd(output + pIndex, w * input[qIndex]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    __global__ void denoiseApplyWeights(Vector3f *output, float *weights, int width, int height){
+        int i, j, pixelIndex;
+        if(!initIndices(i, j, pixelIndex, width, height)) return;
+
+        output[pixelIndex] /= weights[pixelIndex];
+    }
+
+    __global__ void denoise(Vector3f *input, Vector3f *output, FeatureBuffer *featureBuffer, float *weights, int width, int height,
                             Vector3f cameraOrigin) {
         int i, j, pixelIndex;
         if(!initIndices(i, j, pixelIndex, width, height)) return;
+
+//        bilateralFilterWiki(input, output, i, j, width, height);
+        bilateralFilterSlides(input, output, featureBuffer, weights, i, j, width, height);
+        return;
 
         auto getNeighbour = [i, j, width, height]__device__ (Vector3f *array, int dx, int dy,
                                                              BOUNDARY boundary = BOUNDARY::PERIODIC) {
@@ -232,14 +355,14 @@ namespace cudaHelpers {
         //        output[pixelIndex] = Vector3f{(featureBuffer[pixelIndex].position-cameraOrigin).norm()/200};
 //                output[pixelIndex] = featureBuffer[pixelIndex].normal.absValues();
 //                output[pixelIndex] = featureBuffer[pixelIndex].albedo;
-        //        output[pixelIndex] = featureBuffer[pixelIndex].variance;
+                output[pixelIndex] = Color3f(featureBuffer[pixelIndex].variance.norm());
         //        constexpr float numSamples = 512.f;
         //        output[pixelIndex] = Vector3f{powf(static_cast<float>(featureBuffer[pixelIndex].numSubSamples)/(2*numSamples), 2.f)};
 
 
-        if(featureBuffer[pixelIndex].variance.maxCoeff() > 0.1) {
-            output[pixelIndex] = 0.25 * getNeighbour(input, 0, -1) + 0.25 * getNeighbour(input, 1, 0) + 0.25 * getNeighbour(input, 0, 1) + 0.25 * getNeighbour(input, -1, 0);
-        }
+//        if(featureBuffer[pixelIndex].variance.maxCoeff() > 0.1) {
+//            output[pixelIndex] = 0.25 * getNeighbour(input, 0, -1) + 0.25 * getNeighbour(input, 1, 0) + 0.25 * getNeighbour(input, 0, 1) + 0.25 * getNeighbour(input, -1, 0);
+//        }
 //        else {
 //            output[pixelIndex] = input[pixelIndex];
 //        }
@@ -309,6 +432,17 @@ namespace cudaHelpers {
 
             const float s = (iFloat + sampler.getSample1D()) / (widthFloat - 1);
             const float t = (jFloat + sampler.getSample1D()) / (heightFloat - 1);
+
+            //Texture CDF
+//            const Texture &texture = tlas->environmentEmitter.texture;
+//            printf("Index is %f\n", static_cast<int>(t*height * width + s*width)*1.f/width/height);
+//            const float cdf = texture.deviceCDF[static_cast<int>(t*texture.height * texture.width + s*texture.width)];
+//            if(sampler.getSample1D() < 0.1f)
+//                printf("CDF (%f, %f, %i)->%f\n", s, t, static_cast<int>(t*texture.height * texture.width + s*texture.width), cdf);
+//            output[pixelIndex] = Color3f{cdf};
+//            if(i == 0 && j == 0)
+//                output[pixelIndex] = Vector3f{1.f};
+//            return;
 
             const auto ray = cam.getRay(s, t, sampler.getSample2D());
 

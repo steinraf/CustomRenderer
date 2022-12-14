@@ -35,6 +35,20 @@ public:
         : Texture(Vector3f{0.0f, 0.0f, 0.0f}) {
     }
 
+    [[nodiscard]] __device__ constexpr float pdf(size_t idx) const noexcept {
+        if(deviceTexture){
+            if(idx == width*height - 1){
+                return 1 - deviceCDF[idx];
+            }else{
+                assert((deviceCDF[idx+1] - deviceCDF[idx]) > EPSILON);
+                return deviceCDF[idx+1] - deviceCDF[idx];
+            }
+        }else{
+            return 1.f;
+        }
+    }
+
+
     [[nodiscard]] __device__ constexpr Color3f eval(const Vector2f &uv) const noexcept {
         if(deviceTexture) {
 
@@ -98,22 +112,41 @@ public:
 };
 
 struct ColorToRadiance{
+    const Vector3f *const first;
+    const int width, height;
+
+
+    __host__ __device__ explicit ColorToRadiance(Vector3f *first, int width, int height) noexcept
+        : first(first), width(width), height(height) {
+    }
+
+
     __host__ __device__ constexpr float operator()(const Vector3f &vec) const noexcept {
-        return vec.norm();
+        const size_t y = (&vec - first)%width;
+
+        return vec.norm() * sin(y*1.f/height);
     }
 };
 
 
 struct ColorToCDF{
 private:
+    const Vector3f *const first;
+    const int width, height;
     float totalArea;
 
 public:
-    __host__ __device__ explicit ColorToCDF(float totalArea) noexcept
-        : totalArea(totalArea) {
+    __host__ __device__ explicit ColorToCDF(Vector3f *first, int width, int height, float totalArea) noexcept
+        : first(first), width(width), height(height), totalArea(totalArea) {
     }
 
     __host__ __device__ constexpr float operator()(const Vector3f &vec) const noexcept {
-        return vec.norm() / totalArea;
+        const size_t y = (&vec - first)%width;
+        return vec.norm() * sin(y*1.f/height) / totalArea;
     }
+};
+
+class NormalMap{
+    Texture texture;
+    
 };

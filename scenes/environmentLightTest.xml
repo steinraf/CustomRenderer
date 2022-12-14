@@ -100,7 +100,7 @@
         </emitter>
     </shape>
 
-    <emitter type="envmap">
-        <string name="filename" value="scenes/envmap/beach.hdr"/>
-    </emitter>
+        <emitter type="envmap">
+            <string name="filename" value="scenes/envmap/beach.hdr"/>
+        </emitter>
 </scene>

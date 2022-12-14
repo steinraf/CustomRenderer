@@ -119,6 +119,8 @@ public:
 
     [[nodiscard]] __host__ __device__ constexpr inline float maxCoeff() const noexcept;
 
+    __device__ static inline void atomicCudaAdd(Vector3f *address, const Vector3f vec) noexcept;
+
 
     friend inline std::ostream &operator<<(std::ostream &os, const Vector3f &t);
 
@@ -476,6 +478,12 @@ Vector3f::applyTransform(const Matrix4f &transform, bool isTranslationInvariant)
 
 __host__ __device__ constexpr float Vector3f::maxCoeff() const noexcept {
     return CustomRenderer::max(data[0], CustomRenderer::max(data[1], data[2]));
+}
+__device__ void Vector3f::atomicCudaAdd(Vector3f *address, const Vector3f vec) noexcept {
+    Vector3f &v = *address;
+    atomicAdd(&(v[0]), vec[0]);
+    atomicAdd(&(v[1]), vec[1]);
+    atomicAdd(&(v[2]), vec[2]);
 }
 
 

@@ -27,9 +27,7 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) : sceneRepres
                                                                                   sceneRepr.cameraInfo.fov,
                                                                                   static_cast<float>(sceneRepr.sceneInfo.width) / static_cast<float>(sceneRepr.sceneInfo.height),
                                                                                   sceneRepr.cameraInfo.aperture,
-                                                                                  (sceneRepr.cameraInfo.origin -
-                                                                                   sceneRepr.cameraInfo.target)
-                                                                                          .norm()) {//(customRenderer::getCameraOrigin() - customRenderer::getCameraLookAt()).norm()){
+                                                                                  sceneRepr.cameraInfo.focusDist) {//(customRenderer::getCameraOrigin() - customRenderer::getCameraLookAt()).norm()){
 
 
     if(dev == CPU) {
@@ -179,8 +177,15 @@ void Scene::render() {
 
     std::cout << "Starting denoise...\n";
     checkCudaErrors(cudaMemcpy(hostImageBuffer, deviceImageBuffer, imageBufferByteSize, cudaMemcpyDeviceToHost));
-    cudaHelpers::denoise<<<blockSize, threadSize>>>(deviceImageBuffer, deviceImageBufferDenoised, deviceFeatureBuffer, sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height, sceneRepresentation.cameraInfo.origin);
+    float *deviceWeights;
+    checkCudaErrors(cudaMalloc(&deviceWeights, sceneRepresentation.sceneInfo.width * sceneRepresentation.sceneInfo.height * sizeof(float)));
+    checkCudaErrors(cudaMemset(deviceWeights, 0.f, sceneRepresentation.sceneInfo.width * sceneRepresentation.sceneInfo.height * sizeof(float)));
+
+    cudaHelpers::denoise<<<blockSize, threadSize>>>(deviceImageBuffer, deviceImageBufferDenoised, deviceFeatureBuffer, deviceWeights, sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height, sceneRepresentation.cameraInfo.origin);
     checkCudaErrors(cudaDeviceSynchronize());
+    cudaHelpers::denoiseApplyWeights<<<blockSize, threadSize>>>(deviceImageBufferDenoised, deviceWeights, sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height);
+    checkCudaErrors(cudaDeviceSynchronize());
+    checkCudaErrors(cudaFree(deviceWeights));
 
     checkCudaErrors(
             cudaMemcpy(hostImageBufferDenoised, deviceImageBufferDenoised, imageBufferByteSize,

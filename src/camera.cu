@@ -7,7 +7,7 @@
 
 __device__ __host__ Camera::Camera(Vector3f origin, Vector3f lookAt, Vector3f _up, float vFOV,
                                    float aspectRatio, float aperture, float focusDist)
-    : origin(origin), lensRadius(aperture / 2.0f) {
+    : origin(origin), lensRadius(aperture / 2.0f), focusDist(focusDist) {
 
     const float k = tan(vFOV * M_PIf / 360.f);
 
@@ -48,17 +48,44 @@ __device__ Ray3f Camera::getRay(float s, float t, const Vector2f &sample) const 
     //    const Vector2f randomDisk{triaPoint[0], triaPoint[1]};
 
 
-    const Vector3f offset = right * randomDisk[0] + up * randomDisk[1];
+
 
     const Vector3f nearP = (Vector3f{s, t, 0.f}.applyTransform(sampleToCamera)).normalized();
+    Vector3f pLens(randomDisk[0], randomDisk[1], 0.f);
+    float ft = focusDist / nearP[2];
+    Vector3f pFocus = ft * nearP;
+    Vector3f d_norm = (pFocus - pLens).normalized();
 
-    const Vector3f pFinal = nearP.applyTransform(cameraToWorld);
+    return {
+        pLens .applyTransform(cameraToWorld),
+        (d_norm.applyTransform(cameraToWorld) - origin).normalized(),
+        near,
+        far
+    };
 
-    const Vector3f o = Vector3f{randomDisk[0], randomDisk[1], 0.f}.applyTransform(cameraToWorld);
 
-    return {o,
-            (pFinal-origin).normalized(),
-            near,
-            far};
-
+//    Ray3f ray;
+//
+//    // Compute the sample position on the near plane (local camera space).
+//    Vector3f near_p = Vector3f{randomDisk[0], randomDisk[1], 0.f}.applyTransform(sampleToCamera);
+//
+//    // Aperture position
+//    Vector2f tmp = randomDisk;
+//    Vector3f aperture_p(tmp[0], tmp[1], 0.f);
+//
+//    // Sampled position on the focal plane
+//    Vector3f focus_p = near_p * (focusDist / near_p[2]);
+//
+//    // Convert into a normalized ray direction; adjust the ray interval accordingly.
+//    Vector3f d = Vector3f(focus_p - aperture_p).normalized();
+//
+//    ray.o = aperture_p.applyTransform(cameraToWorld);
+//    ray.d = d.applyTransform(cameraToWorld);
+//
+//    return {
+//        ray.o + near * ray.d,
+//        ray.d,
+//        0,
+//        far - near
+//    };
 }

@@ -99,9 +99,9 @@ public:
     }
 
 
-    [[nodiscard]] __device__ constexpr Triangle *sample(float &sampleValue) const noexcept {
+    [[nodiscard]] __device__ constexpr Triangle *sample(float sampleValue) const noexcept {
 
-        const size_t idx = Warp::sampleCDF(sampleValue, &cdf[0], &cdf[numPrimitives]);
+        const size_t idx = Warp::sampleCDF(sampleValue, cdf, cdf + numPrimitives);
 
         assert(numPrimitives >= 2);
         assert(sampleValue >= 0 && sampleValue <= 1);
@@ -177,12 +177,11 @@ public:
         return 1.f / totalArea;
     }
 
-    __device__ constexpr void sampleSurface(ShapeQueryRecord &shapeQueryRecord, const Vector2f &pointSample) const noexcept {
-        Vector2f s = pointSample;
+    __device__ constexpr void sampleSurface(ShapeQueryRecord &shapeQueryRecord, const Vector3f &pointSample) const noexcept {
 
-        const auto triangle = sample(s[0]);
+        const auto triangle = sample(pointSample[2]);
 
-        const Vector3f bc = Warp::squareToUniformTriangle(s);
+        const Vector3f bc = Warp::squareToUniformTriangle(Vector2f{pointSample[0], pointSample[1]});
 
 
         shapeQueryRecord.p = triangle->getCoordinate(bc);

@@ -172,7 +172,7 @@ namespace cudaHelpers {
         EmitterQueryRecord emsEmitterQueryRecord{its.p};
 
 
-        const auto &currentLight = emsLight->sample(emsEmitterQueryRecord, sampler.getSample2D());
+        const auto &currentLight = emsLight->sample(emsEmitterQueryRecord, sampler.getSample3D());
 
 
         //        return sample;
@@ -328,7 +328,7 @@ namespace cudaHelpers {
             EmitterQueryRecord emitterQueryRecord{
                     its.p};
 
-            const Color3f emsSample = light->sample(emitterQueryRecord, sampler.getSample2D()) * scene->numEmitters;
+            const Color3f emsSample = light->sample(emitterQueryRecord, sampler.getSample3D()) * scene->numEmitters;
 
             if(!scene->rayIntersect(emitterQueryRecord.shadowRay)) {
 
@@ -341,6 +341,12 @@ namespace cudaHelpers {
 
                 Li += emsSample * its.mesh->getBSDF()->eval(bsdfQueryRecord) * Frame::cosTheta(its.shFrame.toLocal(emitterQueryRecord.wi)) * light->pdf(emitterQueryRecord) /
                       (its.mesh->getBSDF()->pdf(bsdfQueryRecord) + light->pdf(emitterQueryRecord)) * t;
+            }
+
+            EmitterQueryRecord envEQR{its.p};
+            const Color3f envSample = scene->environmentEmitter.sample(envEQR, sampler.getSample3D());
+            if(!scene->rayIntersect(envEQR.shadowRay)){
+                Li += t * wMat * envSample;
             }
 
             if(its.mesh->isEmitter())
@@ -475,11 +481,19 @@ namespace cudaHelpers {
         return deviceVec;
     }
 
-    __global__ void denoise(Vector3f *input, Vector3f *output, FeatureBuffer *featureBuffer, int width, int height,
+    __device__ void bilateralFilterWiki(Vector3f *input, Vector3f *output, int i, int j, int width, int height);
+    __device__ void bilateralFilterSlides(Vector3f *input, Vector3f *output, int i, int j, int width, int height);
+
+
+    __global__ void denoise(Vector3f *input, Vector3f *output, FeatureBuffer *featureBuffer, float *weights, int width, int height,
                             Vector3f cameraOrigin = Vector3f{0.f});
+
+    __global__ void denoiseApplyWeights(Vector3f *output, float *weights, int width, int height);
 
     __global__ void render(Vector3f *output, Camera cam, TLAS *tlas, int width, int height, int numSubsamples,
            int maxRayDepth, curandState *globalRandState, FeatureBuffer *featureBuffer, unsigned *progressCounter);
+
+
 
 
 }// namespace cudaHelpers
