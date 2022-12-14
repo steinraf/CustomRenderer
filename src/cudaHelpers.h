@@ -110,7 +110,7 @@ namespace cudaHelpers {
     __global__ void computeBVHBoundingBoxes(AccelerationNode *bvhNodes) ;
 
     __global__ void initBVH(BLAS *bvh, AccelerationNode *bvhTotalNodes, float totalArea, const float *cdf,
-            size_t numPrimitives, AreaLight *emitter, BSDF bsdf);
+            size_t numPrimitives, AreaLight *emitter, BSDF bsdf, Texture normalMap);
 
     __global__ void freeVariables();
 
@@ -462,7 +462,7 @@ namespace cudaHelpers {
         return PathMIS(ray, scene, maxRayDepth, sampler, featureBuffer);
         //        return normalMapper(ray, scene, sampler);
         //        return depthMapper(ray, scene, sampler);
-        //        return checkerboard(ray, scene, maxRayDepth, sampler, featureBuffer);
+//                return checkerboard(ray, scene, maxRayDepth, sampler, featureBuffer);
     }
 
     __global__ void constructTLAS(TLAS *tlas,

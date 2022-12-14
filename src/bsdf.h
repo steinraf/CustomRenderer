@@ -78,11 +78,10 @@ enum class Material {
 
 
 class BSDF {
-
+public:
     //private:
     Material material;
     Texture texture;
-    //    Color3f texture;
     float m_intIOR, m_extIOR;
 
 public:

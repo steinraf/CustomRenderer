@@ -248,6 +248,16 @@ struct SceneRepresentation {
         }
     }
 
+    void inline addNormalMap(const std::string &name, bool isEmitter = false) {
+        if(isEmitter) {
+            emitterInfos.back().normalMap = Texture{name};
+            std::cout << "\t\tNormal Map: " << name << '\n';
+        } else {
+            meshInfos.back().normalMap = Texture{name};
+            std::cout << "\t\tNormal Map: " << name << '\n';
+        }
+    }
+
     void inline addMesh(const pugi::xml_node &node) noexcept(false) {
         if(getString(node.attribute("type")) != "obj")
             throw std::runtime_error("Error while parsing shape. Only .obj files are supported.");
@@ -261,6 +271,8 @@ struct SceneRepresentation {
                     addFilename(getString(child.attribute("value")));
                 } else if(getString(child.attribute("name")) == "texture") {
                     addTextureFilename(getString(child.attribute("value")));
+                } else if(getString(child.attribute("name")) == "normal_map") {
+                    addNormalMap(getString(child.attribute("value")));
                 } else {
                     throw std::runtime_error(
                             "Unknown mesh string option \"" + getString(child.attribute("name")) + "\" found.");
@@ -283,8 +295,15 @@ struct SceneRepresentation {
 
         for(const auto &child: node.children()) {
             const std::string &childName = child.name();
+
             if(childName == "string") {
-                addFilename(getString(child.attribute("value")), true);
+                if(getString(child.attribute("name")) == "filename") {
+                    addFilename(getString(child.attribute("value")), true);
+                } else if(getString(child.attribute("name")) == "texture") {
+                    addTextureFilename(getString(child.attribute("value")), true);
+                } else if(getString(child.attribute("name")) == "normal_map") {
+                    addNormalMap(getString(child.attribute("value")), true);
+                }
             } else if(childName == "bsdf") {
                 addBSDF(child, true);
             } else if(childName == "emitter") {
@@ -404,6 +423,9 @@ struct SceneRepresentation {
         std::string textureName;
         Matrix4f transform;
         BSDF bsdf;
+//        Texture normalMap = Texture{"scenes/normalMaps/rock.jpg"};
+        Texture normalMap = Texture{Vector3f{0.5f, 0.5f, 1.f}};
+
     };
 
     std::vector<MeshInfo> meshInfos{};
@@ -416,6 +438,7 @@ struct SceneRepresentation {
         Matrix4f transform;
         BSDF bsdf;
         Vector3f radiance;
+        Texture normalMap = Texture{Vector3f{0.5f, 0.5f, 1.f}};
     };
 
     std::vector<EmitterInfo> emitterInfos{};

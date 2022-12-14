@@ -98,17 +98,7 @@ public:
         return false;
     }
 
-    __device__ constexpr void setHitInformation(const Ray3f &ray, Intersection &its) const {
-
-        const float u = its.uv[0];
-        const float v = its.uv[1];
-
-        const Vector3f bary{1 - u - v, u, v};
-
-        its.p =             bary[0] * p0 + bary[1] * p1 + bary[2] * p2;
-        its.shFrame = Frame{bary[0] * n0 + bary[1] * n1 + bary[2] * n2};
-        its.uv =            bary[0] * uv0+ bary[1] * uv1+ bary[2] * uv2;
-    }
+    __device__ void setHitInformation(const Ray3f &ray, Intersection &its) const noexcept;
 
     [[nodiscard]] __host__ __device__ constexpr inline float getArea() const noexcept {
         return 0.5f * (p1 - p0).cross(p2 - p0).norm();

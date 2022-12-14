@@ -72,7 +72,8 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) : sceneRepres
                                                 hostDeviceMeshCDF[i],
                                                 totalMeshArea[i],
                                                 sceneRepr.meshInfos[i].transform,
-                                                sceneRepr.meshInfos[i].bsdf);
+                                                sceneRepr.meshInfos[i].bsdf,
+                                                sceneRepr.meshInfos[i].normalMap);
     }
 
     auto numEmitters = sceneRepresentation.emitterInfos.size();
@@ -98,6 +99,7 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) : sceneRepres
                                                    totalEmitterArea[i],
                                                    sceneRepr.emitterInfos[i].transform,
                                                    sceneRepr.emitterInfos[i].bsdf,
+                                                   sceneRepr.emitterInfos[i].normalMap,
                                                    deviceAreaLights + i);
     }
 

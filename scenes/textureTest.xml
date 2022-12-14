@@ -5,7 +5,6 @@
 
     <sensor type="perspective">
         <float name="fov" value="27.7856"/>
-        <float name="aperture" value="0.0"/>
 
 
         <transform name="to_world">

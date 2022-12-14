@@ -33,11 +33,11 @@ namespace cudaHelpers {
     }
 
     __global__ void initBVH(BLAS *bvh, AccelerationNode *bvhTotalNodes, float totalArea, const float *cdf,
-                            size_t numPrimitives, AreaLight *emitter, BSDF bsdf) {
+                            size_t numPrimitives, AreaLight *emitter, BSDF bsdf, Texture normalMap) {
         int i, j, pixelIndex;
         if(!cudaHelpers::initIndices(i, j, pixelIndex, 1, 1)) return;
 
-        *bvh = BLAS{bvhTotalNodes, totalArea, cdf, numPrimitives, emitter, bsdf};
+        *bvh = BLAS{bvhTotalNodes, totalArea, cdf, numPrimitives, emitter, bsdf, normalMap};
     }
 
 
@@ -299,7 +299,7 @@ namespace cudaHelpers {
         int i, j, pixelIndex;
         if(!initIndices(i, j, pixelIndex, width, height)) return;
 
-        output[pixelIndex] /= weights[pixelIndex];
+//        output[pixelIndex] /= weights[pixelIndex];
     }
 
     __global__ void denoise(Vector3f *input, Vector3f *output, FeatureBuffer *featureBuffer, float *weights, int width, int height,
@@ -308,8 +308,8 @@ namespace cudaHelpers {
         if(!initIndices(i, j, pixelIndex, width, height)) return;
 
 //        bilateralFilterWiki(input, output, i, j, width, height);
-        bilateralFilterSlides(input, output, featureBuffer, weights, i, j, width, height);
-        return;
+//        bilateralFilterSlides(input, output, featureBuffer, weights, i, j, width, height);
+//        return;
 
         auto getNeighbour = [i, j, width, height]__device__ (Vector3f *array, int dx, int dy,
                                                              BOUNDARY boundary = BOUNDARY::PERIODIC) {

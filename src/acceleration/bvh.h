@@ -59,13 +59,16 @@ public:
     Triangle *firstTriangle;
 
 
+
+
 public:
+    Texture normalMap;
     float totalArea;
 
     __device__ constexpr explicit BLAS(AccelerationNode *bvhTotalNodes, float totalArea, const float *cdf,
-                                       const size_t _numPrimitives, AreaLight *emitter, BSDF bsdf) noexcept
-        : root(bvhTotalNodes), cdf(cdf), numPrimitives(_numPrimitives), bsdf(bsdf), emitter(emitter),
-          totalArea(totalArea), firstTriangle(bvhTotalNodes[numPrimitives - 1].triangle) {
+                                       const size_t _numPrimitives, AreaLight *emitter, BSDF bsdf, Texture normalMap) noexcept
+        : root(bvhTotalNodes), cdf(cdf), numPrimitives(_numPrimitives), emitter(emitter), bsdf(bsdf), firstTriangle(bvhTotalNodes[numPrimitives - 1].triangle),
+          normalMap(normalMap), totalArea(totalArea) {
 
         //IF THINGS GET CHANGED HERE, REMEMBER TO CHANGE IN COPY CONSTRUCTOR AS WELL
         numPrimitives = _numPrimitives;
@@ -90,6 +93,8 @@ public:
         firstTriangle = blas.firstTriangle;
 
         totalArea = blas.totalArea;
+
+        normalMap = blas.normalMap;
 
         if(emitter) {
             emitter->setBlas(this);

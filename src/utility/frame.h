@@ -16,8 +16,8 @@ public:
 
     constexpr Frame() = default;
 
-    __device__ constexpr explicit Frame(const Vector3f &n) noexcept
-        : n(n.normalized()) {
+    __device__ constexpr explicit Frame(const Vector3f &nIn) noexcept
+        : n(nIn.normalized()) {
         if(abs(n[0]) > abs(n[1])) {
             const float invLen = 1.0f / sqrt(n[0] * n[0] + n[2] * n[2]);
             t = Vector3f(n[2] * invLen, 0.0f, -n[0] * invLen).normalized();
@@ -26,6 +26,11 @@ public:
             t = Vector3f(0.0f, n[2] * invLen, -n[1] * invLen).normalized();
         }
         s = t.cross(n).normalized();
+    }
+
+    __device__ constexpr Frame(const Vector3f &s, const Vector3f &t, const Vector3f &n) noexcept
+            :s(s.normalized()), t(t.normalized()), n(n.normalized()){
+
     }
 
     __device__ constexpr Vector3f toLocal(const Vector3f &v) const noexcept {
