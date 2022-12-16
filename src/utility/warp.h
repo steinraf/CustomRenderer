@@ -138,8 +138,8 @@ namespace Warp {
         while(begin >= start && begin < ending){
             if((*(begin + 1) - *begin) == 0){
 #ifndef NDEBUG
-//                const int diff = begin - start;
-//                printf("DEBUG: PDF difference is zero for %i, %f, %f\n", diff, *(begin + 1), *begin);
+                const int diff = begin - start;
+                printf("DEBUG: PDF difference is zero for %i, %f, %f\n", diff, *(begin + 1), *begin);
 #endif
                 ++begin;
 
@@ -150,6 +150,8 @@ namespace Warp {
         assert(begin >= start);
 
         const size_t idx = begin - start;
+
+
 
 
         return idx;

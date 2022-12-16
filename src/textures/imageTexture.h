@@ -20,7 +20,7 @@ public:
     Vector3f radiance;
 
 //public:
-    float *deviceCDF;
+    float *deviceCDF = nullptr;
 
 
 
@@ -28,7 +28,7 @@ public:
 
 
     __host__ __device__ constexpr explicit Texture(const Vector3f &radiance) noexcept
-        : width(0), height(0), dim(3), radiance(radiance), deviceCDF(nullptr) {
+        : width(0), height(0), dim(3), radiance(radiance){
     }
 
     __host__ __device__ constexpr explicit Texture() noexcept
@@ -124,9 +124,11 @@ struct ColorToRadiance{
     __host__ __device__ constexpr float operator()(const Vector3f &vec) const noexcept {
         const size_t y = (&vec - first)%width;
 
-        return vec.norm() * sin(y*1.f/height);
+        return CustomRenderer::clamp(vec.norm(), 0.f, 1000.f) * sin(y*1.f/height);
     }
 };
+
+
 
 
 struct ColorToCDF{
@@ -142,7 +144,7 @@ public:
 
     __host__ __device__ constexpr float operator()(const Vector3f &vec) const noexcept {
         const size_t y = (&vec - first)%width;
-        return vec.norm() * sin(y*1.f/height) / totalArea;
+        return CustomRenderer::clamp(vec.norm(), 0.f, 1000.f) * sin(y*1.f/height) / totalArea;
     }
 };
 

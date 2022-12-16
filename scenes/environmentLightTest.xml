@@ -5,17 +5,17 @@
     </integrator>
 
     <sensor type="perspective">
-        <float name="fov" value="45"/>
+        <float name="fov" value="145"/>
 
 
         <transform name="to_world">
             <lookat target="0.0, 0.759461, -0.58607 "
-                    origin="0.0, 0.919769, 5.41159"
+                    origin="0, 0.319769, 0.41159"
                     up="0, 1, 0"/>
         </transform>
 
         <sampler type="independent">
-            <integer name="sample_count" value="512"/>
+            <integer name="sample_count" value="16"/>
         </sampler>
 
         <film type="hdrfilm">
@@ -23,6 +23,11 @@
 <!--            			<integer name="width" value="3840"/>-->
             <integer name="height" value="600"/>
             <integer name="width" value="800"/>
+<!--                        <integer name="height" value="2048"/>-->
+<!--                        <integer name="width" value="4096"/>-->
+<!--            <integer name="height" value="2900"/>-->
+<!--            <integer name="width" value="6000"/>-->
+
         </film>
 
     </sensor>
@@ -54,45 +59,62 @@
 <!--        <bsdf type="dielectric"/>-->
 <!--    </shape>-->
 
-    <shape type="obj" id="sus">
-        <string name="filename" value="scenes/obj/sus.obj"/>
+<!--    <shape type="obj" id="sus">-->
+<!--        <string name="filename" value="scenes/obj/sus.obj"/>-->
 
-        <transform name="to_world">
-            <scale value="0.003263, 0.003263, 0.003263"/>
-            <translate value="-0.421400, 0, 0"/>
-        </transform>
+<!--        <transform name="to_world">-->
+<!--            <scale value="0.003263, 0.003263, 0.003263"/>-->
+<!--            <translate value="-0.421400, 0, 0"/>-->
+<!--        </transform>-->
 
-        <bsdf type="dielectric"/>
-    </shape>
+<!--        <bsdf type="dielectric"/>-->
+<!--    </shape>-->
 
-    <shape type="obj" id="sus1">
-        <string name="filename" value="scenes/obj/sus.obj"/>
+        <shape type="obj" id="ajax">
+            <string name="filename" value="scenes/obj/ajax.obj"/>
 
-        <transform name="to_world">
-            <scale value="0.003263, 0.003263, 0.003263"/>
-            <translate value="0, 0, -0.3"/>
-        </transform>
-        <bsdf type="mirror"/>
-    </shape>
+            <transform name="to_world">
+                <scale value="0.0277, 0.0277, 0.0277"/>
+                <translate value="0, 0, 0.3"/>
+            </transform>
+            <bsdf type="diffuse">
+                <rgb name="reflectance" value="0.630, 0.065, 0.05"/>
+            </bsdf>
+        </shape>
+
+<!--    <shape type="obj" id="sus1">-->
+<!--        <string name="filename" value="scenes/obj/sus.obj"/>-->
+
+<!--        <transform name="to_world">-->
+<!--            <scale value="0.003263, 0.003263, 0.003263"/>-->
+<!--            <translate value="0, 0, -0.3"/>-->
+<!--        </transform>-->
+<!--        <bsdf type="mirror"/>-->
+<!--    </shape>-->
 
 
-    <shape type="obj" id="sus2">
-        <string name="filename" value="scenes/obj/sus.obj"/>
+<!--    <shape type="obj" id="sus2">-->
+<!--        <string name="filename" value="scenes/obj/sus.obj"/>-->
 
-        <transform name="to_world">
-            <scale value="0.003263, 0.003263, 0.003263"/>
-            <translate value="0.445800, 0, 0"/>
-        </transform>
+<!--        <transform name="to_world">-->
+<!--            <scale value="0.003263, 0.003263, 0.003263"/>-->
+<!--            <translate value="0.445800, 0, 0"/>-->
+<!--        </transform>-->
 
-        <string name="texture" value="scenes/textures/sus.jpg"/>
+<!--        <string name="texture" value="scenes/textures/sus.jpg"/>-->
 
-        <bsdf type="diffuse">
-<!--            <rgb name="reflectance" value="0.630, 0.065, 0.05"/>-->
-        </bsdf>
-    </shape>
+<!--        <bsdf type="diffuse">-->
+<!--&lt;!&ndash;            <rgb name="reflectance" value="0.630, 0.065, 0.05"/>&ndash;&gt;-->
+<!--        </bsdf>-->
+<!--    </shape>-->
 
     <shape type="obj">
         <string name="filename" value="scenes/obj/light.obj"/>
+
+        <transform name="to_world">
+            <scale value="0.001, 0.001, 0.001"/>
+            <translate value="0, 0, -100"/>
+        </transform>
 
         <emitter type="area">
             <rgb name="radiance" value="15, 15, 15"/>
@@ -100,6 +122,6 @@
     </shape>
 
     <emitter type="envmap">
-        <string name="filename" value="scenes/envmap/beach.hdr"/>
+        <string name="filename" value="scenes/envmap/field.hdr"/>
     </emitter>
 </scene>

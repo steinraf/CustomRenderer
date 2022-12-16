@@ -17,8 +17,7 @@ __host__ Texture::Texture(const std::filesystem::path &imagePath) noexcept {
     width = height = dim = 0;// make compiler not issue warnings
     printf("\tLoading texture %s\n", imagePath.c_str());
     auto *hostTexture = (Vector3f *) stbi_loadf(imagePath.c_str(), &width, &height, &dim, 3);
-
-    std::cout << "Texture at 10 10 is equal to " << hostTexture[10*width + 10] << '\n';
+    assert(hostTexture);
 
 //    for(int i = 0; i < width*height; ++i){
 //        if(hostTexture[i][2] <= 0.5)
@@ -38,9 +37,11 @@ __host__ Texture::Texture(const std::filesystem::path &imagePath) noexcept {
     //TODO is this actually called Radiance?
     ColorToRadiance colorToRadiance(deviceTexture, width, height);
 
+//    thrust::plus<float>();
+
     thrust::device_ptr<Vector3f> deviceTexturePtr{deviceTexture};
     float totalSum = thrust::transform_reduce(deviceTexturePtr, deviceTexturePtr + width*height,
-                                                    colorToRadiance, 0.f,  thrust::plus<float>());
+                                                    colorToRadiance, 0.f, thrust::plus<float>());
 
     //TODO remove
     std::cout << "Total texture sum is " << totalSum << '\n';

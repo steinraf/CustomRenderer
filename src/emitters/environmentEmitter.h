@@ -50,8 +50,17 @@ public:
         const size_t idx = Warp::sampleCDF(sample[2], texture.deviceCDF, texture.deviceCDF + (texture.width * texture.height - 1));
 
 
+//        printf("Sample idx is %zu and %i \n", idx, texture.width);
+
+//        printf("EnvEmitter init: Texture dims %i, %i\n", texture.width, texture.height);
+
+//        printf("Sampling with sample (%f, %f, %f)\n", sample[0], sample[1], sample[2]);
+
         const float u = (idx % texture.width)*1.f/texture.width;
         const float v = (idx / texture.width)*1.f/texture.height;
+
+//        printf("Sampling UV stats: %i, %i, %f ->%f / %u \n", texture.width, texture.height, sample[2], v, (unsigned)idx);
+
 
 
         emitterQueryRecord.shadowRay = Ray3f{
@@ -59,10 +68,11 @@ public:
                 dirSample,
         };
 
+        emitterQueryRecord.uv = Vector2f{u, v};
+
         //https://cs184.eecs.berkeley.edu/sp18/article/25
-        //TODO include pdf again
-        float pdf = 1;
-        return texture.eval(Vector2f{u, v})/(pdf * texture.width * texture.height*M_1_PIf*M_1_PIf/(2*sin(M_PIf*v)));
+        const float pdf = texture.pdf(idx);
+        return texture.eval(emitterQueryRecord.uv)/(pdf * texture.width * texture.height *M_1_PIf*M_1_PIf/(2*sin(M_PIf*v)));
     }
 
 };

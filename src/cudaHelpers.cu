@@ -460,6 +460,7 @@ namespace cudaHelpers {
         if(!initIndices(i, j, pixelIndex, width, height)) return;
 
 
+
         auto sampler = Sampler(&globalRandState[pixelIndex]);
 
         const auto iFloat = static_cast<float>(i);
@@ -480,18 +481,36 @@ namespace cudaHelpers {
 
         for(int subSamples = 0; subSamples < numSubsamples; ++subSamples) {
 
-            const float s = (iFloat + sampler.getSample1D()) / (widthFloat - 1);
-            const float t = (jFloat + sampler.getSample1D()) / (heightFloat - 1);
+            const float s = (iFloat + sampler.getSample1D()) / (widthFloat + 1);
+            const float t = (jFloat + sampler.getSample1D()) / (heightFloat + 1);
 
-            //Texture CDF
+//            //SampleVisualization remember to set xml scene size to dimension
+//            if(!(i%5 == 0 && j%5 == 0)) return;
+//            EmitterQueryRecord eQR{Vector3f{0.f}};
+//            auto sample = tlas->environmentEmitter.sample(eQR, sampler.getSample3D());
+////            printf("Sample uv is (%f, %f)\n", eQR.uv[0], eQR.uv[1]);
+//
+//            output[static_cast<int>((eQR.uv[1]*height)*width + eQR.uv[0]*width)] = Vector3f{1.f, 1.f, 1.f};
+//
+//            return;
+
+//            //Texture CDF
 //            const Texture &texture = tlas->environmentEmitter.texture;
-//            printf("Index is %f\n", static_cast<int>(t*height * width + s*width)*1.f/width/height);
-//            const float cdf = texture.deviceCDF[static_cast<int>(t*texture.height * texture.width + s*texture.width)];
-//            if(sampler.getSample1D() < 0.1f)
-//                printf("CDF (%f, %f, %i)->%f\n", s, t, static_cast<int>(t*texture.height * texture.width + s*texture.width), cdf);
-//            output[pixelIndex] = Color3f{cdf};
-//            if(i == 0 && j == 0)
-//                output[pixelIndex] = Vector3f{1.f};
+////            printf("Index is %f\n", static_cast<int>(t*height * width + s*width)*1.f/width/height);
+//            const float cdfRowStart = texture.deviceCDF[static_cast<int>(jFloat * texture.width)];
+//            const float cdfColPrev = [&](){
+//                if(j == 0) return 0.f;
+//                return texture.deviceCDF[static_cast<int>((jFloat-1) * texture.width + iFloat)];
+//            }();
+//            const float cdf = texture.deviceCDF[static_cast<int>(jFloat * texture.width + iFloat)];
+//            const float cdfRowEnd = texture.deviceCDF[static_cast<int>(jFloat * texture.width + width - 1)];
+//            const float cdfColNext = [&](){
+//                if(j == height-1) return 1.f;
+//                return texture.deviceCDF[static_cast<int>((jFloat+1) * texture.width + iFloat)];
+//            }();
+//            if(sampler.getSample1D() < 0.01f)
+//                printf("CDF (%f, %f, %i)->%f\n", s, t, static_cast<int>(jFloat*texture.width + iFloat), cdf);
+//            output[pixelIndex] = Color3f{0.f*(cdf-cdfColPrev)/(cdfColNext-cdfColPrev), (cdf-cdfRowStart)/(cdfRowEnd - cdfRowStart), 0};
 //            return;
 
             const auto ray = cam.getRay(s, t, sampler.getSample2D());
