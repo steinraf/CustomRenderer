@@ -14,19 +14,20 @@ struct ShapeQueryRecord {
     Vector3f ref;
     Vector3f p;
     Vector3f n;
+    Vector2f uv;
 
-    float pdf;
+    float pdf; //TODO investigate why pdf is not used
 
     __device__ constexpr ShapeQueryRecord() noexcept
-        : ref(), p(), n(), pdf(0.f) {
+        : ref(), p(), n(), uv(), pdf(0.f) {
     }
 
     __device__ constexpr ShapeQueryRecord(const Vector3f &ref_) noexcept
-        : ref(ref_), p(), n(), pdf(0.f) {
+        : ref(ref_), p(), n(), uv(), pdf(0.f) {
     }
 
     __device__ constexpr ShapeQueryRecord(const Vector3f &ref_, const Vector3f &p_) noexcept
-        : ref(ref_), p(p_), n(), pdf(0.f) {
+        : ref(ref_), p(p_), n(), uv(), pdf(0.f) {
     }
 };
 
@@ -106,6 +107,10 @@ public:
 
     [[nodiscard]] __device__ constexpr inline Vector3f getCoordinate(const Vector3f &bary) const noexcept {
         return bary[0] * p0 + bary[1] * p1 + bary[2] * p2;
+    }
+
+    [[nodiscard]] __device__ constexpr inline Vector2f getUV(const Vector3f &bary) const noexcept {
+        return  bary[0] * uv0+ bary[1] * uv1+ bary[2] * uv2;;
     }
 
     [[nodiscard]] __device__ constexpr inline Vector3f getNormal(const Vector3f &bary) const noexcept {

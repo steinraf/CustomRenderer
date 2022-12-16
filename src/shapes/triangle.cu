@@ -13,16 +13,26 @@ __device__ void Triangle::setHitInformation(const Ray3f &ray, Intersection &its)
 
     const Vector3f bary{1 - u - v, u, v};
 
-    Vector3f normal = bary[0] * n0 + bary[1] * n1 + bary[2] * n2;
+    its.p = getCoordinate(bary);
+    its.uv = getUV(bary);
+
+    its.uv = its.uv.clamp(0, 1);
+    assert(its.uv[0] >= 0 && its.uv[0] <= 1 && its.uv[1] >= 0 && its.uv[1] <= 1);
+
+    Vector3f normal = getNormal(bary);
 
 
-    Vector3f tangent{1.f, 1.f, 1.f};
+    Vector3f edge1 = p1-p0, edge2 = p2-p0;
+    Vector2f dUV1 = uv1-uv0, dUV2 = uv2-uv0;
+    float uvMatDetInv = 1.f/(dUV1[0]*dUV2[1] - dUV1[1]*dUV2[0]);
+
+    Vector3f tangent = (uvMatDetInv * (dUV2[1] * edge1 - dUV1[1] * edge2)).normalized();
+
+//    Vector3f tangent{1.f, 1.f, 1.f};
+
     Frame f{tangent, -normal.cross(tangent), normal};
-    Vector3f nMap;
-    if(its.mesh->bsdf.material == Material::DIFFUSE)
-        nMap = (2.f*its.mesh->normalMap.eval(bary[0] * uv0+ bary[1] * uv1+ bary[2] * uv2) - Vector3f{1.f}).normalized();
-    else
-        nMap = Vector3f{0.f, 0.f, 1.f};
+//    Vector3f nMap = its.mesh->normalMap.eval(its.uv);//
+    Vector3f nMap = (2.f*its.mesh->normalMap.eval(its.uv) - Vector3f{1.f}).normalized();
 
 
 
@@ -30,10 +40,5 @@ __device__ void Triangle::setHitInformation(const Ray3f &ray, Intersection &its)
 //        printf("Normal is (%f, %f, %f)\n", nMap[0], nMap[1], nMap[2]);
     its.shFrame =       Frame{f.toWorld(nMap)};
 
-
-    its.p =             bary[0] * p0 + bary[1] * p1 + bary[2] * p2;
-    its.uv =            bary[0] * uv0+ bary[1] * uv1+ bary[2] * uv2;
-
-//    printf("Local UV's are (%f, %f), global are (%f, %f)\n", u, v, its.uv[0], its.uv[1]);
 
 }

@@ -30,6 +30,7 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) : sceneRepres
                                                                                   sceneRepr.cameraInfo.focusDist) {//(customRenderer::getCameraOrigin() - customRenderer::getCameraLookAt()).norm()){
 
 
+    const auto numPixels = sceneRepr.sceneInfo.width * sceneRepr.sceneInfo.height;
     if(dev == CPU) {
         checkCudaErrors(cudaMalloc(&deviceImageBuffer, imageBufferByteSize));
         checkCudaErrors(cudaMalloc(&deviceImageBufferDenoised, imageBufferByteSize));
@@ -40,13 +41,24 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) : sceneRepres
         initOpenGL();
     }
 
-    checkCudaErrors(cudaMalloc(&deviceFeatureBuffer, sizeof(FeatureBuffer) * sceneRepresentation.sceneInfo.width *
-                                                             sceneRepresentation.sceneInfo.height));
+    checkCudaErrors(cudaMalloc(&deviceFeatureBuffer.variances, imageBufferByteSize));
+    checkCudaErrors(cudaMalloc(&deviceFeatureBuffer.albedos  , imageBufferByteSize));
+    checkCudaErrors(cudaMalloc(&deviceFeatureBuffer.positions, imageBufferByteSize));
+    checkCudaErrors(cudaMalloc(&deviceFeatureBuffer.normals  , imageBufferByteSize));
+
+    checkCudaErrors(cudaMalloc(&deviceFeatureBuffer.numSubSamples, sizeof(int) * numPixels));
 
 
-    checkCudaErrors(cudaMalloc(&deviceCurandState,
-                               sceneRepresentation.sceneInfo.width * sceneRepresentation.sceneInfo.height *
-                                       sizeof(curandState)));
+    checkCudaErrors(cudaMemset(deviceFeatureBuffer.variances, 0.f, imageBufferByteSize));
+    checkCudaErrors(cudaMemset(deviceFeatureBuffer.albedos  , 0.f, imageBufferByteSize));
+    checkCudaErrors(cudaMemset(deviceFeatureBuffer.positions, 0.f, imageBufferByteSize));
+    checkCudaErrors(cudaMemset(deviceFeatureBuffer.normals  , 0.f, imageBufferByteSize));
+
+    checkCudaErrors(cudaMemset(deviceFeatureBuffer.numSubSamples, 0.f, sizeof(int) * numPixels));
+
+
+
+    checkCudaErrors(cudaMalloc(&deviceCurandState, sizeof(curandState) * numPixels));
 
     cudaHelpers::initRng<<<blockSize, threadSize>>>(sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height, deviceCurandState);
     checkCudaErrors(cudaGetLastError());
@@ -180,8 +192,10 @@ void Scene::render() {
     std::cout << "Starting denoise...\n";
     checkCudaErrors(cudaMemcpy(hostImageBuffer, deviceImageBuffer, imageBufferByteSize, cudaMemcpyDeviceToHost));
     float *deviceWeights;
+
     checkCudaErrors(cudaMalloc(&deviceWeights, sceneRepresentation.sceneInfo.width * sceneRepresentation.sceneInfo.height * sizeof(float)));
     checkCudaErrors(cudaMemset(deviceWeights, 0.f, sceneRepresentation.sceneInfo.width * sceneRepresentation.sceneInfo.height * sizeof(float)));
+
 
     cudaHelpers::denoise<<<blockSize, threadSize>>>(deviceImageBuffer, deviceImageBufferDenoised, deviceFeatureBuffer, deviceWeights, sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height, sceneRepresentation.cameraInfo.origin);
     checkCudaErrors(cudaDeviceSynchronize());

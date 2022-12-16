@@ -42,7 +42,7 @@ public:
     [[nodiscard]] __device__ Color3f constexpr sample(EmitterQueryRecord &emitterQueryRecord, const Vector3f &sample) const noexcept{
 
         if(!texture.deviceCDF)
-            return texture.eval(Vector2f{0.f, 0.f});
+            return texture.eval(Vector2f{});
 
         const Vector3f dirSample = Warp::squareToUniformSphere(Vector2f{sample[0], sample[1]});
 

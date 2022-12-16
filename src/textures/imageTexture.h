@@ -32,7 +32,7 @@ public:
     }
 
     __host__ __device__ constexpr explicit Texture() noexcept
-        : Texture(Vector3f{0.0f, 0.0f, 0.0f}) {
+        : Texture(Vector3f{1.0f, 1.0f, 1.0f}) {
     }
 
     [[nodiscard]] __device__ constexpr float pdf(size_t idx) const noexcept {

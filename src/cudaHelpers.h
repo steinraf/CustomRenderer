@@ -16,11 +16,19 @@
 #define checkCudaErrors(val) cudaHelpers::check_cuda((val), #val, __FILE__, __LINE__)
 
 struct FeatureBuffer {
-    Color3f variance;
+    Color3f *variances;
+    Color3f *albedos;
+    Vector3f *positions;
+    Vector3f *normals;
+    int *numSubSamples;
+};
+
+struct FeatureBufferAccumulator {
+    Color3f color;
     Color3f albedo;
     Vector3f position;
     Vector3f normal;
-    int numSubSamples = 0;
+    int numSubSample = 0;
 };
 
 namespace cudaHelpers {
@@ -123,7 +131,7 @@ namespace cudaHelpers {
         Color3f sample{0.f};
 
         if(its.mesh->isEmitter()) {
-            sample = its.mesh->getEmitter()->eval({ray.o, its.p, its.shFrame.n});
+            sample = its.mesh->getEmitter()->eval({ray.o, its.p, its.shFrame.n, its.uv});
         }
 
 
@@ -147,7 +155,9 @@ namespace cudaHelpers {
             EmitterQueryRecord emitterQueryRecord{
                     ray.o,
                     its.p,
-                    its.shFrame.n};
+                    its.shFrame.n,
+                    its.uv
+            };
 
             sample += emitter->eval(emitterQueryRecord) * bsdfSample;
         }
@@ -163,7 +173,7 @@ namespace cudaHelpers {
         Color3f sample{0.f};
 
         if(its.mesh->isEmitter())
-            sample = its.mesh->getEmitter()->eval({ray.o, its.p, its.shFrame.n});
+            sample = its.mesh->getEmitter()->eval({ray.o, its.p, its.shFrame.n, its.uv});
 
 
         const auto &emsLight = scene->getRandomEmitter(sampler.getSample1D());
@@ -233,7 +243,9 @@ namespace cudaHelpers {
             EmitterQueryRecord masEmitterQueryRecord{
                     its.p,
                     masEmitterIntersect.p,
-                    masEmitterIntersect.shFrame.n};
+                    masEmitterIntersect.shFrame.n,
+                    masEmitterIntersect.uv
+            };
 
             const auto &masEmitter = masEmitterIntersect.mesh->getEmitter();
 
@@ -261,14 +273,9 @@ namespace cudaHelpers {
             if(!scene->rayIntersect(currentRay, its))
                 return Li;
 
-            if(numBounces == 0) {
-                featureBuffer.position = its.p;
-                featureBuffer.normal = its.shFrame.n;
-                featureBuffer.albedo = its.mesh->getBSDF()->getAlbedo(its.uv);
-            }
 
             if(its.mesh->isEmitter())
-                Li += t * its.mesh->getEmitter()->eval({currentRay.o, its.p, its.shFrame.n});
+                Li += t * its.mesh->getEmitter()->eval({currentRay.o, its.p, its.shFrame.n, its.uv});
 
             float successProbability = fmin(t.maxCoeff(), 0.99f);
             //                if((++numBounces > 3) && sampler->next1D() > successProbability)
@@ -293,7 +300,7 @@ namespace cudaHelpers {
     }
 
     __device__ Color3f constexpr PathMIS(const Ray3f &ray, TLAS *scene, int maxRayDepth, Sampler &sampler,
-                                         FeatureBuffer &featureBuffer) noexcept {
+                                         FeatureBufferAccumulator &featureBuffer, size_t fbIndex) noexcept {
         Intersection its;
 
 
@@ -350,7 +357,7 @@ namespace cudaHelpers {
             }
 
             if(its.mesh->isEmitter())
-                Li += t * wMat * its.mesh->getEmitter()->eval({currentRay.o, its.p, its.shFrame.n});
+                Li += t * wMat * its.mesh->getEmitter()->eval({currentRay.o, its.p, its.shFrame.n, its.uv});
 
             float successProbability = fmin(t.maxCoeff(), 0.99f);
             //                if((++numBounces > 3) && sampler->next1D() > successProbability)
@@ -390,7 +397,8 @@ namespace cudaHelpers {
             if(masEmitterIntersect.mesh->isEmitter()) {
                 const float emsPDF = masEmitterIntersect.mesh->getEmitter()->pdf({currentRay.o,
                                                                                   masEmitterIntersect.p,
-                                                                                  masEmitterIntersect.shFrame.n});
+                                                                                  masEmitterIntersect.shFrame.n,
+                                                                                  masEmitterIntersect.uv});
                 wMat = masPDF + emsPDF > 0.f ? masPDF / (masPDF + emsPDF) : masPDF;
             }
 
@@ -417,10 +425,6 @@ namespace cudaHelpers {
 
         if(!scene->rayIntersect(ray, its))
             return Color3f{0.f};
-
-        featureBuffer.position = its.p;
-        featureBuffer.normal = its.shFrame.n;
-        featureBuffer.albedo = its.mesh->getBSDF()->getAlbedo(its.uv);
 
         Vector2f m_scale{0.5f, 0.5f}, m_delta{0.f, 0.f};
         Color3f m_value1{1.f}, m_value2{0.f};
@@ -453,13 +457,13 @@ namespace cudaHelpers {
 
 
     __device__ Color3f constexpr getColor(const Ray3f &ray, TLAS *scene, int maxRayDepth, Sampler &sampler,
-                                          FeatureBuffer &featureBuffer) noexcept {
+                                          FeatureBufferAccumulator &featureBuffer, size_t fbIndex) noexcept {
 
 
         //        return DirectMAS(ray, scene, sampler);
         //        return DirectMIS(ray, scene, sampler);
 //                return PathMAS(ray, scene, maxRayDepth, sampler, featureBuffer);
-        return PathMIS(ray, scene, maxRayDepth, sampler, featureBuffer);
+        return PathMIS(ray, scene, maxRayDepth, sampler, featureBuffer, fbIndex);
         //        return normalMapper(ray, scene, sampler);
         //        return depthMapper(ray, scene, sampler);
 //                return checkerboard(ray, scene, maxRayDepth, sampler, featureBuffer);
@@ -484,14 +488,15 @@ namespace cudaHelpers {
     __device__ void bilateralFilterWiki(Vector3f *input, Vector3f *output, int i, int j, int width, int height);
     __device__ void bilateralFilterSlides(Vector3f *input, Vector3f *output, int i, int j, int width, int height);
 
+    __global__ void applyGaussian(Vector3f *input, Vector3f *output, int width, int height, float sigma=0.1, int windowRadius=3);
 
-    __global__ void denoise(Vector3f *input, Vector3f *output, FeatureBuffer *featureBuffer, float *weights, int width, int height,
+    __global__ void denoise(Vector3f *input, Vector3f *output, FeatureBuffer featureBuffer, float *weights, int width, int height,
                             Vector3f cameraOrigin = Vector3f{0.f});
 
     __global__ void denoiseApplyWeights(Vector3f *output, float *weights, int width, int height);
 
     __global__ void render(Vector3f *output, Camera cam, TLAS *tlas, int width, int height, int numSubsamples,
-           int maxRayDepth, curandState *globalRandState, FeatureBuffer *featureBuffer, unsigned *progressCounter);
+           int maxRayDepth, curandState *globalRandState, FeatureBuffer featureBuffer, unsigned *progressCounter);
 
 
 

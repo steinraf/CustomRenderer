@@ -456,7 +456,7 @@ struct SceneRepresentation {
     SceneInfo sceneInfo;
 
     struct EnvironmentInfo{
-        Texture texture;
+        Texture texture{Color3f{0.f, 0.f, 0.f}};
     };
 
     EnvironmentInfo environmentInfo;

@@ -191,6 +191,7 @@ public:
 
         shapeQueryRecord.p = triangle->getCoordinate(bc);
         shapeQueryRecord.n = triangle->getNormal(bc);
+        shapeQueryRecord.uv = triangle->getUV(bc);
 
         shapeQueryRecord.pdf = 1.f / totalArea;
     }

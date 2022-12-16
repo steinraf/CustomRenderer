@@ -71,7 +71,7 @@ private:
 
     Vector3f *deviceImageBuffer;
 
-    FeatureBuffer *deviceFeatureBuffer;
+    FeatureBuffer deviceFeatureBuffer;
 
     Vector3f *deviceImageBufferDenoised;
     const size_t imageBufferByteSize;

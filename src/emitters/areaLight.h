@@ -13,15 +13,16 @@ struct EmitterQueryRecord {
     Vector3f p;
     Vector3f n;
     Vector3f wi;
+    Vector2f uv;
     float pdf;
     Ray3f shadowRay;
 
     __device__ constexpr explicit EmitterQueryRecord(const Vector3f &ref) noexcept
-        : ref(ref), p(), n(), wi(), pdf(), shadowRay() {
+        : ref(ref), p(), n(), wi(), uv(), pdf(), shadowRay() {
     }
 
-    __device__ constexpr EmitterQueryRecord(const Vector3f &ref, const Vector3f &p, const Vector3f &n) noexcept
-        : ref(ref), p(p), n(n), wi((p - ref).normalized()), pdf(), shadowRay() {
+    __device__ constexpr EmitterQueryRecord(const Vector3f &ref, const Vector3f &p, const Vector3f &n, const Vector2f &uv) noexcept
+        : ref(ref), p(p), n(n), wi((p - ref).normalized()), uv(uv), pdf(), shadowRay() {
     }
 };
 
@@ -42,13 +43,7 @@ public:
     }
 
 
-    [[nodiscard]] __device__ constexpr Color3f eval(const EmitterQueryRecord &emitterQueryRecord) const noexcept {
-        //        assert(blas);
-        if(emitterQueryRecord.n.dot(emitterQueryRecord.wi) >= 0)
-            return Color3f{0.f};
-
-        return radiance;
-    }
+    [[nodiscard]] __device__ Color3f eval(const EmitterQueryRecord &emitterQueryRecord) const noexcept;
 
     [[nodiscard]] __device__ float pdf(const EmitterQueryRecord &emitterQueryRecord) const noexcept;
 

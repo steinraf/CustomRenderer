@@ -18,7 +18,12 @@ __host__ Texture::Texture(const std::filesystem::path &imagePath) noexcept {
     printf("\tLoading texture %s\n", imagePath.c_str());
     auto *hostTexture = (Vector3f *) stbi_loadf(imagePath.c_str(), &width, &height, &dim, 3);
 
-    std::cout << imagePath << " texture has first value " << hostTexture[0] << '\n';
+    std::cout << "Texture at 10 10 is equal to " << hostTexture[10*width + 10] << '\n';
+
+//    for(int i = 0; i < width*height; ++i){
+//        if(hostTexture[i][2] <= 0.5)
+//            std::cout << "Texture was below 0.5 at " << i << " with " << hostTexture[i];
+//    }
 
 
     printf("Size of the image is %i / %i\n", width, height);

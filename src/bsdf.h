@@ -86,7 +86,7 @@ public:
 
 public:
     __device__ __host__ constexpr BSDF() noexcept
-        : material(Material::DIFFUSE), texture(Vector3f{0.f}), m_intIOR(1.5046f), m_extIOR(1.000277f) {
+        : material(Material::DIFFUSE), texture(Vector3f{1.f}), m_intIOR(1.5046f), m_extIOR(1.000277f) {
     }
 
     __device__ __host__ constexpr BSDF(Material mat, Color3f albedo) noexcept

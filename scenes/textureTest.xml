@@ -1,4 +1,4 @@
-<scene>
+<scene version='3.0.0'>
     <integrator type="path">
         <integer name="max_depth" value="200"/>
     </integrator>
@@ -16,25 +16,31 @@
 
 
         <sampler type="independent">
-            <integer name="sample_count" value="1"/>
+            <integer name="sample_count" value="16"/>
         </sampler>
 
         <film type="hdrfilm">
-            <integer name="height" value="600"/>
-            <integer name="width" value="800"/>
+            <integer name="height" value="2160"/>
+            <integer name="width" value="3840"/>
+<!--            <integer name="height" value="600"/>-->
+<!--            <integer name="width" value="800"/>-->
         </film>
 
     </sensor>
 
     <shape type="obj" id="plane">
-        <string name="filename" value="scenes/obj/plane.obj"/>
+        <string name="filename" value="scenes/obj/rock.obj"/>
 
         <transform name="to_world">
-            <rotateAxis axis="1, 0, 0" angle="90"/>
-            <rotateAxis axis="0, 0, -1" angle="-90"/>
+            <translate value="0, -1, 0"/>
+<!--            <rotateAxis axis="1, 0, 0" angle="90"/>-->
+<!--            <rotateAxis axis="0, 0, -1" angle="-90"/>-->
         </transform>
-        <string name="texture" value="scenes/envmap/chapel.hdr"/>
-        <bsdf type="diffuse"/>
+<!--        <string name="normal_map" value="scenes/normalMaps/rock.jpg"/>-->
+<!--        <string name="texture" value="scenes/textures/rock.jpg"/>-->
+        <bsdf type="mirror">
+<!--            <rgb name="reflectance" value="1, 1, 1"/>-->
+        </bsdf>
     </shape>
 
 
@@ -50,4 +56,10 @@
             <rgb name="radiance" value="500, 500, 500"/>
         </emitter>
     </shape>
+
+    <emitter type="envmap">
+        <string name="filename" value="scenes/envmap/beach.hdr"/>
+    </emitter>
+
+
 </scene>

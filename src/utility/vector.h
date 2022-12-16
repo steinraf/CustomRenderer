@@ -428,9 +428,9 @@ __host__ __device__ constexpr inline Vector3f unit_vector(Vector3f v) {
 }
 
 __host__ __device__ constexpr inline Vector3f &Vector3f::clamp(float minimum, float maximum) noexcept {
-    data[0] *= CustomRenderer::max(minimum, CustomRenderer::min(maximum, data[0]));
-    data[1] *= CustomRenderer::max(minimum, CustomRenderer::min(maximum, data[1]));
-    data[2] *= CustomRenderer::max(minimum, CustomRenderer::min(maximum, data[2]));
+    data[0] = CustomRenderer::max(minimum, CustomRenderer::min(maximum, data[0]));
+    data[1] = CustomRenderer::max(minimum, CustomRenderer::min(maximum, data[1]));
+    data[2] = CustomRenderer::max(minimum, CustomRenderer::min(maximum, data[2]));
     return *this;
 }
 
@@ -667,7 +667,7 @@ __host__ __device__ constexpr inline Vector2f unit_vector(Vector2f v) {
 }
 
 __host__ __device__ constexpr inline Vector2f &Vector2f::clamp(float minimum, float maximum) noexcept {
-    data[0] *= CustomRenderer::max(minimum, CustomRenderer::min(maximum, data[0]));
-    data[1] *= CustomRenderer::max(minimum, CustomRenderer::min(maximum, data[1]));
+    data[0] = CustomRenderer::max(minimum, CustomRenderer::min(maximum, data[0]));
+    data[1] = CustomRenderer::max(minimum, CustomRenderer::min(maximum, data[1]));
     return *this;
 }
