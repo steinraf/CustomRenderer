@@ -67,7 +67,7 @@ private:
     SceneRepresentation sceneRepresentation;
     //    HostMeshInfo mesh;
 
-    const unsigned int blockSizeX = 16, blockSizeY = 16;
+    const unsigned int blockSizeX = 4, blockSizeY = 4;
 
     const dim3 threadSize{blockSizeX, blockSizeY};
 

@@ -40,7 +40,8 @@ public:
     }
 
     [[nodiscard]] __device__ float constexpr pdf(const EmitterQueryRecord &emitterQueryRecord) const noexcept{ //TODO find where sin factor needs to be
-        if(texture.pdf(emitterQueryRecord.idx) == 0) return 0.f;
+        const float pdf = texture.pdf(emitterQueryRecord.idx);
+        if(pdf == 0 || sin(M_PIf*emitterQueryRecord.uv[1]) == 0) return 0.f;
         return texture.pdf(emitterQueryRecord.idx) * texture.width * texture.height *M_1_PIf*M_1_PIf/(2*sin(M_PIf*emitterQueryRecord.uv[1]));
     }
 

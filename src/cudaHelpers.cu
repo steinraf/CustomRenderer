@@ -237,8 +237,11 @@ namespace cudaHelpers {
     __device__ void bilateralFilterSlides(Vector3f *input, Vector3f *output, FeatureBuffer &featureBuffer, float *weights, int i, int j, int width, int height){
 
 
-        constexpr int neighbourDiameter = 21;
-        constexpr int patchDiameter = 5;
+//        constexpr int neighbourDiameter = 21;
+//        constexpr int patchDiameter = 7;
+
+        constexpr int neighbourDiameter = 11;
+        constexpr int patchDiameter = 1;
 
         constexpr float k = 0.45f;
 
@@ -262,6 +265,9 @@ namespace cudaHelpers {
                                 const Vector3f qVarianceMean = featureBuffer.variances[qIndex]/static_cast<float>(featureBuffer.numSubSamples[qIndex]);
 
 
+//                                if(k * k * (pVarianceMean +  qVarianceMean).squaredNorm() < FLT_EPSILON)
+//                                    printf("Variance sum very small %f\n", (pVarianceMean +  qVarianceMean).squaredNorm());
+
                                 for(int col = 0; col < 3; ++col)
                                     meanDist += (powf(input[pIndex][col] - input[qIndex][col], 2) - (  pVarianceMean[col] + CustomRenderer::min(pVarianceMean[col], qVarianceMean[col]))) / (EPSILON + k * k * (pVarianceMean[col] +  qVarianceMean[col]));
                                 //meanDist .= ((input[pI] - input[qI])^2 - (var[pI] + min(var[pI], var[qI])
@@ -275,6 +281,7 @@ namespace cudaHelpers {
 //                printf("Mean distance is %f\n", meanDist/(3 * patchDiameter * patchDiameter));
 
                 float w = expf(-CustomRenderer::max(0.f, meanDist/(3 * patchDiameter * patchDiameter)));
+//                w = CustomRenderer::max(EPSILON*EPSILON, w);
 //
 //                if(w < EPSILON){
 //#ifndef NDEBUG
@@ -294,7 +301,6 @@ namespace cudaHelpers {
 
                                 const int qIndex = qJ * width + qI;
 
-//                                weights[pIndex] += w;
                                 atomicAdd(weights + pIndex, w);
                                 Vector3f::atomicCudaAdd(output + pIndex, w * input[qIndex]);
                             }
@@ -345,8 +351,10 @@ namespace cudaHelpers {
 //        if(abs(weights[pixelIndex]) < EPSILON)
 //            printf("Denoising weights are smaller than epsilon...\n");
 //#endif
-//        if(weights[pixelIndex] == 0.f)
-//            return;
+//        if(weights[pixelIndex] == 0.f) {
+//            printf("Output would have been (%f, %f, %f)\n", output[pixelIndex][0], output[pixelIndex][1], output[pixelIndex][2]);
+//            output[pixelIndex] = Vector3f{0.f, 0.f, 1.f};
+//        }
 //        output[pixelIndex] /= weights[pixelIndex];
     }
 
@@ -407,9 +415,9 @@ namespace cudaHelpers {
 //                output[pixelIndex] = featureBuffer.normals[pixelIndex].absValues();
 //                output[pixelIndex] = featureBuffer.albedos[pixelIndex];
 //        output[pixelIndex] = featureBuffer.variances[pixelIndex];
-        output[pixelIndex] = Color3f(featureBuffer.variances[pixelIndex].norm());
-//        constexpr float numSamples = 256.f;
-//        output[pixelIndex] = Vector3f{powf(static_cast<float>(featureBuffer.numSubSamples[pixelIndex])/(2*numSamples), 2.f)};
+//        output[pixelIndex] = Color3f(featureBuffer.variances[pixelIndex].norm());
+        constexpr float numSamples = 512.f;
+        output[pixelIndex] = Vector3f{powf(static_cast<float>(featureBuffer.numSubSamples[pixelIndex])/(numSamples), 2.f)};
 
 
 //        if(featureBuffer[pixelIndex].variance.maxCoeff() > 0.1) {
@@ -459,7 +467,20 @@ namespace cudaHelpers {
     __global__ void render(Vector3f *output, Camera cam, TLAS *tlas, int width, int height, int numSubsamples,
                            int maxRayDepth, curandState *globalRandState, FeatureBuffer featureBuffer, unsigned *progressCounter) {
         int i, j, pixelIndex;
-        if(!initIndices(i, j, pixelIndex, width, height)) return;
+        bool inBounds = initIndices(i, j, pixelIndex, width, height);
+
+        __shared__ int counter[1];
+
+        if(threadIdx.x == 0 && threadIdx.y == 0)
+            counter[0] = 0;
+
+        __syncthreads();
+
+        if(!inBounds) {
+            atomicAdd(counter, 1);
+            return;
+        }
+        bool updatedVariance = false;
 
 
 
@@ -486,12 +507,12 @@ namespace cudaHelpers {
             const float s = (iFloat + sampler.getSample1D()) / (widthFloat + 1);
             const float t = (jFloat + sampler.getSample1D()) / (heightFloat + 1);
 
-
-            //SampleVisualization remember to set xml scene size to dimension
-            EmitterQueryRecord eQR{Vector3f{0.f}};
-            auto sample = tlas->environmentEmitter.sample(eQR, sampler.getSample3D());
-            Vector3f::atomicCudaAdd(output + static_cast<int>((eQR.uv[1]*height)*width + eQR.uv[0]*width), tlas->environmentEmitter.pdf(eQR)/(width * height) * Vector3f{1.f, 1.f, 1.f});
-            return;
+//            //SampleVisualization remember to set xml scene size to dimension
+//            EmitterQueryRecord eQR{Vector3f{0.f}};
+////            if(i % 3 != 0 || j % 3 != 0) return;
+//            auto sample = tlas->environmentEmitter.sample(eQR, sampler.getSample3D());
+//            Vector3f::atomicCudaAdd(output + static_cast<int>((eQR.uv[1]*height)*width + eQR.uv[0]*width), /* tlas->environmentEmitter.pdf(eQR)/(width * height) * */ Vector3f{1.f, 1.f, 1.f});
+//            return;
 
 //            //Texture CDF
 //            const Texture &texture = tlas->environmentEmitter.texture;
@@ -526,10 +547,14 @@ namespace cudaHelpers {
             totalColor += currentColor;
 
 
-//            if(subSamples > 64 && (m2 / static_cast<float>((subSamples - 1))).absValues().maxCoeff() < 0.00001) {
-//                actualSamples = subSamples;
-//                break;
-//            }
+            if(!updatedVariance && subSamples > 64 && (m2 / static_cast<float>((subSamples - 1))).maxCoeff() < EPSILON) {
+                atomicAdd(counter, 1);
+                updatedVariance = true;
+            }
+            if(counter[0] >= blockDim.x*blockDim.y){
+                actualSamples = subSamples;
+                break;
+            }
         }
 
 
