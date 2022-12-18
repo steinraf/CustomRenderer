@@ -12,11 +12,19 @@
 #include "stb_image.h"
 
 
-__host__ Texture::Texture(const std::filesystem::path &imagePath) noexcept {
+__host__ Texture::Texture(const std::filesystem::path &imagePath, bool isEnvMap) noexcept {
     assert(!imagePath.string().empty());
     width = height = dim = 0;// make compiler not issue warnings
-    printf("\tLoading texture %s\n", imagePath.c_str());
+    printf("Loading texture %s\n", imagePath.c_str());
     auto *hostTexture = (Vector3f *) stbi_loadf(imagePath.c_str(), &width, &height, &dim, 3);
+
+#ifndef NDEBUG
+    if(!hostTexture){
+        printf("The failure reaston is %s\n", stbi__g_failure_reason);
+        assert(false);
+    }
+#endif
+
     assert(hostTexture);
 
 //    for(int i = 0; i < width*height; ++i){
@@ -35,9 +43,8 @@ __host__ Texture::Texture(const std::filesystem::path &imagePath) noexcept {
 
 
     //TODO is this actually called Radiance?
-    ColorToRadiance colorToRadiance(deviceTexture, width, height);
+    ColorToRadiance colorToRadiance(deviceTexture, width, height, isEnvMap);
 
-//    thrust::plus<float>();
 
     thrust::device_ptr<Vector3f> deviceTexturePtr{deviceTexture};
     float totalSum = thrust::transform_reduce(deviceTexturePtr, deviceTexturePtr + width*height,
@@ -47,7 +54,7 @@ __host__ Texture::Texture(const std::filesystem::path &imagePath) noexcept {
     std::cout << "Total texture sum is " << totalSum << '\n';
 
 
-    ColorToCDF colorToCdf{deviceTexture, width, height, totalSum};
+    ColorToCDF colorToCdf{deviceTexture, width, height, totalSum, isEnvMap};
 
     thrust::transform_inclusive_scan(deviceTexturePtr, deviceTexturePtr + width*height,
                                      deviceCDF, colorToCdf, thrust::plus<float>());

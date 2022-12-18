@@ -24,7 +24,7 @@ public:
 
 
 
-    __host__ explicit Texture(const std::filesystem::path &imagePath) noexcept;
+    __host__ explicit Texture(const std::filesystem::path &imagePath, bool isEnvMap = false) noexcept;
 
 
     __host__ __device__ constexpr explicit Texture(const Vector3f &radiance) noexcept
@@ -38,9 +38,15 @@ public:
     [[nodiscard]] __device__ constexpr float pdf(size_t idx) const noexcept {
         if(deviceTexture){
             if(idx == width*height - 1){
+                assert(1 - deviceCDF[idx] > 0);
                 return 1 - deviceCDF[idx];
             }else{
-                assert((deviceCDF[idx+1] - deviceCDF[idx]) > EPSILON);
+#ifndef NDEBUG
+                if((deviceCDF[idx+1] - deviceCDF[idx]) < FLT_EPSILON){
+                    printf("CDF SMALLER THAN EPSILON!!! %f\n", deviceCDF[idx+1] - deviceCDF[idx]);
+                    assert(false);
+                }
+#endif
                 return deviceCDF[idx+1] - deviceCDF[idx];
             }
         }else{
@@ -52,7 +58,7 @@ public:
     [[nodiscard]] __device__ constexpr Color3f eval(const Vector2f &uv) const noexcept {
         if(deviceTexture) {
 
-//            Checkerboard
+//            //Checkerboard
 //            Vector2f m_scale{0.1f, 0.1f}, m_delta{0.f, 0.f};
 //            Color3f m_value1{1.f}, m_value2{0.f};
 //
@@ -85,9 +91,9 @@ public:
             const auto w = static_cast<float>(width);
 
 
-            const float x = CustomRenderer::clamp(uv[0] * (w-1.f), 0.f, w-1-0.01f);
+            const float x = CustomRenderer::clamp(uv[0] * (w-1.f), 0.f, w-1.01f);
 
-            const float y = CustomRenderer::clamp(h - 2 - uv[1] * (h-1.f), 0.f, h-1-0.01f);
+            const float y = CustomRenderer::clamp(h - 2 - uv[1] * (h-1.f), 0.f, h-1.01f);
 
             const int x1 = std::floor(x), x2 = x1+1;
             const int y1 = std::floor(y), y2 = y1+1;
@@ -114,17 +120,21 @@ public:
 struct ColorToRadiance{
     const Vector3f *const first;
     const int width, height;
+    const bool isEnvMap;
 
 
-    __host__ __device__ explicit ColorToRadiance(Vector3f *first, int width, int height) noexcept
-        : first(first), width(width), height(height) {
+    __host__ __device__ explicit ColorToRadiance(Vector3f *first, int width, int height, bool isEnvMap) noexcept
+        : first(first), width(width), height(height), isEnvMap(isEnvMap){
     }
 
 
     __host__ __device__ constexpr float operator()(const Vector3f &vec) const noexcept {
         const size_t y = (&vec - first)%width;
-
-        return CustomRenderer::clamp(vec.norm(), 0.f, 1000.f) * sin(y*1.f/height);
+        if(isEnvMap){
+            return CustomRenderer::clamp(vec.norm(), 0.f, 1000.f) * sin(y*1.f/height);
+        }else{
+            return CustomRenderer::clamp(vec.norm(), 0.f, 1000.f);
+        }
     }
 };
 
@@ -135,20 +145,20 @@ struct ColorToCDF{
 private:
     const Vector3f *const first;
     const int width, height;
-    float totalArea;
+    const float totalArea;
+    const bool isEnvMap;
 
 public:
-    __host__ __device__ explicit ColorToCDF(Vector3f *first, int width, int height, float totalArea) noexcept
-        : first(first), width(width), height(height), totalArea(totalArea) {
+    __host__ __device__ explicit ColorToCDF(Vector3f *first, int width, int height, float totalArea, bool isEnvMap) noexcept
+        : first(first), width(width), height(height), totalArea(totalArea), isEnvMap(isEnvMap) {
     }
 
     __host__ __device__ constexpr float operator()(const Vector3f &vec) const noexcept {
         const size_t y = (&vec - first)%width;
-        return CustomRenderer::clamp(vec.norm(), 0.f, 1000.f) * sin(y*1.f/height) / totalArea;
+        if(isEnvMap){
+            return CustomRenderer::clamp(vec.norm(), 0.f, 1000.f) * sin(y*1.f/height) / totalArea;
+        }else{
+            return CustomRenderer::clamp(vec.norm(), 0.f, 1000.f) / totalArea;
+        }
     }
-};
-
-class NormalMap{
-    Texture texture;
-    
 };

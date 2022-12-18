@@ -15,14 +15,15 @@ struct EmitterQueryRecord {
     Vector3f wi;
     Vector2f uv;
     float pdf;
+    size_t idx;
     Ray3f shadowRay;
 
     __device__ constexpr explicit EmitterQueryRecord(const Vector3f &ref) noexcept
-        : ref(ref), p(), n(), wi(), uv(), pdf(), shadowRay() {
+        : ref(ref), p(), n(), wi(), uv(), pdf(), idx(), shadowRay() {
     }
 
     __device__ constexpr EmitterQueryRecord(const Vector3f &ref, const Vector3f &p, const Vector3f &n, const Vector2f &uv) noexcept
-        : ref(ref), p(p), n(n), wi((p - ref).normalized()), uv(uv), pdf(), shadowRay() {
+        : ref(ref), p(p), n(n), wi((p - ref).normalized()), uv(uv), pdf(), idx(), shadowRay() {
     }
 };
 
@@ -60,7 +61,7 @@ public:
     //
     //    }
 
-    //private:
+    //private: //TODO add texture as radiance option
     Color3f radiance;
     const BLAS *blas;
 };

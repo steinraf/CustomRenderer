@@ -350,10 +350,144 @@ namespace cudaHelpers {
                       (its.mesh->getBSDF()->pdf(bsdfQueryRecord) + light->pdf(emitterQueryRecord)) * t;
             }
 
-            EmitterQueryRecord envEQR{its.p};
-            const Color3f envSample = scene->environmentEmitter.sample(envEQR, sampler.getSample3D());
-            if(!scene->rayIntersect(envEQR.shadowRay)){
-                Li += t * wMat * envSample;
+//            EmitterQueryRecord envEQR{its.p};
+//            const Color3f envSample = scene->environmentEmitter.sample(envEQR, sampler.getSample3D());
+//            if(!scene->rayIntersect(envEQR.shadowRay)){
+//                Li += t * wMat * envSample;
+//            }
+
+            if(its.mesh->isEmitter())
+                Li += t * wMat * its.mesh->getEmitter()->eval({currentRay.o, its.p, its.shFrame.n, its.uv});
+
+            float successProbability = fmin(t.maxCoeff(), 0.99f);
+            //                if((++numBounces > 3) && sampler->next1D() > successProbability)
+            if(sampler.getSample1D() >= successProbability || numBounces > maxRayDepth){
+//                if(t.norm() > EPSILON)
+//                    return Li + t * scene->environmentEmitter.eval(currentRay);
+//                else
+                    return Li;
+            }
+
+            t /= successProbability;
+
+            BSDFQueryRecord bsdfQueryRecord{
+                    its.shFrame.toLocal(-currentRay.d)};
+            bsdfQueryRecord.measure = ESolidAngle;
+            bsdfQueryRecord.uv = its.uv;
+
+            t *= its.mesh->getBSDF()->sample(bsdfQueryRecord, sampler.getSample2D());
+
+            currentRay = {
+                    its.p,
+                    its.shFrame.toWorld(bsdfQueryRecord.wo)
+            };
+
+
+            const float masPDF = its.mesh->getBSDF()->pdf(bsdfQueryRecord);
+
+            Intersection masEmitterIntersect;
+            if(!scene->rayIntersect(currentRay, masEmitterIntersect)){
+                if(t.norm() > EPSILON)
+                    return Li + t * scene->environmentEmitter.eval(currentRay);
+                else
+                    return Li;
+                //TODO handle case where bsfd sample returns zero better
+            }
+
+            if(masEmitterIntersect.mesh->isEmitter()) {
+                const float emsPDF = masEmitterIntersect.mesh->getEmitter()->pdf({currentRay.o,
+                                                                                  masEmitterIntersect.p,
+                                                                                  masEmitterIntersect.shFrame.n,
+                                                                                  masEmitterIntersect.uv});
+                wMat = masPDF + emsPDF > 0.f ? masPDF / (masPDF + emsPDF) : masPDF;
+            }
+
+            if(bsdfQueryRecord.measure == EDiscrete)
+                wMat = 1.0f;
+
+            ++numBounces;
+        }
+    }
+
+    __device__ Color3f constexpr PathMISEnv(const Ray3f &ray, TLAS *scene, int maxRayDepth, Sampler &sampler,
+                                         FeatureBufferAccumulator &featureBuffer, size_t fbIndex) noexcept {
+        Intersection its;
+
+
+        Color3f Li{0.f}, t{1.f};
+
+        Ray3f currentRay = ray;
+
+        int numBounces = 0;
+
+        float wMat = 1.0f;
+
+
+        while(true) {
+            assert(currentRay.getDirection().norm() != 0.f);
+
+            if(!scene->rayIntersect(currentRay, its)) {
+                if(t.norm() > EPSILON)
+                    return Li + t * scene->environmentEmitter.eval(currentRay);
+                else
+                    return Li;
+            }
+
+            //TODO fix normals for ajax
+
+            if(numBounces == 0) {
+                featureBuffer.position = its.p;
+                featureBuffer.normal = its.shFrame.n;
+                featureBuffer.albedo = its.mesh->getBSDF()->getAlbedo(its.uv);
+            }
+
+
+            //environmentMap Sampling
+            EmitterQueryRecord envMapEQR{its.p};
+
+            const Color3f envMapEMSSample = scene->environmentEmitter.sample(envMapEQR, sampler.getSample3D());
+
+            if(!scene->rayIntersect(envMapEQR.shadowRay)) {
+
+                BSDFQueryRecord bsdfQueryRecord{
+                        its.shFrame.toLocal(-currentRay.d),
+                        its.shFrame.toLocal(envMapEQR.wi),
+                        ESolidAngle};
+                bsdfQueryRecord.measure = ESolidAngle;
+                bsdfQueryRecord.uv = its.uv;
+
+                const float tempPDF = scene->environmentEmitter.pdf(envMapEQR);
+
+//                printf("Normal is %f, %f, %f\n", its.shFrame.n[0], its.shFrame.n[1], its.shFrame.n[2]);
+                Li += envMapEMSSample
+                      * t
+                      * its.mesh->getBSDF()->eval(bsdfQueryRecord)
+                      * Frame::cosTheta(its.shFrame.toLocal(envMapEQR.wi))
+                      * tempPDF
+                      / (its.mesh->getBSDF()->pdf(bsdfQueryRecord) + tempPDF)
+                ;
+            }
+
+
+            //Emitter sampling
+            const auto *light = scene->getRandomEmitter(sampler.getSample1D());
+
+            EmitterQueryRecord emitterQueryRecord{
+                    its.p};
+//
+            const Color3f emsSample = light->sample(emitterQueryRecord, sampler.getSample3D()) * scene->numEmitters;
+
+            if(!scene->rayIntersect(emitterQueryRecord.shadowRay)) {
+
+                BSDFQueryRecord bsdfQueryRecord{
+                        its.shFrame.toLocal(-currentRay.d),
+                        its.shFrame.toLocal(emitterQueryRecord.wi),
+                        ESolidAngle};
+                bsdfQueryRecord.measure = ESolidAngle;
+                bsdfQueryRecord.uv = its.uv;
+
+                Li += emsSample * its.mesh->getBSDF()->eval(bsdfQueryRecord) * Frame::cosTheta(its.shFrame.toLocal(emitterQueryRecord.wi)) * light->pdf(emitterQueryRecord) /
+                      (its.mesh->getBSDF()->pdf(bsdfQueryRecord) + light->pdf(emitterQueryRecord)) * t;
             }
 
             if(its.mesh->isEmitter())
@@ -362,9 +496,9 @@ namespace cudaHelpers {
             float successProbability = fmin(t.maxCoeff(), 0.99f);
             //                if((++numBounces > 3) && sampler->next1D() > successProbability)
             if(sampler.getSample1D() >= successProbability || numBounces > maxRayDepth){
-                if(t.norm() > EPSILON)
-                    return Li + t * scene->environmentEmitter.eval(currentRay);
-                else
+//                if(t.norm() > EPSILON)
+//                    return Li + t * scene->environmentEmitter.eval(currentRay)
+//                else
                     return Li;
             }
 
@@ -463,7 +597,9 @@ namespace cudaHelpers {
         //        return DirectMAS(ray, scene, sampler);
         //        return DirectMIS(ray, scene, sampler);
 //                return PathMAS(ray, scene, maxRayDepth, sampler, featureBuffer);
-        return PathMIS(ray, scene, maxRayDepth, sampler, featureBuffer, fbIndex);
+//        return PathMIS(ray, scene, maxRayDepth, sampler, featureBuffer, fbIndex);
+        return PathMISEnv(ray, scene, maxRayDepth, sampler, featureBuffer, fbIndex);
+
         //        return normalMapper(ray, scene, sampler);
         //        return depthMapper(ray, scene, sampler);
 //                return checkerboard(ray, scene, maxRayDepth, sampler, featureBuffer);

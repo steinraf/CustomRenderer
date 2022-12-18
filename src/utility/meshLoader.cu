@@ -72,6 +72,20 @@ HostMeshInfo loadMesh(const std::filesystem::path &filePath, const Matrix4f &tra
             s2 >> v2 >> delim >> t2 >> delim >> n2;
             s3 >> v3 >> delim >> t3 >> delim >> n3;
 
+            if(v1 < 0) v1 += vertices.size();
+            if(v2 < 0) v2 += vertices.size();
+            if(v3 < 0) v3 += vertices.size();
+
+            if(t1 < 0) t1 += textures.size();
+            if(t2 < 0) t2 += textures.size();
+            if(t3 < 0) t3 += textures.size();
+
+            if(n1 < 0) n1 += normals.size();
+            if(n2 < 0) n2 += normals.size();
+            if(n3 < 0) n3 += normals.size();
+
+//            std::cout << "Adding face vertices " << v1 << ' ' << v2 << ' ' << v3 << '\n';
+
             vertexIndices1.push_back(v1 - 1);
             vertexIndices2.push_back(v2 - 1);
             vertexIndices3.push_back(v3 - 1);
@@ -89,6 +103,13 @@ HostMeshInfo loadMesh(const std::filesystem::path &filePath, const Matrix4f &tra
                 std::istringstream s4(e4);
                 s4 >> v4 >> delim >> t4 >> delim >> n4;
                 assert(delim == '/');
+
+                if(v4 < 0) v4 += vertices.size();
+                if(t4 < 0) t4 += textures.size();
+                if(n4 < 0) n4 += normals.size();
+
+//                std::cout << "Adding face vertices " << v4 << ' ' << v1 << ' ' << v3 << '\n';
+
 
                 vertexIndices3.push_back(v4 - 1);
                 vertexIndices1.push_back(v1 - 1);

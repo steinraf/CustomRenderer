@@ -33,6 +33,7 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) : sceneRepres
     const auto numPixels = sceneRepr.sceneInfo.width * sceneRepr.sceneInfo.height;
     if(dev == CPU) {
         checkCudaErrors(cudaMalloc(&deviceImageBuffer, imageBufferByteSize));
+        checkCudaErrors(cudaMemset(deviceImageBuffer, 0.f, imageBufferByteSize));
         checkCudaErrors(cudaMalloc(&deviceImageBufferDenoised, imageBufferByteSize));
     } else {
 
@@ -188,6 +189,17 @@ void Scene::render() {
     std::cout << "Synchronizing GPU...\n";
     checkCudaErrors(cudaDeviceSynchronize());
 
+//#ifndef NDEBUG
+
+    ColorToNorm colorToNorm;
+
+    thrust::device_ptr<Vector3f> deviceTexturePtr{deviceImageBuffer};
+    float totalSum = thrust::transform_reduce(deviceTexturePtr, deviceTexturePtr + sceneRepresentation.sceneInfo.width * sceneRepresentation.sceneInfo.height,
+                                              colorToNorm, 0.f, thrust::plus<float>());
+
+    std::cout << "Total sum of image output is " << totalSum << '\n';
+
+//#endif
 
     std::cout << "Starting denoise...\n";
     checkCudaErrors(cudaMemcpy(hostImageBuffer, deviceImageBuffer, imageBufferByteSize, cudaMemcpyDeviceToHost));
@@ -195,6 +207,12 @@ void Scene::render() {
 
     checkCudaErrors(cudaMalloc(&deviceWeights, sceneRepresentation.sceneInfo.width * sceneRepresentation.sceneInfo.height * sizeof(float)));
     checkCudaErrors(cudaMemset(deviceWeights, 0.f, sceneRepresentation.sceneInfo.width * sceneRepresentation.sceneInfo.height * sizeof(float)));
+
+    Vector3f *varianceCopy;
+    checkCudaErrors(cudaMalloc(&varianceCopy, imageBufferByteSize));
+    checkCudaErrors(cudaMemcpy(varianceCopy, deviceFeatureBuffer.variances, imageBufferByteSize, cudaMemcpyDeviceToDevice));
+    cudaHelpers::applyGaussian<<<blockSize, threadSize>>>(varianceCopy, deviceFeatureBuffer.variances, sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height, 0.3f, 21);
+    checkCudaErrors(cudaFree(varianceCopy));
 
 
     cudaHelpers::denoise<<<blockSize, threadSize>>>(deviceImageBuffer, deviceImageBufferDenoised, deviceFeatureBuffer, deviceWeights, sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height, sceneRepresentation.cameraInfo.origin);

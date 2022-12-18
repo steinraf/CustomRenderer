@@ -297,7 +297,7 @@ __host__ __device__ constexpr inline Vector3f Vector3f::normalized() const {
     float n = norm();
 #ifndef NDEBUG
     if(n == 0) {
-        printf("ERROR, Zero Vector is being normalized %i\n ", __LINE__);
+        printf("ERROR, Zero Vector is being normalized %i\n ");
         return {1.f, 0.f, 0.f};
     }
 #endif

@@ -39,16 +39,22 @@ public:
         return texture.eval(Vector2f{(u < 0) ? (u + 1) : u, v});
     }
 
-    [[nodiscard]] __device__ Color3f constexpr sample(EmitterQueryRecord &emitterQueryRecord, const Vector3f &sample) const noexcept{
+    [[nodiscard]] __device__ float constexpr pdf(const EmitterQueryRecord &emitterQueryRecord) const noexcept{ //TODO find where sin factor needs to be
+        if(texture.pdf(emitterQueryRecord.idx) == 0) return 0.f;
+        return texture.pdf(emitterQueryRecord.idx) * texture.width * texture.height *M_1_PIf*M_1_PIf/(2*sin(M_PIf*emitterQueryRecord.uv[1]));
+    }
 
+    [[nodiscard]] __device__ Color3f constexpr sample(EmitterQueryRecord &emitterQueryRecord, const Vector3f &sample) const noexcept{
+        //TODO check if this actually needs 3d sample of if 1d is sufficient
         if(!texture.deviceCDF)
             return texture.eval(Vector2f{});
 
-        const Vector3f dirSample = Warp::squareToUniformSphere(Vector2f{sample[0], sample[1]});
+//        const Vector3f dirSample = Warp::squareToUniformSphere(Vector2f{sample[0], sample[1]});
 
 
         const size_t idx = Warp::sampleCDF(sample[2], texture.deviceCDF, texture.deviceCDF + (texture.width * texture.height - 1));
 
+        emitterQueryRecord.idx = idx;
 
 //        printf("Sample idx is %zu and %i \n", idx, texture.width);
 
@@ -59,8 +65,15 @@ public:
         const float u = (idx % texture.width)*1.f/texture.width;
         const float v = (idx / texture.width)*1.f/texture.height;
 
-//        printf("Sampling UV stats: %i, %i, %f ->%f / %u \n", texture.width, texture.height, sample[2], v, (unsigned)idx);
+        assert(u >= 0 && u <= 1 && v >= 0 && v <= 1);
 
+        const Vector3f warpSample{Warp::squareToUniformSphere(Vector2f{u, v})};
+        const Vector3f dirSample{
+                warpSample[0],
+                warpSample[2],
+                -warpSample[1]
+        };
+//        printf("Sampling UV stats: %i, %i, %f ->%f / %u \n", texture.width, texture.height, sample[2], v, (unsigned)idx);
 
 
         emitterQueryRecord.shadowRay = Ray3f{
@@ -68,11 +81,16 @@ public:
                 dirSample,
         };
 
+        emitterQueryRecord.p = emitterQueryRecord.ref + 100000*dirSample; //TODO change to infinity maybe
+        emitterQueryRecord.wi = -dirSample;
+
+
         emitterQueryRecord.uv = Vector2f{u, v};
 
         //https://cs184.eecs.berkeley.edu/sp18/article/25
-        const float pdf = texture.pdf(idx);
-        return texture.eval(emitterQueryRecord.uv)/(pdf * texture.width * texture.height *M_1_PIf*M_1_PIf/(2*sin(M_PIf*v)));
+        const float pdf = this->pdf(emitterQueryRecord);
+        emitterQueryRecord.pdf = pdf; //TODO fix pdf
+        return texture.eval(emitterQueryRecord.uv)/pdf;
     }
 
 };

@@ -32,6 +32,12 @@ struct PixelInfo {
     Vector3f normal;
 };
 
+struct ColorToNorm{
+    __device__ constexpr float operator()(const Vector3f &vec) const noexcept {
+        return vec.norm();
+    }
+};
+
 
 class Scene {
 public:

@@ -46,7 +46,6 @@ __device__ Color3f AreaLight::sample(EmitterQueryRecord &emitterQueryRecord, con
     emitterQueryRecord.uv = sRec.uv;
     emitterQueryRecord.pdf = pdf(emitterQueryRecord);
 
-
     return eval(emitterQueryRecord) / emitterQueryRecord.pdf;
 }
 [[nodiscard]] __device__ Color3f AreaLight::eval(const EmitterQueryRecord &emitterQueryRecord) const noexcept {
