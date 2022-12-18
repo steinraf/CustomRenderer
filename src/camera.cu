@@ -6,8 +6,8 @@
 #include "utility/warp.h"
 
 __device__ __host__ Camera::Camera(Vector3f origin, Vector3f lookAt, Vector3f _up, float vFOV,
-                                   float aspectRatio, float aperture, float focusDist)
-    : origin(origin), lensRadius(aperture / 2.0f), focusDist(focusDist) {
+                                   float aspectRatio, float aperture, float focusDist, float k1, float k2)
+    : origin(origin), lensRadius(aperture / 2.0f), focusDist(focusDist), k1(k1), k2(k2) {
 
     const float k = tan(vFOV * M_PIf / 360.f);
 
@@ -38,14 +38,20 @@ __device__ __host__ Camera::Camera(Vector3f origin, Vector3f lookAt, Vector3f _u
 
 __device__ Ray3f Camera::getRay(float s, float t, const Vector2f &sample) const {
 
+    const float distSq = (s - 0.5f)*(s - 0.5f) * (t - 0.5f)*(t - 0.5f);
+    const float distortion = (k1 * distSq + k2*distSq*distSq);
+
+    s += (s-0.5f)*distortion;
+    t += (t-0.5f)*distortion;
+
 
     const Vector2f randomDisk = lensRadius * Warp::squareToUniformDisk(sample);
-    //    const Vector2f randomDisk = lensRadius * Warp::squareToUniformSquare(sample);
-    //    const Vector3f triaSample =  Warp::squareToUniformTriangle(sample);
-    //    const Vector3f triaPoint = lensRadius * (   Vector3f{-0.5, -0.5, 0} * triaSample[0] +
-    //                                                Vector3f{-0.5,  0.5, 0} * triaSample[1] +
-    //                                                Vector3f{ 0.5,  0.5, 0} * triaSample[2] );
-    //    const Vector2f randomDisk{triaPoint[0], triaPoint[1]};
+//        const Vector2f randomDisk = lensRadius * Warp::squareToUniformSquare(sample);
+//        const Vector3f triaSample =  Warp::squareToUniformTriangle(sample);
+//        const Vector3f triaPoint = lensRadius * (   Vector3f{-0.5, -0.5, 0} * triaSample[0] +
+//                                                    Vector3f{-0.5,  0.5, 0} * triaSample[1] +
+//                                                    Vector3f{ 0.5,  0.5, 0} * triaSample[2] );
+//        const Vector2f randomDisk{triaPoint[0], triaPoint[1]};
 
 
 

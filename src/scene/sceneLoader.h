@@ -113,6 +113,12 @@ struct SceneRepresentation {
                 } else if(attribName == "focus_distance"){
                     cameraInfo.focusDist = std::stof(getString(child.attribute("value")));
                     std::cout << "\t\tAperture: \n\t\t\t" << cameraInfo.focusDist << '\n';
+                } else if(attribName == "k1"){
+                    cameraInfo.k1 = std::stof(getString(child.attribute("value")));
+                    std::cout << "\t\tK1: \n\t\t\t" << cameraInfo.k1 << '\n';
+                } else if(attribName == "k2"){
+                    cameraInfo.k2 = std::stof(getString(child.attribute("value")));
+                    std::cout << "\t\tK2: \n\t\t\t" << cameraInfo.k2 << '\n';
                 } else {
                     throw std::runtime_error("Unrecognized sensor float option " + getString(child.attribute("name")));
                 }
@@ -406,11 +412,12 @@ struct SceneRepresentation {
 
     struct CameraInfo {
         CameraInfo()
-            : target(0.f, 0.f, -1.f), origin(0.f), up(0.f, 1.f, 0.f), fov(30), aperture(0.f), focusDist(1.f) {
+            : target(0.f, 0.f, -1.f), origin(0.f), up(0.f, 1.f, 0.f), fov(30), aperture(0.f), focusDist(1.f), k1(0.f), k2(0.f) {
         }
 
         Vector3f target, origin, up;
         float fov, aperture, focusDist;
+        float k1, k2;
     };
 
     CameraInfo cameraInfo;

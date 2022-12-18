@@ -103,21 +103,21 @@
 		<bsdf type="dielectric"/>
 	</shape>
 
-	<shape type="obj">
-		<string name="filename" value="scenes/obj/ocean.obj"/>
+<!--	<shape type="obj">-->
+<!--		<string name="filename" value="scenes/obj/ocean.obj"/>-->
 
-		<transform name="to_world">
-			<scale value="0.2, 0.2, 0.2"/>
-			<rotateAxis axis="1, 0, 0" angle="-90"/>
-			<translate value="0, 0.2, 0"/>
-		</transform>
+<!--		<transform name="to_world">-->
+<!--			<scale value="0.2, 0.2, 0.2"/>-->
+<!--			<rotateAxis axis="1, 0, 0" angle="-90"/>-->
+<!--			<translate value="0, 0.2, 0"/>-->
+<!--		</transform>-->
 
-		<bsdf type="diffuse">
-			<rgb name="reflectance" value="1, 0, 0"/>
-		</bsdf>
+<!--		<bsdf type="diffuse">-->
+<!--			<rgb name="reflectance" value="1, 0, 0"/>-->
+<!--		</bsdf>-->
 
-<!--		<bsdf type="dielectric"/>-->
-	</shape>
+<!--&lt;!&ndash;		<bsdf type="dielectric"/>&ndash;&gt;-->
+<!--	</shape>-->
 
 	<shape type="obj">
 		<string name="filename" value="scenes/obj/light.obj"/>

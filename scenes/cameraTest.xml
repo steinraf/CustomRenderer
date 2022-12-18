@@ -5,7 +5,7 @@
 
     <sensor type="perspective">
         <float name="fov" value="20.7856"/>
-        <float name="aperture" value="25"/>
+        <float name="aperture_radius" value="2.5"/>
 
 
         <transform name="to_world">
@@ -27,10 +27,10 @@
         </sampler>
 
         <film type="hdrfilm">
-            <integer name="height" value="2160"/>
-            <integer name="width" value="3840"/>
-<!--            <integer name="height" value="600"/>-->
-<!--            <integer name="width" value="800"/>-->
+<!--            <integer name="height" value="2160"/>-->
+<!--            <integer name="width" value="3840"/>-->
+            <integer name="height" value="600"/>
+            <integer name="width" value="800"/>
         </film>
 
     </sensor>

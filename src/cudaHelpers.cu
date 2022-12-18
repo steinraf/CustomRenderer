@@ -412,12 +412,12 @@ namespace cudaHelpers {
         //TODO when modifying something here, remember to maybe uncomment weights application
 
         //        output[pixelIndex] = Vector3f{(featureBuffer[pixelIndex].position-cameraOrigin).norm()/200};
-//                output[pixelIndex] = featureBuffer.normals[pixelIndex].absValues();
+                output[pixelIndex] = featureBuffer.normals[pixelIndex].absValues();
 //                output[pixelIndex] = featureBuffer.albedos[pixelIndex];
 //        output[pixelIndex] = featureBuffer.variances[pixelIndex];
 //        output[pixelIndex] = Color3f(featureBuffer.variances[pixelIndex].norm());
-        constexpr float numSamples = 512.f;
-        output[pixelIndex] = Vector3f{powf(static_cast<float>(featureBuffer.numSubSamples[pixelIndex])/(numSamples), 2.f)};
+//        constexpr float numSamples = 512.f;
+//        output[pixelIndex] = Vector3f{powf(static_cast<float>(featureBuffer.numSubSamples[pixelIndex])/(numSamples), 2.f)};
 
 
 //        if(featureBuffer[pixelIndex].variance.maxCoeff() > 0.1) {
@@ -547,14 +547,15 @@ namespace cudaHelpers {
             totalColor += currentColor;
 
 
-            if(!updatedVariance && subSamples > 64 && (m2 / static_cast<float>((subSamples - 1))).maxCoeff() < EPSILON) {
-                atomicAdd(counter, 1);
-                updatedVariance = true;
-            }
-            if(counter[0] >= blockDim.x*blockDim.y){
-                actualSamples = subSamples;
-                break;
-            }
+            //Adaptive sampling
+//            if(!updatedVariance && subSamples > 64 && (m2 / static_cast<float>((subSamples - 1))).maxCoeff() < EPSILON) {
+//                atomicAdd(counter, 1);
+//                updatedVariance = true;
+//            }
+//            if(counter[0] >= blockDim.x*blockDim.y){
+//                actualSamples = subSamples;
+//                break;
+//            }
         }
 
 

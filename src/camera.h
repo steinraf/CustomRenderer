@@ -11,8 +11,7 @@
 class Camera {
 public:
     __host__ __device__ Camera(Vector3f origin, Vector3f lookAt, Vector3f _up, float vFOV, float aspectRatio,
-                               float aperture,
-                               float focusDist);
+                               float aperture, float focusDist, float k1, float k2);
 
     __device__ Ray3f getRay(float s, float t, const Vector2f &sample) const;
 
@@ -25,6 +24,7 @@ private:
 
     const float lensRadius;
     const float focusDist;
+    const float k1, k2;
     const float far = 1000.f;
     const float near = 0.0001;
 };

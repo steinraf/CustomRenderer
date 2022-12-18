@@ -27,7 +27,9 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) : sceneRepres
                                                                                   sceneRepr.cameraInfo.fov,
                                                                                   static_cast<float>(sceneRepr.sceneInfo.width) / static_cast<float>(sceneRepr.sceneInfo.height),
                                                                                   sceneRepr.cameraInfo.aperture,
-                                                                                  sceneRepr.cameraInfo.focusDist) {//(customRenderer::getCameraOrigin() - customRenderer::getCameraLookAt()).norm()){
+                                                                                  sceneRepr.cameraInfo.focusDist,
+                                                                                  sceneRepr.cameraInfo.k1,
+                                                                                  sceneRepr.cameraInfo.k2) {
 
 
     const auto numPixels = sceneRepr.sceneInfo.width * sceneRepr.sceneInfo.height;
