@@ -185,8 +185,6 @@ namespace cudaHelpers {
         const auto &currentLight = emsLight->sample(emsEmitterQueryRecord, sampler.getSample3D());
 
 
-        //        return sample;
-
         BSDFQueryRecord emsBSDFRec{
                 its.shFrame.toLocal(-ray.d),
                 its.shFrame.toLocal(emsEmitterQueryRecord.wi),
@@ -200,26 +198,10 @@ namespace cudaHelpers {
 
 
         if(!scene->rayIntersect(emsEmitterQueryRecord.shadowRay)) {
-            //            printf("n(%f, %f, %f), "
-            //                   "sr(%f, %f, %f)\n",
-            //                   its.shFrame.n[0], its.shFrame.n[1], its.shFrame.n[2],
-            //                   emsEmitterQueryRecord.shadowRay.d[0], emsEmitterQueryRecord.shadowRay.d[1], emsEmitterQueryRecord.shadowRay.d[2]
-            //            );
-
-            //            printf("EVAL(%f, %f, %f), currentLight(%f, %f, %f), cos(%f), numEmitter(%i)\n",
-            //                   its.mesh->getBSDF()->eval(emsBSDFRec)[0], its.mesh->getBSDF()->eval(emsBSDFRec)[1], its.mesh->getBSDF()->eval(emsBSDFRec)[2],
-            //                   currentLight[0], currentLight[1], currentLight[2],
-            //                   std::abs(its.shFrame.n.dot(emsEmitterQueryRecord.shadowRay.d)),
-            //                   scene->numEmitters);
-
-
             emsWeight = emsLight->pdf(emsEmitterQueryRecord) /
                         (emsLight->pdf(emsEmitterQueryRecord) + its.mesh->getBSDF()->pdf(emsBSDFRec));
 
             emsSample = its.mesh->getBSDF()->eval(emsBSDFRec) * currentLight * std::abs(its.shFrame.n.dot(emsEmitterQueryRecord.shadowRay.d)) * scene->numEmitters;
-
-
-            //            printf("Straight path to emitter (%f, %f, %f)\n", emsSample[0], emsSample[1], emsSample[2]);
         }
 
         BSDFQueryRecord masBSDFQueryRecord{

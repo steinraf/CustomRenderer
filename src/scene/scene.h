@@ -65,7 +65,6 @@ private:
     const std::string vertexShaderPath = "/home/steinraf/ETH/CG/CustomRenderer/shaders/vertexShader.glsl";
 
     SceneRepresentation sceneRepresentation;
-    //    HostMeshInfo mesh;
 
     const unsigned int blockSizeX = 4, blockSizeY = 4;
 
@@ -97,7 +96,6 @@ private:
 
 
     TLAS *meshAccelerationStructure;
-//    TLAS *emitterAccelerationStructure;
 
     curandState *deviceCurandState;
 

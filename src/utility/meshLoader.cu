@@ -137,8 +137,6 @@ HostMeshInfo loadMesh(const std::filesystem::path &filePath, const Matrix4f &tra
                            p1 = vertices[vertexIndices2[i]],
                            p2 = vertices[vertexIndices3[i]];
             normals[i] = ((p1 - p0).cross(p2 - p0)).normalized();
-            //            std::cout << "NM Idx " << normalIndices1[i] << '\n';
-            //            std::cout << "vn " << normals[i][0] << ' ' << normals[i][1] << ' ' << normals[i][2] << '\n';
         }
     }
 
@@ -214,12 +212,6 @@ DeviceMeshInfo meshToGPU(const HostMeshInfo &mesh) noexcept {
 
     printf("\tTotal area of all triangles is %f\n", totalTriaArea);
 
-    //TODO maybe try to only compute total BB once (but morton codes require normalize with BB)
-
-    //    printf("Bounding box of total scene is (%f, %f, %f), (%f, %f, %f)\n",
-    //            maxBoundingBox.min[0], maxBoundingBox.min[1], maxBoundingBox.min[2],
-    //           maxBoundingBox.max[0], maxBoundingBox.max[1], maxBoundingBox.max[2]
-    //    );
 
     TriangleToMortonCode triangleToMortonCode(maxBoundingBox);
 
@@ -229,7 +221,7 @@ DeviceMeshInfo meshToGPU(const HostMeshInfo &mesh) noexcept {
                       triangleToMortonCode);
 
     thrust::sort_by_key(mortonCodes.begin(), mortonCodes.end(), deviceTriangles.begin());
-    //TODO maybe use radix sort instead of default sort
+    //TODO maybe use radix sort
 
     return {deviceTriangles, mortonCodes, areaCDF, totalTriaArea};
 }
@@ -241,8 +233,6 @@ __host__ BLAS *getMeshFromFile(const std::string &filename, thrust::device_vecto
                                BSDF bsdf, Texture normalMap, AreaLight *deviceEmitter) noexcept(false) {
     clock_t startGeometryBVH = clock();
 
-    //    if(!radiance.isZero())
-    //        std::cout << "\tLoading Emitter with radiance " << radiance << "...\n";
 
     auto mesh = loadMesh(filename, transform);
     auto [deviceTriangles, deviceMortonCodes, deviceCDF, area] = meshToGPU(mesh).toTuple();
@@ -266,12 +256,9 @@ __host__ BLAS *getMeshFromFile(const std::string &filename, thrust::device_vecto
                                sizeof(AccelerationNode) * (2 * numTriangles - 1)));//n-1 internal, n leaf
     checkCudaErrors(cudaMalloc((void **) &bvh, sizeof(BLAS)));
 
-    //    printf("BLAS has allocation range of (%p, %p)\n", bvhTotalNodes, bvhTotalNodes + (2 * numTriangles - 1));
 
-
-    cudaHelpers::constructBVH<<<(numTriangles + 1024 - 1) /
-                                        1024,
-                                1024>>>(bvhTotalNodes, deviceTriaPtr, deviceMortonCodes.data().get(), numTriangles);
+    cudaHelpers::constructBVH<<<(numTriangles + 1024 - 1) / 1024, 1024>>>
+            (bvhTotalNodes, deviceTriaPtr, deviceMortonCodes.data().get(), numTriangles);
 
 
     checkCudaErrors(cudaGetLastError());

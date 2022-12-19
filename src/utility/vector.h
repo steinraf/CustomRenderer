@@ -48,17 +48,11 @@ public:
 
         std::string_view currentString(str);
 
-        checkConversion(std::from_chars(currentString.begin(), currentString.end(), data[0]), data[0]);
-        currentString.remove_prefix(currentString.find(',') + 1);
-        currentString.remove_prefix(currentString.find_first_not_of(" \r\n\t\v\f"));
-
-        checkConversion(std::from_chars(currentString.begin(), currentString.end(), data[1]), data[1]);
-        currentString.remove_prefix(currentString.find(',') + 1);
-        currentString.remove_prefix(currentString.find_first_not_of(" \r\n\t\v\f"));
-
-        checkConversion(std::from_chars(currentString.begin(), currentString.end(), data[2]), data[2]);
-        currentString.remove_prefix(currentString.find(',') + 1);
-        currentString.remove_prefix(currentString.find_first_not_of(" \r\n\t\v\f"));
+        for(float & i : data){
+            checkConversion(std::from_chars(currentString.begin(), currentString.end(), i), i);
+            currentString.remove_prefix(currentString.find(',') + 1);
+            currentString.remove_prefix(currentString.find_first_not_of(" \r\n\t\v\f"));
+        }
     }
 
     [[nodiscard]] __host__ __device__ constexpr inline float operator[](int i) const noexcept { return data[i]; }
@@ -119,7 +113,7 @@ public:
 
     [[nodiscard]] __host__ __device__ constexpr inline float maxCoeff() const noexcept;
 
-    __device__ static inline void atomicCudaAdd(Vector3f *address, const Vector3f vec) noexcept;
+    __device__ static inline void atomicCudaAdd(Vector3f *address, const Vector3f &vec) noexcept;
 
 
     friend inline std::ostream &operator<<(std::ostream &os, const Vector3f &t);
@@ -479,7 +473,7 @@ Vector3f::applyTransform(const Matrix4f &transform, bool isTranslationInvariant)
 __host__ __device__ constexpr float Vector3f::maxCoeff() const noexcept {
     return CustomRenderer::max(data[0], CustomRenderer::max(data[1], data[2]));
 }
-__device__ void Vector3f::atomicCudaAdd(Vector3f *address, const Vector3f vec) noexcept {
+__device__ void Vector3f::atomicCudaAdd(Vector3f *address, const Vector3f &vec) noexcept {
     Vector3f &v = *address;
     atomicAdd(&(v[0]), vec[0]);
     atomicAdd(&(v[1]), vec[1]);
@@ -659,7 +653,6 @@ __host__ __device__ constexpr inline Vector2f &Vector2f::operator/=(float t) {
     data[1] *= k;
     return *this;
 }
-
 __host__ __device__ constexpr inline Vector2f unit_vector(Vector2f v) {
     auto n = v.norm();
     assert(n != 0);

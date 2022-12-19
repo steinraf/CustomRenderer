@@ -191,7 +191,7 @@ void Scene::render() {
     std::cout << "Synchronizing GPU...\n";
     checkCudaErrors(cudaDeviceSynchronize());
 
-//#ifndef NDEBUG
+#ifndef NDEBUG
 
     ColorToNorm colorToNorm;
 
@@ -201,7 +201,7 @@ void Scene::render() {
 
     std::cout << "Total sum of image output is " << totalSum << '\n';
 
-//#endif
+#endif
 
     std::cout << "Starting denoise...\n";
     checkCudaErrors(cudaMemcpy(hostImageBuffer, deviceImageBuffer, imageBufferByteSize, cudaMemcpyDeviceToHost));
@@ -223,9 +223,8 @@ void Scene::render() {
     checkCudaErrors(cudaDeviceSynchronize());
     checkCudaErrors(cudaFree(deviceWeights));
 
-    checkCudaErrors(
-            cudaMemcpy(hostImageBufferDenoised, deviceImageBufferDenoised, imageBufferByteSize,
-                       cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(hostImageBufferDenoised, deviceImageBufferDenoised,
+                               imageBufferByteSize, cudaMemcpyDeviceToHost));
     checkCudaErrors(cudaDeviceSynchronize());
 
 
@@ -387,23 +386,18 @@ __host__ void Scene::OpenGLDraw(Vector3f *deviceVector, volatile bool &isRenderi
             0.5f, -0.5f, 0.0f,
             0.0f, 0.5f, 0.0f};
 
-    std::cout << "Hehe 2";
-
     //    float *vertices;
 
     glBindVertexArray(VAO);
 
-    std::cout << "Hehe 2.5";
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    std::cout << "Hehe 3";
 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0 * 3 * sizeof(float), nullptr);
 
-    std::cout << "Hehe 4";
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
@@ -439,7 +433,6 @@ __host__ void Scene::OpenGLDraw(Vector3f *deviceVector, volatile bool &isRenderi
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-    std::cout << "Exiting :sadge:\n";
 }
 
 __host__ void Scene::loadShader() {

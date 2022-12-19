@@ -32,9 +32,6 @@ class AreaLight {
 public:
     explicit __host__ __device__ constexpr AreaLight(const Color3f &radiance) noexcept
         : radiance(radiance), blas(nullptr) {
-        //        assert(blas);
-        //        printf("Initialized Area Light with radiance (%f, %f, %f)\n", blas->radiance[0], blas->radiance[1], blas->radiance[2]);
-        //        printf("THIS: %p\n", this);
     }
 
     AreaLight() = default;
@@ -57,11 +54,7 @@ public:
         return !radiance.isZero();
     }
 
-    //    [[nodiscard]] __device__ Color3f sample(EmitterQueryRecord &emitterQueryRecord, const Vector2f &sample) const noexcept{
-    //
-    //    }
-
     //private: //TODO add texture as radiance option
     Color3f radiance;
-    const BLAS *blas;
+    const BLAS *blas = nullptr;
 };

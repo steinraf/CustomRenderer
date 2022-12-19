@@ -9,7 +9,6 @@
 #include "utility/vector.h"
 
 class BLAS;
-
 class Triangle;
 
 struct Intersection {

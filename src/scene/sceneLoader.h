@@ -325,8 +325,6 @@ struct SceneRepresentation {
                 std::cout << "\t\tEmitter:\n";
                 std::cout << "\t\t\tType: Area\n";
 
-                //                meshInfos.back().bsdf = {Material::DIFFUSE, getVector3f(color, "value", "\t\t\t", "reflectance")};
-
                 emitterInfos.back().radiance = getVector3f(color, "value", "\t\t\t", "radiance");
 
             } else if(childName == "transform") {

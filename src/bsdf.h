@@ -10,6 +10,7 @@
 #include "utility/sampler.h"
 #include "utility/warp.h"
 
+//Nori Fresnel Term
 [[nodiscard]] __device__ constexpr float fresnel(float cosThetaI, float extIOR, float intIOR) noexcept {
     float etaI = extIOR, etaT = intIOR;
 

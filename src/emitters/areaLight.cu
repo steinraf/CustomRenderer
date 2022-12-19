@@ -49,17 +49,10 @@ __device__ Color3f AreaLight::sample(EmitterQueryRecord &emitterQueryRecord, con
     return eval(emitterQueryRecord) / emitterQueryRecord.pdf;
 }
 [[nodiscard]] __device__ Color3f AreaLight::eval(const EmitterQueryRecord &emitterQueryRecord) const noexcept {
-    //        assert(blas);
 
     if(emitterQueryRecord.n.dot(emitterQueryRecord.wi) >= 0)
         return Color3f{0.f};
 
-
-
-    //TODO maybe make one call only
-
     return radiance * blas->bsdf.texture.eval(emitterQueryRecord.uv);
 
 }
-
-//__device__ Color3f AreaLight::eval(const EmitterQueryRecord &emitterQueryRecord) const noexcept

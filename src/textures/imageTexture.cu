@@ -5,7 +5,6 @@
 #include "../cudaHelpers.h"
 #include "imageTexture.h"
 #include <thrust/device_vector.h>
-#include <thrust/host_vector.h>
 #include <thrust/transform_scan.h>
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -14,7 +13,7 @@
 
 __host__ Texture::Texture(const std::filesystem::path &imagePath, bool isEnvMap) noexcept {
     assert(!imagePath.string().empty());
-    width = height = dim = 0;// make compiler not issue warnings
+    width = height = dim = 0;
     printf("Loading texture %s\n", imagePath.c_str());
     auto *hostTexture = (Vector3f *) stbi_loadf(imagePath.c_str(), &width, &height, &dim, 3);
 
@@ -26,11 +25,6 @@ __host__ Texture::Texture(const std::filesystem::path &imagePath, bool isEnvMap)
 #endif
 
     assert(hostTexture);
-
-//    for(int i = 0; i < width*height; ++i){
-//        if(hostTexture[i][2] <= 0.5)
-//            std::cout << "Texture was below 0.5 at " << i << " with " << hostTexture[i];
-//    }
 
 
     printf("Size of the image is %i / %i\n", width, height);

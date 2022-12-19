@@ -28,17 +28,8 @@ __device__ void Triangle::setHitInformation(const Ray3f &ray, Intersection &its)
 
     Vector3f tangent = (uvMatDetInv * (dUV2[1] * edge1 - dUV1[1] * edge2)).normalized();
 
-//    Vector3f tangent{1.f, 1.f, 1.f};
-
     Frame f{tangent, -normal.cross(tangent), normal};
-//    Vector3f nMap = its.mesh->normalMap.eval(its.uv);//
     Vector3f nMap = (2.f*its.mesh->normalMap.eval(its.uv) - Vector3f{1.f}).normalized();
 
-
-
-//    if(nMap != Vector3f{0.f, 0.f, 1.f})
-//        printf("Normal is (%f, %f, %f)\n", nMap[0], nMap[1], nMap[2]);
     its.shFrame =       Frame{f.toWorld(nMap)};
-
-
 }

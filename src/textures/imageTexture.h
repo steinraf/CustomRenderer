@@ -78,8 +78,8 @@ public:
 //
 //            return m_value2;
 
-            //TODO add sin(theta) factor
-//            printf("UVTexture: (%f, %f)\n", uv[0], uv[1]);
+
+
 #ifndef NDEBUG
             if(!(uv[0] >= 0.f && uv[0] <= 1.f && uv[1] >= 0.f && uv[1] <= 1.f)){
                 printf("Failed UV (%f, %f)\n", uv[0], uv[1]);
@@ -107,6 +107,7 @@ public:
 
             assert(w1 >= 0 && w2 >= 0 && w3 >= 0 && w4 >= 0);
 
+            //TODO check if sin factor applies here
             return w1 * deviceTexture[y1*width + x1] +
                    w2 * deviceTexture[y1*width + x2] +
                    w3 * deviceTexture[y2*width + x1] +

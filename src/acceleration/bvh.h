@@ -59,8 +59,6 @@ public:
     Triangle *firstTriangle;
 
 
-
-
 public:
     Texture normalMap;
     float totalArea;
@@ -274,8 +272,6 @@ public:
         //TODO maybe weight by radiance?
 
         const size_t idx = CustomRenderer::min(static_cast<int>(floor(numEmitters * sample)), numEmitters - 1);
-
-        //        printf("Idx is %lu\n", idx);
 
         assert(emitterBlasArr[idx]->isEmitter());
         return emitterBlasArr[idx]->getEmitter();
