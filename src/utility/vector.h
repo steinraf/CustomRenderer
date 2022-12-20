@@ -55,6 +55,8 @@ public:
         }
     }
 
+
+
     [[nodiscard]] __host__ __device__ constexpr inline float operator[](int i) const noexcept { return data[i]; }
 
     [[nodiscard]] __host__ __device__ constexpr inline float &operator[](int i) noexcept { return data[i]; };
@@ -112,6 +114,10 @@ public:
     [[nodiscard]] __host__ __device__ constexpr inline bool isZero() const noexcept;
 
     [[nodiscard]] __host__ __device__ constexpr inline float maxCoeff() const noexcept;
+
+    [[nodiscard]] __host__ __device__ constexpr inline bool isValid() const noexcept{
+        return isfinite(data[0]) && isfinite(data[1]) && isfinite(data[2]);
+    }
 
     __device__ static inline void atomicCudaAdd(Vector3f *address, const Vector3f &vec) noexcept;
 
@@ -291,7 +297,7 @@ __host__ __device__ constexpr inline Vector3f Vector3f::normalized() const {
     float n = norm();
 #ifndef NDEBUG
     if(n == 0) {
-        printf("ERROR, Zero Vector is being normalized %i\n ");
+        printf("ERROR, Zero Vector is being normalized\n ");
         return {1.f, 0.f, 0.f};
     }
 #endif

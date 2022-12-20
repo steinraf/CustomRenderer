@@ -33,11 +33,11 @@ namespace cudaHelpers {
     }
 
     __global__ void initBVH(BLAS *bvh, AccelerationNode *bvhTotalNodes, float totalArea, const float *cdf,
-                            size_t numPrimitives, AreaLight *emitter, BSDF bsdf, Texture normalMap) {
+                            size_t numPrimitives, AreaLight *emitter, BSDF bsdf, Texture normalMap, GalaxyMedium *medium) {
         int i, j, pixelIndex;
         if(!cudaHelpers::initIndices(i, j, pixelIndex, 1, 1)) return;
 
-        *bvh = BLAS{bvhTotalNodes, totalArea, cdf, numPrimitives, emitter, bsdf, normalMap};
+        *bvh = BLAS{bvhTotalNodes, totalArea, cdf, numPrimitives, emitter, bsdf, normalMap, medium};
     }
 
 
@@ -157,67 +157,6 @@ namespace cudaHelpers {
     }
 
 
-    __device__ void bilateralFilterSlides(Vector3f *input, Vector3f *output, FeatureBuffer &featureBuffer, float *weights, int i, int j, int width, int height){
-
-
-//        constexpr int neighbourDiameter = 21;
-//        constexpr int patchDiameter = 7;
-
-        constexpr int neighbourDiameter = 11;
-        constexpr int patchDiameter = 1;
-
-        constexpr float k = 0.45f;
-
-        const int pixelI = i, pixelJ = j;
-
-
-        for(int pixelQI = CustomRenderer::max(0, pixelI - neighbourDiameter /2); pixelQI < CustomRenderer::min(width, pixelI + neighbourDiameter /2 + 1); ++pixelQI){
-            for(int pixelQJ = CustomRenderer::max(0, pixelJ - neighbourDiameter /2); pixelQJ < CustomRenderer::min(height, pixelJ + neighbourDiameter /2 + 1); ++pixelQJ) {
-                float meanDist = 0.f;
-                for(int pI = CustomRenderer::max(0, pixelI - patchDiameter / 2); pI < CustomRenderer::min(width, pixelI + patchDiameter / 2 + 1); ++pI) {
-                    for(int pJ = CustomRenderer::max(0, pixelJ - patchDiameter / 2); pJ < CustomRenderer::min(height, pixelJ + patchDiameter / 2 + 1); ++pJ) {
-                        const int pIndex = pJ * width + pI;
-                        const Vector3f pVarianceMean = featureBuffer.variances[pIndex]/static_cast<float>(featureBuffer.numSubSamples[pIndex]);
-
-                        for(int qI = CustomRenderer::max(0, pixelQI - patchDiameter / 2); qI < CustomRenderer::min(width, pixelQI + patchDiameter / 2 + 1); ++qI) {
-                            for(int qJ = CustomRenderer::max(0, pixelQJ - patchDiameter / 2); qJ < CustomRenderer::min(height, pixelQJ + patchDiameter / 2 + 1); ++qJ) {
-                                const int qIndex = qJ * width + qI;
-
-                                const Vector3f qVarianceMean = featureBuffer.variances[qIndex]/static_cast<float>(featureBuffer.numSubSamples[qIndex]);
-
-                                for(int col = 0; col < 3; ++col)
-                                    meanDist += (powf(input[pIndex][col] - input[qIndex][col], 2) - (  pVarianceMean[col] + CustomRenderer::min(pVarianceMean[col], qVarianceMean[col]))) / (EPSILON + k * k * (pVarianceMean[col] +  qVarianceMean[col]));
-                                //meanDist .= ((input[pI] - input[qI])^2 - (var[pI] + min(var[pI], var[qI])
-                                //            --------------------------------------------------------
-                                //              (EPSILON + k^2 * (var[pI] + var[qI]))
-                            }
-                        }
-                    }
-                }
-
-                float w = expf(-CustomRenderer::max(0.f, meanDist/(3 * patchDiameter * patchDiameter)));
-
-
-                for(int pI = CustomRenderer::max(0, pixelI - patchDiameter / 2); pI < CustomRenderer::min(width, pixelI + patchDiameter / 2 + 1); ++pI) {
-                    for(int pJ = CustomRenderer::max(0, pixelJ - patchDiameter / 2); pJ < CustomRenderer::min(height, pixelJ + patchDiameter / 2 + 1); ++pJ) {
-
-                        const int pIndex = pJ * width + pI;
-
-                        for(int qI = CustomRenderer::max(0, pixelQI - patchDiameter / 2); qI < CustomRenderer::min(width, pixelQI + patchDiameter / 2 + 1); ++qI) {
-                            for(int qJ = CustomRenderer::max(0, pixelQJ - patchDiameter / 2); qJ < CustomRenderer::min(height, pixelQJ + patchDiameter / 2 + 1); ++qJ) {
-
-                                const int qIndex = qJ * width + qI;
-
-                                atomicAdd(weights + pIndex, w);
-                                Vector3f::atomicCudaAdd(output + pIndex, w * input[qIndex]);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
 
     __global__ void applyGaussian(Vector3f *input, Vector3f *output, int width, int height, float sigma, int windowRadius){
 
@@ -251,87 +190,7 @@ namespace cudaHelpers {
 
     }
 
-    __global__ void denoiseApplyWeights(Vector3f *output, float *weights, int width, int height){
-        int i, j, pixelIndex;
-        if(!initIndices(i, j, pixelIndex, width, height)) return;
-        if(weights[pixelIndex] == 0.f) {
-            printf("Output would have been (%f, %f, %f)\n", output[pixelIndex][0], output[pixelIndex][1], output[pixelIndex][2]);
-            output[pixelIndex] = Vector3f{0.f, 0.f, 1.f};
-        }
-        output[pixelIndex] /= weights[pixelIndex];
-    }
 
-
-    __global__ void denoise(Vector3f *input, Vector3f *output, FeatureBuffer featureBuffer, float *weights, int width, int height,
-                            Vector3f cameraOrigin) {
-        int i, j, pixelIndex;
-        if(!initIndices(i, j, pixelIndex, width, height)) return;
-
-//        bilateralFilterWiki(input, output, i, j, width, height);
-        bilateralFilterSlides(input, output, featureBuffer, weights, i, j, width, height);
-        return;
-
-//        auto getNeighbour = [i, j, width, height]__device__ (Vector3f *array, int dx, int dy,
-//                                                             BOUNDARY boundary = BOUNDARY::PERIODIC) {
-//            switch(boundary) {
-//                case BOUNDARY::PERIODIC:
-//                    return array[(j + height + dy) % height * width + (i + width + dx) % width];
-//                case BOUNDARY::REFLECTING:
-//                    //TODO implement?
-//                    assert(false && "Not implemented.");
-////                    break;
-//                case BOUNDARY::ZERO:
-//                    if(i >= 0 && i < width && j >= 0 && j < height)
-//                        return array[j*width + i];
-//
-//                    return Vector3f{0.f};
-//            }
-//        };
-
-//        const int m_radius = 2;
-//        const float m_stddev = 0.5f;
-//
-//        const float alpha = -1.0f / (2.0f * m_stddev * m_stddev);
-//        const float constant = std::exp(alpha * m_radius * m_radius);
-
-
-//        auto gaussian = [alpha, constant] __device__ (float x){
-//            return CustomRenderer::max(0.0f, std::exp(alpha * x * x) - constant);
-//        };
-
-//        float integral = 0.f;
-//        Vector3f tmp{0.f};
-
-//        for(int xNew = -m_radius; xNew <= m_radius; ++xNew) {
-//            for(int yNew = -m_radius + 1; yNew < m_radius; ++yNew){
-//                const float gaussianContrib = gaussian(sqrtf(xNew*xNew + yNew*yNew));
-//                tmp += gaussianContrib * getNeighbour(input, xNew, yNew);
-//                integral += gaussianContrib;
-//            }
-//        }
-//
-//        output[pixelIndex] = tmp/integral;
-
-        //TODO when modifying something here, remember to maybe uncomment weights application
-
-        //        output[pixelIndex] = Vector3f{(featureBuffer[pixelIndex].position-cameraOrigin).norm()/200};
-//                output[pixelIndex] = featureBuffer.normals[pixelIndex].absValues();
-//                output[pixelIndex] = featureBuffer.albedos[pixelIndex];
-        output[pixelIndex] = featureBuffer.variances[pixelIndex];
-//        output[pixelIndex] = Color3f(featureBuffer.variances[pixelIndex].norm());
-//        constexpr float numSamples = 16384.f;
-//        output[pixelIndex] = Vector3f{powf(static_cast<float>(featureBuffer.numSubSamples[pixelIndex])/(numSamples), 2.f)};
-
-
-//        if(featureBuffer[pixelIndex].variance.maxCoeff() > 0.1) {
-//            output[pixelIndex] = 0.25 * getNeighbour(input, 0, -1) + 0.25 * getNeighbour(input, 1, 0) + 0.25 * getNeighbour(input, 0, 1) + 0.25 * getNeighbour(input, -1, 0);
-//        }
-//        else {
-//            output[pixelIndex] = input[pixelIndex];
-//        }
-
-        //        output[pixelIndex] = Color3f(featureBuffer[pixelIndex].variance.norm());
-    }
 
 
     __device__ int findSplit(const uint32_t *mortonCodes, int first, int last, int numPrimitives) {
@@ -408,11 +267,12 @@ namespace cudaHelpers {
             const float s = (iFloat + sampler.getSample1D()) / (widthFloat + 1);
             const float t = (jFloat + sampler.getSample1D()) / (heightFloat + 1);
 
-//            //SampleVisualization remember to set xml scene size to dimension
+////            //SampleVisualization remember to set xml scene size to dimension
 //            EmitterQueryRecord eQR{Vector3f{0.f}};
-////            if(i % 3 != 0 || j % 3 != 0) return;
+//            if(i % 3 != 0 || j % 3 != 0) return;
 //            auto sample = tlas->environmentEmitter.sample(eQR, sampler.getSample3D());
-//            Vector3f::atomicCudaAdd(output + static_cast<int>((eQR.uv[1]*height)*width + eQR.uv[0]*width),  tlas->environmentEmitter.pdf(eQR)/(width * height) *  Vector3f{1.f, 1.f, 1.f});
+//            const int pixelCoord = static_cast<int>((eQR.uv[1]*height)*width + eQR.uv[0]*width);
+//            Vector3f::atomicCudaAdd(output + pixelCoord,  tlas->environmentEmitter.pdf(eQR) * width * height  * Vector3f{1.f, 1.f, 1.f});
 //            return;
 
 //            //Texture CDF

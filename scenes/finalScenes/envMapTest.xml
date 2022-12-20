@@ -28,7 +28,7 @@
 
 
 		<sampler type="independent">
-			<integer name="sample_count" value="512	"/>
+			<integer name="sample_count" value="512"/>
 		</sampler>
 
 		<film type="hdrfilm">
@@ -97,6 +97,6 @@
 
 
 	<emitter type="envmap">
-		<string name="filename" value="scenes/envmap/beach.hdr"/>
+		<string name="filename" value="scenes/envmap/highres/starmap.hdr"/>
 	</emitter>
 </scene>

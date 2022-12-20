@@ -42,8 +42,8 @@ add_executable(CustomRenderer
         src/scene/scene.h
         src/utility/ray.h
         src/hittable.h
-        src/camera.cu
-        src/camera.h
+        src/camera/camera.cu
+        src/camera/camera.h
         src/utility/warp.h
         src/utility/sampler.h
         src/acceleration/bvh.h
@@ -57,7 +57,7 @@ add_executable(CustomRenderer
         src/emitters/areaLight.cu
         src/utility/frame.h
         src/textures/imageTexture.cu
-        src/textures/imageTexture.h src/emitters/environmentEmitter.h src/shapes/triangle.cu)
+        src/textures/imageTexture.h src/emitters/environmentEmitter.h src/shapes/triangle.cu src/medium/medium.h src/medium/medium.cu src/medium/isotropicPhaseFunction.cu src/medium/isotropicPhaseFunction.h src/denoise/denoise.cu src/denoise/denoise.h)
 
 add_dependencies(CustomRenderer pugixml)
 

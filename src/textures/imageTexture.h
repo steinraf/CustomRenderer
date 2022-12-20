@@ -48,10 +48,8 @@ public:
 //                    assert(false);
                 }
 #endif
-                if((deviceCDF[idx+1] - deviceCDF[idx]) < FLT_EPSILON){
-                    return 1;
-                }
-                return deviceCDF[idx+1] - deviceCDF[idx];
+
+                return CustomRenderer::max(deviceCDF[idx+1] - deviceCDF[idx], FLT_EPSILON);
             }
         }else{
             return 1.f;
@@ -111,7 +109,6 @@ public:
 
             assert(w1 >= 0 && w2 >= 0 && w3 >= 0 && w4 >= 0);
 
-            //TODO check if sin factor applies here
             return w1 * deviceTexture[y1*width + x1] +
                    w2 * deviceTexture[y1*width + x2] +
                    w3 * deviceTexture[y2*width + x1] +

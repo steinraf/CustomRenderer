@@ -7,13 +7,12 @@
 #include <curand_kernel.h>
 
 #include "acceleration/bvh.h"
-#include "camera.h"
+#include "camera/camera.h"
+#include "medium/medium.h"
 #include "utility/ray.h"
 #include "utility/warp.h"
 #include <cuda/std/limits>
 
-
-#define checkCudaErrors(val) cudaHelpers::check_cuda((val), #val, __FILE__, __LINE__)
 
 struct FeatureBuffer {
     Color3f *variances;
@@ -30,6 +29,12 @@ struct FeatureBufferAccumulator {
     Vector3f normal;
     int numSubSample = 0;
 };
+
+
+
+#define checkCudaErrors(val) cudaHelpers::check_cuda((val), #val, __FILE__, __LINE__)
+
+
 
 namespace cudaHelpers {
 
@@ -118,7 +123,7 @@ namespace cudaHelpers {
     __global__ void computeBVHBoundingBoxes(AccelerationNode *bvhNodes) ;
 
     __global__ void initBVH(BLAS *bvh, AccelerationNode *bvhTotalNodes, float totalArea, const float *cdf,
-            size_t numPrimitives, AreaLight *emitter, BSDF bsdf, Texture normalMap);
+            size_t numPrimitives, AreaLight *emitter, BSDF bsdf, Texture normalMap, GalaxyMedium *medium);
 
     __global__ void freeVariables();
 
@@ -281,6 +286,199 @@ namespace cudaHelpers {
         }
     }
 
+    __device__ Color3f inline PathVol(const Ray3f &ray, TLAS *scene, int maxRayDepth, Sampler &sampler,
+                                         FeatureBufferAccumulator &featureBuffer, size_t fbIndex) noexcept{
+        Color3f Li{0.0f}, t{1.0f};
+
+        Ray3f nextRay = ray;
+
+        float matpdf = 1.0;
+        bool lastDiscrete = true;
+        const GalaxyMedium *medium = nullptr;
+
+        for (;;) {
+
+            Intersection its;
+
+        volumetric: for (;;) {
+                if (scene->rayIntersect(nextRay, its)) {
+                    if (its.mesh->getMedium()) {
+                        Ray3f newRay {nextRay.atTime(its.t + EPSILON), nextRay.d};
+                        nextRay = newRay;
+                        if (!medium) {
+                            medium = its.mesh->getMedium();
+                        } else {
+                            medium = nullptr;
+                            continue;
+                        }
+                    } else {
+                        break;
+                    }
+                } else {
+                    goto end;
+                }
+
+                float maxDistance;
+                bool rayBounded = false;
+                bool rayBoundedByMaterial = false;
+
+                Intersection maxIts;
+                if (scene->rayIntersect(nextRay, maxIts)) {
+                    maxDistance = maxIts.t;
+                    rayBounded = true;
+                    rayBoundedByMaterial = !maxIts.mesh->getMedium();
+                }
+
+                float sampledDistance, prob, extinction;
+                float maxExtinction = medium->getMaxExtinction();
+
+                int i = 0;
+                do {
+                    if (maxExtinction == 0||i++ > 10) {
+                        if(!rayBounded) {
+                            return {0.f,1.f,0.f};
+                        } else {
+                            if (rayBoundedByMaterial) {
+                                goto material;
+                            } else {
+                                Ray3f newRay {nextRay.atTime(maxDistance + EPSILON), nextRay.d};
+                                nextRay = newRay;
+                                medium = nullptr;
+                                goto volumetric;
+                            }
+                        }
+                    }
+                    sampledDistance = -logf(1 - sampler.getSample1D()) / maxExtinction;
+
+                    extinction = medium->getExtinction(nextRay.atTime(sampledDistance));
+                    prob = extinction / maxExtinction;
+                } while (prob + EPSILON < 1.0f && sampler.getSample1D() > prob);
+
+                if (rayBounded && (sampledDistance >= maxDistance || extinction == 0)) {
+                    if (rayBoundedByMaterial) {
+                        goto material;
+                    } else {
+                        Ray3f newRay {nextRay.atTime(maxDistance + EPSILON), nextRay.d};
+                        nextRay = newRay;
+                        medium = nullptr;
+                        continue;
+                    }
+                }
+
+                const IsotropicPhaseFunction &phaseFunction = medium->getPhaseFunction();
+
+                PhaseFunctionQueryRecord phaseFunctionQuery(nextRay.d);
+                phaseFunctionQuery.p = nextRay.atTime(sampledDistance);
+                Color3f phaseFunctionSample = phaseFunction->sample(phaseFunctionQuery, sampler.getSample2D());
+
+                /*if (phaseFunctionQuery.measure != EDiscrete) {
+					const Emitter *sampledEmitter = scene->getRandomEmitter(sampler->next1D());
+					EmitterQueryRecord sampledEmitterRecord{phaseFunctionQuery.p};
+					auto sampleColor = sampledEmitter->sample(sampledEmitterRecord, sampler->next2D());
+					Intersection shadowIts;
+					if (!scene->rayIntersect(sampledEmitterRecord.shadowRay, shadowIts) || shadowIts.mesh->getMedium()) {
+						auto emitterPhaseFunctionQuery = PhaseFunctionQueryRecord(nextRay.d,
+						                                                          sampledEmitterRecord.wi,
+						                                                          ESolidAngle);
+
+						Color3f sampledEmitterColor = sampleColor * phaseFunction->eval(emitterPhaseFunctionQuery) * scene->getLights().size();
+						float emempdf = sampledEmitter->pdf(sampledEmitterRecord);
+						float emmatpdf = phaseFunction->pdf(emitterPhaseFunctionQuery);
+						Li += (emempdf) / (emempdf + emmatpdf) * t * sampledEmitterColor;
+					}
+				}*/
+
+                t *= medium->getAlbedo(phaseFunctionQuery.p)*medium->getScattering(phaseFunctionQuery.p) / extinction * phaseFunctionSample;
+
+                if(!t.isValid()) {
+                    return {0.0,1.0,0.0};
+                }
+
+                float renderProba = fmin(t.maxCoeff(), 0.99f);
+                if (sampler.getSample1D() >= renderProba) {
+                    goto end;
+                }
+                t /= renderProba;
+
+                if (phaseFunctionQuery.measure == EDiscrete) {
+                    lastDiscrete = true;
+                } else {
+                    matpdf = phaseFunction->pdf(phaseFunctionQuery);
+                    lastDiscrete = false;
+                }
+
+                nextRay = {phaseFunctionQuery.p, phaseFunctionQuery.wo};
+            }
+        material:
+
+            if (!scene->rayIntersect(nextRay, its))
+                goto end;
+
+            BSDFQueryRecord bsdfQuery(its.shFrame.toLocal(-nextRay.d));
+            bsdfQuery.measure = ESolidAngle;
+            bsdfQuery.uv = its.uv;
+            Color3f bsdfSample = its.mesh->getBSDF()->sample(bsdfQuery, sampler.getSample2D());
+
+
+            if (its.mesh->isEmitter()) {
+                EmitterQueryRecord eQuery{nextRay.o, its.p, its.shFrame.n, its.uv};
+                Color3f emColor = its.mesh->getEmitter()->eval(eQuery);
+
+                if (lastDiscrete) {
+                    Li += t * emColor;
+                } else {
+                    float empdf = its.mesh->getEmitter()->pdf(eQuery);
+                    Li += t * matpdf / (empdf + matpdf) * emColor;
+                }
+            }
+
+            float renderProba = fmin(t.maxCoeff(), 0.99f);
+            if (sampler.getSample1D() >= renderProba) {
+                break;
+            }
+            t /= renderProba;
+
+            if (bsdfQuery.measure != EDiscrete) {
+                const AreaLight *sampledEmitter = scene->getRandomEmitter(sampler.getSample1D());
+                EmitterQueryRecord sampledEmitterRecord{its.p};
+                auto sampleColor = sampledEmitter->sample(sampledEmitterRecord, sampler.getSample3D());
+                Intersection shadowIts;
+                if (!scene->rayIntersect(sampledEmitterRecord.shadowRay, shadowIts) || shadowIts.mesh->getMedium()) {
+                    auto emitterBsdfQuery = BSDFQueryRecord(its.shFrame.toLocal(-nextRay.d),
+                                                            its.shFrame.toLocal(sampledEmitterRecord.wi),
+                                                            ESolidAngle);
+                    emitterBsdfQuery.uv = its.uv;
+                    Color3f sampledEmitterColor = sampleColor * its.mesh->getBSDF()->eval(emitterBsdfQuery) *
+                                                  Frame::cosTheta(its.shFrame.toLocal(sampledEmitterRecord.wi)) *
+                                                  scene->numEmitters;
+                    float emempdf = sampledEmitter->pdf(sampledEmitterRecord);
+                    float emmatpdf = its.mesh->getBSDF()->pdf(emitterBsdfQuery);
+                    Li += (emempdf) / (emempdf + emmatpdf) * t * sampledEmitterColor;
+                }
+            }
+
+
+            t *= bsdfSample;
+
+            if(!t.isValid()) {
+                return {1.0,0.0,0.0};
+            }
+
+            if (bsdfQuery.measure == EDiscrete) {
+                lastDiscrete = true;
+            } else {
+                matpdf = its.mesh->getBSDF()->pdf(bsdfQuery);
+                lastDiscrete = false;
+            }
+
+            nextRay = Ray3f(its.p, its.shFrame.toWorld(bsdfQuery.wo));
+        }
+
+    end:
+
+        return Li;
+    }
+
     __device__ Color3f constexpr PathMIS(const Ray3f &ray, TLAS *scene, int maxRayDepth, Sampler &sampler,
                                          FeatureBufferAccumulator &featureBuffer, size_t fbIndex) noexcept {
         Intersection its;
@@ -425,7 +623,7 @@ namespace cudaHelpers {
 
 
             //environmentMap Sampling
-            constexpr int maxEnvSamples = 1;
+            constexpr int maxEnvSamples = 3;
             for(int envSamples = 0; envSamples < maxEnvSamples; ++envSamples){
                 EmitterQueryRecord envMapEQR{its.p};
 
@@ -521,6 +719,15 @@ namespace cudaHelpers {
                                                                                   masEmitterIntersect.shFrame.n,
                                                                                   masEmitterIntersect.uv});
                 wMat = masPDF + emsPDF > 0.f ? masPDF / (masPDF + emsPDF) : masPDF;
+            }else {
+                const float emsPDF = scene->environmentEmitter.pdf({
+                        currentRay.o,
+                        masEmitterIntersect.p,
+                        masEmitterIntersect.shFrame.n,
+                        masEmitterIntersect.uv
+                });
+
+                wMat = masPDF + emsPDF > 0.f ? masPDF / (masPDF + emsPDF) : masPDF;
             }
 
             if(bsdfQueryRecord.measure == EDiscrete)
@@ -579,7 +786,7 @@ namespace cudaHelpers {
     }
 
 
-    __device__ Color3f constexpr getColor(const Ray3f &ray, TLAS *scene, int maxRayDepth, Sampler &sampler,
+    __device__ Color3f /* constexpr */ inline getColor(const Ray3f &ray, TLAS *scene, int maxRayDepth, Sampler &sampler,
                                           FeatureBufferAccumulator &featureBuffer, size_t fbIndex) noexcept {
 
 
@@ -588,6 +795,8 @@ namespace cudaHelpers {
 //                return PathMAS(ray, scene, maxRayDepth, sampler, featureBuffer);
 //        return PathMIS(ray, scene, maxRayDepth, sampler, featureBuffer, fbIndex);
         return PathMISEnv(ray, scene, maxRayDepth, sampler, featureBuffer, fbIndex);
+
+        return PathVol(ray, scene, maxRayDepth, sampler, featureBuffer, fbIndex);
 
         //        return normalMapper(ray, scene, sampler);
         //        return depthMapper(ray, scene, sampler);
@@ -610,15 +819,8 @@ namespace cudaHelpers {
         return deviceVec;
     }
 
-    __device__ void bilateralFilterWiki(Vector3f *input, Vector3f *output, int i, int j, int width, int height);
-    __device__ void bilateralFilterSlides(Vector3f *input, Vector3f *output, int i, int j, int width, int height);
-
     __global__ void applyGaussian(Vector3f *input, Vector3f *output, int width, int height, float sigma=0.1, int windowRadius=3);
 
-    __global__ void denoise(Vector3f *input, Vector3f *output, FeatureBuffer featureBuffer, float *weights, int width, int height,
-                            Vector3f cameraOrigin = Vector3f{0.f});
-
-    __global__ void denoiseApplyWeights(Vector3f *output, float *weights, int width, int height);
 
     __global__ void render(Vector3f *output, Camera cam, TLAS *tlas, int width, int height, int numSubsamples,
            int maxRayDepth, curandState *globalRandState, FeatureBuffer featureBuffer, unsigned *progressCounter);

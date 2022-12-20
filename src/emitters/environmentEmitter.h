@@ -86,7 +86,8 @@ public:
 
         //https://cs184.eecs.berkeley.edu/sp18/article/25
         const float pdf = this->pdf(emitterQueryRecord);
-        emitterQueryRecord.pdf = pdf; //TODO fix pdf
+        emitterQueryRecord.pdf = pdf;
+        assert(pdf > 0);
         return texture.eval(emitterQueryRecord.uv)/pdf;
     }
 

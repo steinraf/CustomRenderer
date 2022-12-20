@@ -11,6 +11,7 @@
 #include <string>
 
 #include "../bsdf.h"
+#include "../medium/medium.h"
 #include "../utility/vector.h"
 #include "pugixml.hpp"
 
@@ -287,7 +288,9 @@ struct SceneRepresentation {
                 addBSDF(child);
             } else if(childName == "transform") {
                 createTransform(child);
-            } else {
+            } else if(childName == "medium") {
+                createMedium(child);
+            }else {
                 throw std::runtime_error("Invalid Tag \"" + childName + "\" found for shape.");
             }
         }
@@ -375,6 +378,50 @@ struct SceneRepresentation {
         return attrib.value();
     }
 
+    void inline createMedium(const pugi::xml_node &medium) {
+        const std::string phaseFunction = medium.attribute("phasefunction").value();
+
+        meshInfos.back().medium.isActive = true;
+
+        for(auto &child: medium.children()) {
+            const std::string &mediumChildName = child.name();
+
+            const std::string &attribName = child.attribute("name").value();
+
+            if(mediumChildName == "float"){
+                if(attribName == "sigma_a"){
+                    meshInfos.back().medium.m_sigmaA = std::stof(child.attribute("value").value());
+                } else if(attribName == "sigma_s"){
+                    meshInfos.back().medium.m_sigmaS = std::stof(child.attribute("value").value());
+                } else if(attribName == "radius"){
+                    meshInfos.back().medium.m_radius = std::stof(child.attribute("value").value());
+                }else if(attribName == "arm_exponent"){
+                    meshInfos.back().medium.m_armThinning = std::stof(child.attribute("value").value());
+                }else if(attribName == "arm_depth"){
+                    meshInfos.back().medium.m_armDepth = std::stof(child.attribute("value").value());
+                }else if(attribName == "arm_length"){
+                    meshInfos.back().medium.m_armLength = std::stof(child.attribute("value").value());
+                } else if(attribName == "twist"){
+                    meshInfos.back().medium.m_twist = std::stof(child.attribute("value").value());
+                } else {
+                    throw std::runtime_error("Attribute " + std::string(child.attribute("name").value()) + " unknown for medium.");
+                }
+            } else if(mediumChildName == "integer"){
+                meshInfos.back().medium.m_armCount = std::stoi(child.attribute("value").value());
+            } else if(mediumChildName == "vector"){
+                meshInfos.back().medium.m_normal = getVector3f(child, "value", "\t\t\t", "normal");
+            } else if(mediumChildName == "point"){
+                meshInfos.back().medium.m_center = getVector3f(child, "value", "\t\t\t", "center");
+            } else if(mediumChildName == "phasefunction"){
+                if(std::string(child.attribute("type").value()) != "isotropic")
+                    throw std::runtime_error("Phasefunction must be isotropic.");
+            } else {
+                throw std::runtime_error("Medium attribute " + mediumChildName + " is not valid.");
+            }
+
+        }
+    }
+
     void inline createTransform(const pugi::xml_node &transform, bool isEmitter = false) noexcept(false) {
 
 
@@ -433,7 +480,7 @@ struct SceneRepresentation {
         BSDF bsdf;
 //        Texture normalMap = Texture{"scenes/normalMaps/rock.jpg"};
         Texture normalMap = Texture{Vector3f{0.5f, 0.5f, 1.f}};
-
+        GalaxyMedium medium{};
     };
 
     std::vector<MeshInfo> meshInfos{};

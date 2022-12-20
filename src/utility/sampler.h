@@ -5,6 +5,7 @@
 #pragma once
 
 #include <curand_kernel.h>
+#include "vector.h"
 
 class Sampler {
 public:

@@ -11,6 +11,8 @@
 #include <fstream>
 #include <thread>
 
+#include "../denoise/denoise.h"
+
 __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) : sceneRepresentation(sceneRepr),
                                                                      imageBufferByteSize(sceneRepr.sceneInfo.width * sceneRepr.sceneInfo.height * sizeof(Vector3f)),
                                                                      blockSize(sceneRepr.sceneInfo.width / blockSizeX + 1, sceneRepr.sceneInfo.height / blockSizeY + 1),
@@ -79,6 +81,17 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) : sceneRepres
     std::vector<BLAS *> hostMeshBlasVector(numMeshes);
 
 
+    std::vector<GalaxyMedium> hostMedia(numMeshes);
+    for(size_t i = 0; i < numMeshes; ++i) {
+        hostMedia[i] = GalaxyMedium(sceneRepr.meshInfos[i].medium);
+    }
+
+    GalaxyMedium *deviceMedia;
+    checkCudaErrors(cudaMalloc(&deviceMedia, sizeof(GalaxyMedium) * numMeshes));
+    checkCudaErrors(cudaMemcpy(deviceMedia, hostMedia.data(), sizeof(GalaxyMedium) * numMeshes,
+                               cudaMemcpyHostToDevice));
+
+
     clock_t meshLoadStart = clock();
 #pragma omp parallel for
     for(size_t i = 0; i < numMeshes; ++i) {
@@ -88,7 +101,9 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) : sceneRepres
                                                 totalMeshArea[i],
                                                 sceneRepr.meshInfos[i].transform,
                                                 sceneRepr.meshInfos[i].bsdf,
-                                                sceneRepr.meshInfos[i].normalMap);
+                                                sceneRepr.meshInfos[i].normalMap,
+                                                nullptr,
+                                                deviceMedia + i);
     }
 
     auto numEmitters = sceneRepresentation.emitterInfos.size();
@@ -115,7 +130,8 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) : sceneRepres
                                                    sceneRepr.emitterInfos[i].transform,
                                                    sceneRepr.emitterInfos[i].bsdf,
                                                    sceneRepr.emitterInfos[i].normalMap,
-                                                   deviceAreaLights + i);
+                                                   deviceAreaLights + i,
+                                                   nullptr);
     }
 
 
@@ -199,7 +215,7 @@ void Scene::render() {
     float totalSum = thrust::transform_reduce(deviceTexturePtr, deviceTexturePtr + sceneRepresentation.sceneInfo.width * sceneRepresentation.sceneInfo.height,
                                               colorToNorm, 0.f, thrust::plus<float>());
 
-    std::cout << "Total sum of image output is " << totalSum << '\n';
+    std::cout << "Average pixel value is " << totalSum/sceneRepresentation.sceneInfo.width/sceneRepresentation.sceneInfo.height << '\n';
 
 //#endif
 
@@ -217,9 +233,9 @@ void Scene::render() {
     checkCudaErrors(cudaFree(varianceCopy));
 
 
-    cudaHelpers::denoise<<<blockSize, threadSize>>>(deviceImageBuffer, deviceImageBufferDenoised, deviceFeatureBuffer, deviceWeights, sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height, sceneRepresentation.cameraInfo.origin);
+    denoise<<<blockSize, threadSize>>>(deviceImageBuffer, deviceImageBufferDenoised, deviceFeatureBuffer, deviceWeights, sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height, sceneRepresentation.cameraInfo.origin);
     checkCudaErrors(cudaDeviceSynchronize());
-    cudaHelpers::denoiseApplyWeights<<<blockSize, threadSize>>>(deviceImageBufferDenoised, deviceWeights, sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height);
+    denoiseApplyWeights<<<blockSize, threadSize>>>(deviceImageBufferDenoised, deviceWeights, sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height);
     checkCudaErrors(cudaDeviceSynchronize());
     checkCudaErrors(cudaFree(deviceWeights));
 

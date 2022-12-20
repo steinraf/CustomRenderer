@@ -33,13 +33,53 @@
 
     <h3> Simple Denoising: Bilateral Filter with Pixel Variance Estimate</h3>
 
+    <p>
+        Relevant files: <br>
+        <code>src/denoise/denoise.h</code> <br>
+        <code>src/denoise/denoise.cu</code> <br>
+        <code>src/cudaHelpers.h</code> <br>
+
+        During rendering, a feature buffer is built that contains the color variance,
+        the albedo of the first hit, the spatial position of the first hit, the normal of the first hit
+        and the total number of subSamples in a given pixel. For the current bilater filter denoiser,
+        only the variance of the color is used, but the other buffers were created for extensibility of the denoiser
+        and debugging purposes.
+
+        The denoiser itself is a bilateral filter with window size 11 and k = 0.45.
+
+        To not have to store an array for every entry, the variance is computed incrementally
+        using Welford's online algorithm.
+
+    </p>
+
     <div class="twentytwenty-container">
         <img src="images/cbox64spp.png" alt="Original Render" class="img-responsive">
         <img src="images/cbox64sppVariance.png" alt="Variance Buffer" class="img-responsive">
         <img src="images/cbox64sppDenoised.png" alt="Denoised Render" class="img-responsive">
     </div> <br>
 
+    <p>
+        The quality of the denoiser was tested in this cornell box scene with 64 samples per pixel.
+        The denoiser is very effective at removing fireflies as their variance is large. For low sample counts,
+        it tends to remove caustics as well, but this is to be expected as their variance is also high.
+    </p>
+
     <h3> Adaptive Sampling with Pixel Variance Estimates </h3>
+
+    <p>
+        Relevant files: <br>
+        <code>src/cudaHelpers.h</code> <br>
+
+        The adaptive sampling takes into consideration the previously computed variance buffer.
+        To make it more robust, the variances are considered in a 4x4 block size, which is conveniently the kernel size of the
+        GPU call. If all variances in the square are below some threshold Epsilon, the grid is no longer sampled.
+        <br>
+
+
+        Because this implementation does not distribute samples globally, it does not fully make use of all
+        spp * width * height samples that it is given. This can be offset by adjusting the spp higher if the scene
+        has areas of low variance.
+    </p>
 
     <div class="twentytwenty-container">
         <img src="images/adaptiveSampling.png" alt="Output" class="img-responsive">
@@ -47,33 +87,70 @@
     </div> <br>
 
 
+
+
     <h2>Feature 2: Advanced Camera Model</h2>
 
-    <p>Reference Scene</p>
+    <p>
+        Relevant files: <br>
+        <code>src/camera/camera.h</code> <br>
+        <code>src/camera/camera.cu</code> <br>
+
+        For this task, a thinlens camera model was implemented. It supports different field of view angles,
+        aspect ratios, aperture radii and shapes, focal lengths and two distortion parameters.
+    </p>
+
     <img src="images/cbox512sppCameraTest.png" alt="Reference" class="img-responsive">
 
+    <p>
+        To test the camera a scene inspired by the cornell box was created.
+        <br>
+        The scene contains various small square light sources arranged in a circular shape, all facing towards the positive z-direction.
+    </p>
 
     <h3>Depth of Field</h3>
 
-    <p>Here DoF</p>
+    <p>
+        The depth of field makes object in the focal plane look focused, while objects outside the focal plane become blurred.
+        The DoF does not add any distortion to the image.
+    </p>
 
     <div class="twentytwenty-container">
         <img src="images/cbox512sppDepthOfField.png" alt="Own" class="img-responsive">
         <img src="images/cbox512sppDepthOfFieldMitsuba.png" alt="Mitsuba Reference" class="img-responsive">
     </div> <br>
 
+    <p>
+        The focal length was chosen such that some lights are in front of the focal plane, while some are behind.
+
+        The render was compared to Mitsuba 3.0. It can be seen that there is a difference in the renders. From debugging it
+        seems that this has to do with reconstruction filters, which this framework does not support (yet).
+    </p>
+
     <h3>Lens Distortion</h3>
 
-    <p> https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/tr98-71.pdf </p>
+    <p>
+        The Lens Distortion model used in the renderer is pretty simple. It contains two distortion term.
+        K1 distorts the image based on the square of the radial distance of the camera plane, while the parameter K2 distorts
+        the image proportional to the fourth power of the distance. This models spherical distortion and is inspired from
+
+        <a href="https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/tr98-71.pdf">this paper</a>.
+
+    </p>
 
     <div class="twentytwenty-container">
         <img src="images/cbox512sppDistortionK1.png" alt="K1 Distortion " class="img-responsive">
         <img src="images/cbox512sppDistortionK1K2.png" alt="K1 + K2 Distortion" class="img-responsive">
+        <img src="images/cbox512sppCameraTest.png" alt="Undistorted" class="img-responsive">
+
     </div> <br>
 
     <h3>Non-Spherical Aperture</h3>
 
-    <p>  </p>
+    <p>
+        The aperture can have three different shapes; (The default) circular aperture, a square aperture and a triangular aperture.
+        All the apertures are centered and their size depends on the aperture radius.
+    </p>
 
     <div class="twentytwenty-container">
         <img src="images/cbox512sppDepthOfField.png" alt="Circular Aperture" class="img-responsive">
@@ -85,7 +162,13 @@
 
     <h2>Feature 3: Environment Map Emitters</h2>
 
-	<p>Copium</p>
+	<p>Environment Map Emitters are implemented using Latitude-Longitude maps. The map is converted into 1-D CDF,
+        from which a point is then sampled. This approach struggles with images with very high average intensity, as the
+        normalization divides a lot of small values to zero.
+    <br>
+
+
+    </p>
 
     <div class="twentytwenty-container">
         <img src="images/envmapCDF.png" alt="Rowwise CDF" class="img-responsive">
@@ -93,15 +176,32 @@
         <img src="images/beach.png" alt="Original Environment Map" class="img-responsive">
     </div> <br>
 
+    <div class="twentytwenty-container">
+        <img src="images/envmap512spp.png" alt="Example Render" class="img-responsive">
+    </div> <br>
+
 
     <h2>Feature 4: Images as Textures</h2>
 
-    <p>Copium</p>
+    <p>
+        Relevant files: <br>
+        <code>src/textures/imageTexture.h</code> <br>
+        <code>src/textures/imageTexture.cu</code> <br>
+
+        To make texture support work, textures are loaded into CPU memory with help of the stbimage library.
+        The texture then gets transformed into a CDF, which makes it possible to importance sample it according to texture.
+
+        The textures are evaluated using bilinear interpolation to make artifacts a bit less visible.
+    </p>
 
     <div class="twentytwenty-container">
         <img src="images/spot.png" alt="Own" class="img-responsive">
         <img src="images/spotMitsuba.png" alt="Mitsuba" class="img-responsive">
     </div> <br>
+
+    <p>
+        The render matches with mitsuba up to the camera difference.
+    </p>
 
 
     <h2>Feature 5: Normal Mapping</h2>
