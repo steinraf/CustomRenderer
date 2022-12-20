@@ -4,23 +4,27 @@
     </integrator>
 
     <sensor type="perspective">
-        <float name="fov" value="27.7856"/>
+        <float name="fov" value="45"/>
+        <float name="aperture_radius" value="0.08"/>
+        <float name="focus_distance" value="450"/>
+        <float name="k1" value="1"/>
+        <float name="k2" value="10"/>
 
         <transform name="to_world">
-            <lookat target="-6, 35, 50"
-                    origin="-120, 100, -300"
+            <lookat target="0, 30, 0"
+                    origin="-220, 60, 0"
                     up="0, 1, 0"/>
         </transform>
 
         <sampler type="independent">
-            <integer name="sample_count" value="16"/>
+            <integer name="sample_count" value="512"/>
         </sampler>
 
         <film type="hdrfilm">
-            <integer name="height" value="600"/>
-            <integer name="width" value="800"/>
-<!--            <integer name="height" value="2160"/>-->
-<!--            <integer name="width" value="3840"/>-->
+<!--            <integer name="height" value="600"/>-->
+<!--            <integer name="width" value="800"/>-->
+            <integer name="height" value="2160"/>
+            <integer name="width" value="3840"/>
         </film>
 
     </sensor>
@@ -40,7 +44,7 @@
 
 
         <bsdf type="diffuse">
-            <rgb name="reflectance" value="0.3, 1, 1"/>
+            <rgb name="reflectance" value="0.75, 0.75, 0.75"/>
         </bsdf>
     </shape>
 
@@ -93,8 +97,8 @@
         <string name="filename" value="scenes/obj/sphere2.obj"/>
 
         <transform name="to_world">
-            <scale value="1, 1, 1"/>
-            <translate value="30, 30, 100"/>
+            <scale value="1.5, 1.5, 1.5"/>
+            <translate value="300, 50, 0"/>
         </transform>
         <string name="texture" value="scenes/textures/moon.jpg"/>
 
@@ -105,24 +109,41 @@
         </emitter>
     </shape>
 
-    <shape type="obj" name="astronaut">
-        <string name="filename" value="scenes/compOBJ/astronaut.obj"/>
-        <bsdf type="diffuse">
-            <rgb name="reflectance" value="0.3, 1, 1"/>
+    <shape type="obj" name="astronaut2">
+
+        <string name="filename" value="scenes/compOBJ/astronaut2.obj"/>
+        <bsdf type="mirror">
+<!--            <rgb name="reflectance" value="0.2, 0.2, 0.2"/>-->
         </bsdf>
     </shape>
 
 
-    <emitter type="envmap">
-        <string name="filename" value="scenes/envmap/highres/starmap.hdr"/>
-    </emitter>
+<!--        <shape type="obj" name="bb">-->
+
+<!--            <string name="filename" value="scenes/compOBJ/MediumBoundingBox.obj"/>-->
+
+<!--            <medium type="galaxy">-->
+<!--                <float name="sigma_a" value="0.1"/>-->
+<!--                <float name="sigma_s" value="0.1"/>-->
+<!--                <float name="radius" value="0.5"/>-->
+<!--                <float name="arm_exponent" value="10.0"/>-->
+<!--                <float name="arm_depth" value="1.0"/>-->
+<!--                <float name="arm_length" value="0.5"/>-->
+<!--                <float name="twist" value="20.0"/>-->
+<!--                <integer name="arm_count" value="2"/>-->
+<!--                <integer name="is_homogeneous" value="1"/>-->
+<!--                <vector name="normal" value="0,0,1"/>-->
+<!--                <point name="center" value="0.0,0.8,0.0"/>-->
+<!--                <phasefunction type="isotropic"/>-->
+<!--            </medium>-->
+<!--        </shape>-->
 
     <shape type="obj" name="moon">
         <string name="filename" value="scenes/obj/sphere2.obj"/>
 
         <transform name="to_world">
             <scale value="1, 1, 1"/>
-            <translate value="-30, 30, -150"/>
+            <translate value="-30, 30, -200"/>
         </transform>
         <string name="texture" value="scenes/textures/moon.jpg"/>
 
@@ -132,6 +153,46 @@
             <rgb name="radiance" value="10, 10, 10"/>
         </emitter>
     </shape>
+
+    <shape type="obj" name="lights">
+        <string name="filename" value="scenes/compOBJ/poolLights.obj"/>
+
+
+        <emitter type="area">
+            <rgb name="radiance" value="80, 160, 80"/>
+        </emitter>
+    </shape>
+
+    <shape type="obj" name="lightframes">
+        <string name="filename" value="scenes/compOBJ/poolLightsFrame.obj"/>
+
+        <bsdf type="diffuse">
+            <rgb name="reflectance" value="1, 1, 1"/>
+        </bsdf>
+    </shape>
+
+<!--    <shape type="obj" name="moon">-->
+<!--        <string name="filename" value="scenes/obj/sphere2.obj"/>-->
+
+<!--        <transform name="to_world">-->
+<!--            <scale value="1, 1, 1"/>-->
+<!--            <translate value="0, 200, 0"/>-->
+<!--        </transform>-->
+<!--        <string name="texture" value="scenes/textures/moon.jpg"/>-->
+
+<!--        <bsdf type="diffuse"/>-->
+
+<!--        <emitter type="area">-->
+<!--            <rgb name="radiance" value="100, 100, 100"/>-->
+<!--        </emitter>-->
+<!--    </shape>-->
+
+
+    <emitter type="envmap">
+        <string name="filename" value="scenes/envmap/highres/starmap.hdr"/>
+    </emitter>
+
+
 
 
 </scene>

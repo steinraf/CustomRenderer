@@ -11,6 +11,8 @@ class GalaxyMedium {
 private:
 
     __device__ constexpr float galaxy(const Vector3f &p) const noexcept{
+        if(isHomogeneous) return 1.f;
+
         Vector3f rel = p - m_center;
 
         float x = rel.dot(m_tangentX);
@@ -42,6 +44,7 @@ public:
     Vector3f m_tangentY;
 
     bool isActive = false;
+    bool isHomogeneous = false;
 
     IsotropicPhaseFunction phaseFunction{};
 
@@ -58,6 +61,7 @@ public:
 
     [[nodiscard]] __device__ __host__ float getExtinction(const Vector3f &p) const noexcept{
 //        printf("Extinction at (%f, %f, %f)\n", p[0], p[1], p[2]);
+
         return (m_sigmaA + m_sigmaS) * galaxy(p);
     }
 
@@ -70,6 +74,6 @@ public:
     }
 
     [[nodiscard]] __device__ __host__ Color3f getAlbedo(const Vector3f &p) const noexcept{
-        return Color3f(Color3f{1.0, 0.0, 0.0} + 0.5*Color3f{galaxy(p)}).clamp(0.f,1.f);
+        return Color3f{1.f};//Color3f(Color3f{1.0, 0.0, 0.0} + 0.5*Color3f{galaxy(p)}).clamp(0.f,1.f);
     }
 };

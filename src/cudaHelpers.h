@@ -296,9 +296,9 @@ namespace cudaHelpers {
         bool lastDiscrete = true;
         const GalaxyMedium *medium = nullptr;
 
-        for (;;) {
+        Intersection its;
 
-            Intersection its;
+        for (;;) {
 
         volumetric: for (;;) {
                 if (scene->rayIntersect(nextRay, its)) {
@@ -317,6 +317,34 @@ namespace cudaHelpers {
                 } else {
                     goto end;
                 }
+
+//                constexpr int maxEnvSamples = 3;
+//                for(int envSamples = 0; envSamples < maxEnvSamples; ++envSamples){
+//                    EmitterQueryRecord envMapEQR{its.p};
+//
+//                    const Color3f envMapEMSSample = scene->environmentEmitter.sample(envMapEQR, sampler.getSample3D());
+//
+//                    if(!scene->rayIntersect(envMapEQR.shadowRay)) {
+//
+//                        BSDFQueryRecord bsdfQueryRecord{
+//                                its.shFrame.toLocal(-nextRay.d),
+//                                its.shFrame.toLocal(envMapEQR.wi),
+//                                ESolidAngle};
+//                        bsdfQueryRecord.measure = ESolidAngle;
+//                        bsdfQueryRecord.uv = its.uv;
+//
+//                        const float tempPDF = scene->environmentEmitter.pdf(envMapEQR);
+//
+//                        Li += envMapEMSSample
+//                              * t
+//                              * its.mesh->getBSDF()->eval(bsdfQueryRecord)
+//                              * Frame::cosTheta(its.shFrame.toLocal(envMapEQR.wi))
+//                              * tempPDF
+//                              / (its.mesh->getBSDF()->pdf(bsdfQueryRecord) + tempPDF)
+//                              / maxEnvSamples
+//                                ;
+//                    }
+//                }
 
                 float maxDistance;
                 bool rayBounded = false;
@@ -391,7 +419,7 @@ namespace cudaHelpers {
                 t *= medium->getAlbedo(phaseFunctionQuery.p)*medium->getScattering(phaseFunctionQuery.p) / extinction * phaseFunctionSample;
 
                 if(!t.isValid()) {
-                    return {0.0,1.0,0.0};
+                    return {0.f,1.f,0.f};
                 }
 
                 float renderProba = fmin(t.maxCoeff(), 0.99f);
@@ -476,7 +504,12 @@ namespace cudaHelpers {
 
     end:
 
-        return Li;
+        if(!scene->rayIntersect(nextRay, its)) {
+            if(t.norm() > EPSILON)
+                return Li + t * scene->environmentEmitter.eval(nextRay);
+            else
+                return Li;
+        }
     }
 
     __device__ Color3f constexpr PathMIS(const Ray3f &ray, TLAS *scene, int maxRayDepth, Sampler &sampler,
@@ -795,8 +828,8 @@ namespace cudaHelpers {
 //                return PathMAS(ray, scene, maxRayDepth, sampler, featureBuffer);
 //        return PathMIS(ray, scene, maxRayDepth, sampler, featureBuffer, fbIndex);
         return PathMISEnv(ray, scene, maxRayDepth, sampler, featureBuffer, fbIndex);
-
-        return PathVol(ray, scene, maxRayDepth, sampler, featureBuffer, fbIndex);
+//
+//        return PathVol(ray, scene, maxRayDepth, sampler, featureBuffer, fbIndex);
 
         //        return normalMapper(ray, scene, sampler);
         //        return depthMapper(ray, scene, sampler);

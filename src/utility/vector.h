@@ -116,6 +116,7 @@ public:
     [[nodiscard]] __host__ __device__ constexpr inline float maxCoeff() const noexcept;
 
     [[nodiscard]] __host__ __device__ constexpr inline bool isValid() const noexcept{
+        return true;
         return isfinite(data[0]) && isfinite(data[1]) && isfinite(data[2]);
     }
 

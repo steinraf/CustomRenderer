@@ -407,7 +407,13 @@ struct SceneRepresentation {
                     throw std::runtime_error("Attribute " + std::string(child.attribute("name").value()) + " unknown for medium.");
                 }
             } else if(mediumChildName == "integer"){
-                meshInfos.back().medium.m_armCount = std::stoi(child.attribute("value").value());
+                if(attribName == "arm_count"){
+                    meshInfos.back().medium.m_armCount = std::stoi(child.attribute("value").value());
+                } else if(attribName == "is_homogeneous"){
+                    meshInfos.back().medium.isHomogeneous = static_cast<bool>(std::stof(child.attribute("value").value()));
+                } else {
+                    throw std::runtime_error("Integer attribute " + attribName + " is not allowed in media.");
+                }
             } else if(mediumChildName == "vector"){
                 meshInfos.back().medium.m_normal = getVector3f(child, "value", "\t\t\t", "normal");
             } else if(mediumChildName == "point"){
