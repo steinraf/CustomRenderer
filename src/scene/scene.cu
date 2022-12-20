@@ -215,7 +215,6 @@ void Scene::render() {
     float totalSum = thrust::transform_reduce(deviceTexturePtr, deviceTexturePtr + sceneRepresentation.sceneInfo.width * sceneRepresentation.sceneInfo.height,
                                               colorToNorm, 0.f, thrust::plus<float>());
 
-    std::cout << "Average pixel value is " << totalSum/sceneRepresentation.sceneInfo.width/sceneRepresentation.sceneInfo.height << '\n';
 
 //#endif
 
