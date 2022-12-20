@@ -25,6 +25,6 @@ private:
     const float lensRadius;
     const float focusDist;
     const float k1, k2;
-    const float far = 1000.f;
+    const float far = 100000.f;
     const float near = 0.0001;
 };

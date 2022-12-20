@@ -191,7 +191,7 @@ void Scene::render() {
     std::cout << "Synchronizing GPU...\n";
     checkCudaErrors(cudaDeviceSynchronize());
 
-#ifndef NDEBUG
+//#ifndef NDEBUG
 
     ColorToNorm colorToNorm;
 
@@ -201,7 +201,7 @@ void Scene::render() {
 
     std::cout << "Total sum of image output is " << totalSum << '\n';
 
-#endif
+//#endif
 
     std::cout << "Starting denoise...\n";
     checkCudaErrors(cudaMemcpy(hostImageBuffer, deviceImageBuffer, imageBufferByteSize, cudaMemcpyDeviceToHost));

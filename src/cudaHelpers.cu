@@ -254,11 +254,11 @@ namespace cudaHelpers {
     __global__ void denoiseApplyWeights(Vector3f *output, float *weights, int width, int height){
         int i, j, pixelIndex;
         if(!initIndices(i, j, pixelIndex, width, height)) return;
-//        if(weights[pixelIndex] == 0.f) {
-//            printf("Output would have been (%f, %f, %f)\n", output[pixelIndex][0], output[pixelIndex][1], output[pixelIndex][2]);
-//            output[pixelIndex] = Vector3f{0.f, 0.f, 1.f};
-//        }
-//        output[pixelIndex] /= weights[pixelIndex];
+        if(weights[pixelIndex] == 0.f) {
+            printf("Output would have been (%f, %f, %f)\n", output[pixelIndex][0], output[pixelIndex][1], output[pixelIndex][2]);
+            output[pixelIndex] = Vector3f{0.f, 0.f, 1.f};
+        }
+        output[pixelIndex] /= weights[pixelIndex];
     }
 
 
@@ -268,8 +268,8 @@ namespace cudaHelpers {
         if(!initIndices(i, j, pixelIndex, width, height)) return;
 
 //        bilateralFilterWiki(input, output, i, j, width, height);
-//        bilateralFilterSlides(input, output, featureBuffer, weights, i, j, width, height);
-//        return;
+        bilateralFilterSlides(input, output, featureBuffer, weights, i, j, width, height);
+        return;
 
 //        auto getNeighbour = [i, j, width, height]__device__ (Vector3f *array, int dx, int dy,
 //                                                             BOUNDARY boundary = BOUNDARY::PERIODIC) {
@@ -319,7 +319,7 @@ namespace cudaHelpers {
 //                output[pixelIndex] = featureBuffer.albedos[pixelIndex];
         output[pixelIndex] = featureBuffer.variances[pixelIndex];
 //        output[pixelIndex] = Color3f(featureBuffer.variances[pixelIndex].norm());
-//        constexpr float numSamples = 2048.f;
+//        constexpr float numSamples = 16384.f;
 //        output[pixelIndex] = Vector3f{powf(static_cast<float>(featureBuffer.numSubSamples[pixelIndex])/(numSamples), 2.f)};
 
 
@@ -412,7 +412,7 @@ namespace cudaHelpers {
 //            EmitterQueryRecord eQR{Vector3f{0.f}};
 ////            if(i % 3 != 0 || j % 3 != 0) return;
 //            auto sample = tlas->environmentEmitter.sample(eQR, sampler.getSample3D());
-//            Vector3f::atomicCudaAdd(output + static_cast<int>((eQR.uv[1]*height)*width + eQR.uv[0]*width), /* tlas->environmentEmitter.pdf(eQR)/(width * height) * */ Vector3f{1.f, 1.f, 1.f});
+//            Vector3f::atomicCudaAdd(output + static_cast<int>((eQR.uv[1]*height)*width + eQR.uv[0]*width),  tlas->environmentEmitter.pdf(eQR)/(width * height) *  Vector3f{1.f, 1.f, 1.f});
 //            return;
 
 //            //Texture CDF
@@ -448,17 +448,17 @@ namespace cudaHelpers {
             totalColor += currentColor;
 
             //TODO redirect samples to pixels that need it
-            assert(false);
-//            //Adaptive sampling
-//            if(!updatedVariance && subSamples > 64 && (m2 / static_cast<float>((subSamples - 1))).maxCoeff() < 0.005) {
-//                atomicAdd(counter, 1);
-//                updatedVariance = true;
-//            }
-//            if(counter[0] >= blockDim.x*blockDim.y){
-//                assert(updatedVariance);
-//                actualSamples = subSamples;
-//                break;
-//            }
+//            assert(false);
+            //Adaptive sampling
+            if(!updatedVariance && subSamples > 64 && (m2 / static_cast<float>((subSamples - 1))).maxCoeff() < EPSILON) {
+                atomicAdd(counter, 1);
+                updatedVariance = true;
+            }
+            if(counter[0] >= blockDim.x*blockDim.y){
+                assert(updatedVariance);
+                actualSamples = subSamples;
+                break;
+            }
         }
 
 

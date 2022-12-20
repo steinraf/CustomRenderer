@@ -425,30 +425,35 @@ namespace cudaHelpers {
 
 
             //environmentMap Sampling
-            EmitterQueryRecord envMapEQR{its.p};
+            constexpr int maxEnvSamples = 1;
+            for(int envSamples = 0; envSamples < maxEnvSamples; ++envSamples){
+                EmitterQueryRecord envMapEQR{its.p};
 
-            const Color3f envMapEMSSample = scene->environmentEmitter.sample(envMapEQR, sampler.getSample3D());
+                const Color3f envMapEMSSample = scene->environmentEmitter.sample(envMapEQR, sampler.getSample3D());
 
-            if(!scene->rayIntersect(envMapEQR.shadowRay)) {
+                if(!scene->rayIntersect(envMapEQR.shadowRay)) {
 
-                BSDFQueryRecord bsdfQueryRecord{
-                        its.shFrame.toLocal(-currentRay.d),
-                        its.shFrame.toLocal(envMapEQR.wi),
-                        ESolidAngle};
-                bsdfQueryRecord.measure = ESolidAngle;
-                bsdfQueryRecord.uv = its.uv;
+                    BSDFQueryRecord bsdfQueryRecord{
+                            its.shFrame.toLocal(-currentRay.d),
+                            its.shFrame.toLocal(envMapEQR.wi),
+                            ESolidAngle};
+                    bsdfQueryRecord.measure = ESolidAngle;
+                    bsdfQueryRecord.uv = its.uv;
 
-                const float tempPDF = scene->environmentEmitter.pdf(envMapEQR);
+                    const float tempPDF = scene->environmentEmitter.pdf(envMapEQR);
 
-//                printf("Normal is %f, %f, %f\n", its.shFrame.n[0], its.shFrame.n[1], its.shFrame.n[2]);
-                Li += envMapEMSSample
-                      * t
-                      * its.mesh->getBSDF()->eval(bsdfQueryRecord)
-                      * Frame::cosTheta(its.shFrame.toLocal(envMapEQR.wi))
-                      * tempPDF
-                      / (its.mesh->getBSDF()->pdf(bsdfQueryRecord) + tempPDF)
-                ;
+                    //                printf("Normal is %f, %f, %f\n", its.shFrame.n[0], its.shFrame.n[1], its.shFrame.n[2]);
+                    Li += envMapEMSSample
+                          * t
+                          * its.mesh->getBSDF()->eval(bsdfQueryRecord)
+                          * Frame::cosTheta(its.shFrame.toLocal(envMapEQR.wi))
+                          * tempPDF
+                          / (its.mesh->getBSDF()->pdf(bsdfQueryRecord) + tempPDF)
+                          / maxEnvSamples
+                            ;
+                }
             }
+
 
 
             //Emitter sampling
@@ -525,6 +530,8 @@ namespace cudaHelpers {
         }
     }
 
+
+
     __device__ Color3f constexpr normalMapper(const Ray3f &ray, TLAS *scene, Sampler &sampler) noexcept {
         Intersection its;
         Color3f Li{0.f};
@@ -579,8 +586,8 @@ namespace cudaHelpers {
         //        return DirectMAS(ray, scene, sampler);
         //        return DirectMIS(ray, scene, sampler);
 //                return PathMAS(ray, scene, maxRayDepth, sampler, featureBuffer);
-        return PathMIS(ray, scene, maxRayDepth, sampler, featureBuffer, fbIndex);
-//        return PathMISEnv(ray, scene, maxRayDepth, sampler, featureBuffer, fbIndex);
+//        return PathMIS(ray, scene, maxRayDepth, sampler, featureBuffer, fbIndex);
+        return PathMISEnv(ray, scene, maxRayDepth, sampler, featureBuffer, fbIndex);
 
         //        return normalMapper(ray, scene, sampler);
         //        return depthMapper(ray, scene, sampler);

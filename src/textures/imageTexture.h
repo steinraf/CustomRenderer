@@ -41,12 +41,16 @@ public:
                 assert(1 - deviceCDF[idx] > 0);
                 return 1 - deviceCDF[idx];
             }else{
+
 #ifndef NDEBUG
                 if((deviceCDF[idx+1] - deviceCDF[idx]) < FLT_EPSILON){
                     printf("CDF SMALLER THAN EPSILON!!! %f\n", deviceCDF[idx+1] - deviceCDF[idx]);
-                    assert(false);
+//                    assert(false);
                 }
 #endif
+                if((deviceCDF[idx+1] - deviceCDF[idx]) < FLT_EPSILON){
+                    return 1;
+                }
                 return deviceCDF[idx+1] - deviceCDF[idx];
             }
         }else{

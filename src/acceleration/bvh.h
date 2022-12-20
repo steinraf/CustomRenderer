@@ -61,6 +61,7 @@ public:
 
 public:
     Texture normalMap;
+    Texture photonMap{Vector3f{0.f}};
     float totalArea;
 
     __device__ constexpr explicit BLAS(AccelerationNode *bvhTotalNodes, float totalArea, const float *cdf,

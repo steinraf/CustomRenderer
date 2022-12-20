@@ -41,12 +41,12 @@ public:
 
     [[nodiscard]] __device__ float constexpr pdf(const EmitterQueryRecord &emitterQueryRecord) const noexcept{ //TODO find where sin factor needs to be
         const float pdf = texture.pdf(emitterQueryRecord.idx);
-        if(pdf == 0 || sin(M_PIf*emitterQueryRecord.uv[1]) == 0) return 0.f;
-        return texture.pdf(emitterQueryRecord.idx) * texture.width * texture.height *M_1_PIf*M_1_PIf/(2*sin(M_PIf*emitterQueryRecord.uv[1]));
+        if(pdf == 0 || sin(M_PIf*emitterQueryRecord.uv[1]) == 0) return FLT_EPSILON ;
+        return texture.pdf(emitterQueryRecord.idx)  *M_1_PIf*M_1_PIf/(2*sin(M_PIf*emitterQueryRecord.uv[1]));
     }
 
     [[nodiscard]] __device__ Color3f constexpr sample(EmitterQueryRecord &emitterQueryRecord, const Vector3f &sample) const noexcept{
-        //TODO check if this actually needs 3d sample of if 1d is sufficient
+        //TODO check if this actually needs 3d sample input or if 1d is sufficient
         if(!texture.deviceCDF)
             return texture.eval(Vector2f{});
 
@@ -64,11 +64,14 @@ public:
         assert(u >= 0 && u <= 1 && v >= 0 && v <= 1);
 
         const Vector3f warpSample{Warp::squareToUniformSphere(Vector2f{u, v})};
-        const Vector3f dirSample{
-                warpSample[0],
-                warpSample[2],
-                -warpSample[1]
-        };
+
+//        const Vector3f dirSample{
+//                warpSample[0],
+//                warpSample[2],
+//                -warpSample[1]
+//        };
+
+        const Vector3f dirSample = warpSample;
 
         emitterQueryRecord.shadowRay = Ray3f{
                 emitterQueryRecord.p,

@@ -344,8 +344,11 @@ struct SceneRepresentation {
             if(childName == "string") {
                 if(getString(child.attribute("name")) == "filename") {
                     environmentInfo.texture = Texture{getString(child.attribute("value"))};
-                } else {
-                    throw std::runtime_error("Unknown envmap string option \"" + getString(child.attribute("name")) + "\" found.");
+                } else if (getString(child.attribute("name")) == "constant") {
+                    environmentInfo.texture = Texture{getVector3f(child, "value", "\t\t\t", "texture")};
+
+                }else {
+                        throw std::runtime_error("Unknown envmap string option \"" + getString(child.attribute("name")) + "\" found.");
                 }
             }else{
                 throw std::runtime_error("Unknown envmap child \"" + childName + "\" found.");
