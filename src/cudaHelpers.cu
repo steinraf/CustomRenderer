@@ -315,11 +315,11 @@ namespace cudaHelpers {
         //TODO when modifying something here, remember to maybe uncomment weights application
 
         //        output[pixelIndex] = Vector3f{(featureBuffer[pixelIndex].position-cameraOrigin).norm()/200};
-                output[pixelIndex] = featureBuffer.normals[pixelIndex].absValues();
+//                output[pixelIndex] = featureBuffer.normals[pixelIndex].absValues();
 //                output[pixelIndex] = featureBuffer.albedos[pixelIndex];
-//        output[pixelIndex] = featureBuffer.variances[pixelIndex];
+        output[pixelIndex] = featureBuffer.variances[pixelIndex];
 //        output[pixelIndex] = Color3f(featureBuffer.variances[pixelIndex].norm());
-//        constexpr float numSamples = 512.f;
+//        constexpr float numSamples = 2048.f;
 //        output[pixelIndex] = Vector3f{powf(static_cast<float>(featureBuffer.numSubSamples[pixelIndex])/(numSamples), 2.f)};
 
 
@@ -447,13 +447,15 @@ namespace cudaHelpers {
 
             totalColor += currentColor;
 
-
-            //Adaptive sampling
-//            if(!updatedVariance && subSamples > 64 && (m2 / static_cast<float>((subSamples - 1))).maxCoeff() < EPSILON) {
+            //TODO redirect samples to pixels that need it
+            assert(false);
+//            //Adaptive sampling
+//            if(!updatedVariance && subSamples > 64 && (m2 / static_cast<float>((subSamples - 1))).maxCoeff() < 0.005) {
 //                atomicAdd(counter, 1);
 //                updatedVariance = true;
 //            }
 //            if(counter[0] >= blockDim.x*blockDim.y){
+//                assert(updatedVariance);
 //                actualSamples = subSamples;
 //                break;
 //            }
@@ -463,7 +465,7 @@ namespace cudaHelpers {
         atomicAdd(progressCounter, 1);
         if(*progressCounter % 1000 == 0) {
             const float progress = 100.f * (*progressCounter) / (width * height);
-            printf("Current progress is %f%\r", progress);
+            printf("Current progress is %f% \r", progress);
         }
 
         const Vector3f unbiasedVarianceMean = m2 / (static_cast<float>(actualSamples - 1));

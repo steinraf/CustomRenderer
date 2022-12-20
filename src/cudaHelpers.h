@@ -579,8 +579,8 @@ namespace cudaHelpers {
         //        return DirectMAS(ray, scene, sampler);
         //        return DirectMIS(ray, scene, sampler);
 //                return PathMAS(ray, scene, maxRayDepth, sampler, featureBuffer);
-//        return PathMIS(ray, scene, maxRayDepth, sampler, featureBuffer, fbIndex);
-        return PathMISEnv(ray, scene, maxRayDepth, sampler, featureBuffer, fbIndex);
+        return PathMIS(ray, scene, maxRayDepth, sampler, featureBuffer, fbIndex);
+//        return PathMISEnv(ray, scene, maxRayDepth, sampler, featureBuffer, fbIndex);
 
         //        return normalMapper(ray, scene, sampler);
         //        return depthMapper(ray, scene, sampler);

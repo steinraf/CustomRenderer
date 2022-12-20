@@ -7,7 +7,7 @@
 
 __device__ __host__ Camera::Camera(Vector3f origin, Vector3f lookAt, Vector3f _up, float vFOV,
                                    float aspectRatio, float aperture, float focusDist, float k1, float k2)
-    : origin(origin), lensRadius(aperture / 2.0f), focusDist(focusDist), k1(k1), k2(k2) {
+    : origin(origin), lensRadius(aperture * aspectRatio * sqrtf(2.f) / 2.0f /* scaled to fit mitsuba */), focusDist(focusDist), k1(k1), k2(k2) {
 
     const float k = tan(vFOV * M_PIf / 360.f);
 
@@ -46,7 +46,7 @@ __device__ Ray3f Camera::getRay(float s, float t, const Vector2f &sample) const 
 
 
     const Vector2f randomDisk = lensRadius * Warp::squareToUniformDisk(sample);
-//        const Vector2f randomDisk = lensRadius * Warp::squareToUniformSquare(sample);
+//        const Vector2f randomDisk = lensRadius * (Warp::squareToUniformSquare(sample) - Vector2f{0.5f});
 //        const Vector3f triaSample =  Warp::squareToUniformTriangle(sample);
 //        const Vector3f triaPoint = lensRadius * (   Vector3f{-0.5, -0.5, 0} * triaSample[0] +
 //                                                    Vector3f{-0.5,  0.5, 0} * triaSample[1] +
