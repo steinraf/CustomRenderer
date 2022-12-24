@@ -39,7 +39,7 @@
 
         </transform>
 
-        <string name="normal_map" value="scenes/normalMaps/rock.jpg"/>
+<!--        <string name="normal_map" value="scenes/normalMaps/rock.jpg"/>-->
         <string name="texture" value="scenes/textures/rock.jpg"/>
 
         <bsdf type="diffuse">

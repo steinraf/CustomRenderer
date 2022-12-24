@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Computer Graphics - PA4</title>
+    <title>Computer Graphics - Final Report</title>
 
     <link href="resources/bootstrap.min.css" rel="stylesheet">
     <link href="resources/offcanvas.css" rel="stylesheet">
@@ -28,6 +28,10 @@
 <div class="pageContent">
 
 	<!-- ================================================================= -->
+
+    <p>
+        This report is only for the features of Rafael Steiner.
+    </p>
 
     <h2>Feature 1: Simple Denoising + Adaptive Sampling</h2>
 
@@ -162,12 +166,18 @@
 
     <h2>Feature 3: Environment Map Emitters</h2>
 
+    <p>
+        Relevant files: <br>
+        <code>src/textures/imageTexture.h</code> <br>
+        <code>src/textures/imageTexture.cu</code> <br>
+        <code>src/emitters/environmentEmitter.h</code> <br>
+
+    </p>
+
 	<p>Environment Map Emitters are implemented using Latitude-Longitude maps. The map is converted into 1-D CDF,
         from which a point is then sampled. This approach struggles with images with very high average intensity, as the
         normalization divides a lot of small values to zero.
     <br>
-
-
     </p>
 
     <div class="twentytwenty-container">
@@ -175,6 +185,11 @@
         <img src="images/envmapSampling.png" alt="Sampling Density" class="img-responsive">
         <img src="images/beach.png" alt="Original Environment Map" class="img-responsive">
     </div> <br>
+
+    <p>
+        The environment map importance sampling works as can be seen by the diffusive sphere in the examle render.
+        The discrete BSDF's work well without it.
+    </p>
 
     <div class="twentytwenty-container">
         <img src="images/envmap512spp.png" alt="Example Render" class="img-responsive">
@@ -200,31 +215,186 @@
     </div> <br>
 
     <p>
+
         The render matches with mitsuba up to the camera difference.
     </p>
 
 
     <h2>Feature 5: Normal Mapping</h2>
 
-    <p>Copium</p>
+    <p>
+
+        Relevant files: <br>
+        <code>src/shapes/triangle.h</code> <br>
+        <code>src/textures/imageTexture.h</code> <br>
+        <code>src/textures/imageTexture.cu</code> <br>
+
+        To make normal mapping work, normal maps are mapped onto the Mesh, and the hit information functions
+    is updated according to the normal map. </p>
 
     <div class="twentytwenty-container">
-        <img src="images/rockTexture.png" alt="Regular" class="img-responsive">
+        <img src="images/rockTexture.png" alt="Regular Texture" class="img-responsive">
         <img src="images/rockNormal.png" alt="Normal Mapped" class="img-responsive">
-        <img src="images/rockTextureMitsuba.png" alt="Regular Mitsuba" class="img-responsive">
+        <img src="images/rockTextureMitsuba.png" alt="Regular Texture Mitsuba" class="img-responsive">
         <img src="images/rockNormalMitsuba.png" alt="Normal Mapped Mitsuba" class="img-responsive">
     </div> <br>
+
+    <p>While the texture matches, the normal maps dont seem to match mitsuba, but they look good on their own.</p>
 
 
     <h2>Feature 6: Textured Area Emitters</h2>
 
-    <p>TODO FIX</p>
+    <p>To make textured area emitters work, the texture is projected onto the uv coordinates of a mesh and multiplied
+    by the radiance of the emitter.</p>
 
     <div class="twentytwenty-container">
         <img src="images/texturedEmitter.png" alt="Rowwise CDF" class="img-responsive">
-        <img src="images/envmapSampling.png" alt="Sampling Density" class="img-responsive">
     </div> <br>
 
+
+    <h1>
+        Addendum
+    </h1>
+
+    <h2>
+        Cuda Path Tracing
+    </h2>
+
+    <p>
+        My work is written using a renderer that I made specifically for the computer graphics course.
+        The renderer is written using CUDA and runs fully on the GPU.
+
+        Because writing a whole renderer brings quite some challenges with itself, some features were omitted or simplified.
+
+        Here I will talk a bit about all the features that were implemented.
+
+
+    </p>
+
+    <h3>
+        Acceleration Structures
+    </h3>
+        <p>
+            <code>src/acceleration</code> <br>
+
+            To make the rendering feasible, an acceleration is needed for raytracing. I chose a Bounding Volume Hierarchy filled with Axis Aligned Bounding Boxes.
+            After the xml is read on the CPU, the meshes are transferred onto the gpu, and each mesh gets its own BVH. The idea
+            behind this was that a Bottom Layer Acceleration Structure would hold all the Meshes, and Top Layer Acceleration Structure would be a BVH that contains meshes.
+            Due to time constraints, only the Bottom Layer Acceleration offers logarithmic traversal.
+
+            Furthermore, the only optimization for the BVH is that the triangles get sorted according to morton code, which
+            provides some spacial locality. Other optimizations like SAH optimizations were explored, but didnt make it in the final version.
+
+
+
+        </p>
+
+    <h3>
+        Camera
+    </h3>
+
+    <p>
+        <code>src/acceleration</code> <br>
+        The camera pretty much works like in nori, but it has the handedness like mitsuba or other renderers.
+        There is a slight offset in the camera that makes renderer noticably offset if inspected closely, but overall it is equivalent.
+    </p>
+
+    <h3>
+        Denoiser
+    </h3>
+    <p>
+        <code>src/denoise</code> <br>
+
+        One thing that differs from the base Nori framework, is that there are no reconstruction filter.
+        This introduces some noise/unwanted artifacts.
+    </p>
+
+    <h3>
+        Emitters
+    </h3>
+    <p>
+        <code>src/areaLight</code> <br>
+        For simplicity and performance (virtual function overhead), there is only one kind of emitter, namely the mesh area emitter.
+        It supports sampling by surface area, which is achieved using a CDF over all triangle areas for a given BVH.
+
+    </p>
+
+    <h3>
+        Media
+    </h3>
+    <p>
+        <code>src/medium</code> <br>
+        Some media were ported onto the GPU, which do work for some simplified scenes.
+        Due to timeconstraints they were not fully ported.
+    </p>
+
+    <h3>
+        Scene
+    </h3>
+    <p>
+        <code>src/scene</code> <br>
+        The scene framework was meant to use OpenGL to procedurally show the renderer, but this feature did not make it in time.
+        To estimate progress,  a counter keeps track of the progress made.
+
+        The project features an xml parser, which parses xml's with a mitsuba inspired syntax.
+    </p>
+
+    <h3>
+        Primitives
+    </h3>
+    <p>
+        <code>src/shapes</code> <br>
+        For similar reasons as the area emitters, only one type of primitive, namely the triangle is supported.
+        As meshes are powerful, this was a trade off that was well worth it.
+    </p>
+
+    <h3>
+        Textures
+    </h3>
+    <p>
+        <code>src/textures</code> <br>
+
+        As textures are again not virtual classes, there is some overhead for each texture, but this is
+        not relevant in practice.
+        The possibility of hardware accelerated GPU texture lookups was investigated, but didnt make it into the final version.
+
+
+    </p>
+
+    <h3>
+        Utility
+    </h3>
+    <p>
+        <code>src/utility</code> <br>
+
+        These functions are often very much like the nori equivalents and are made with them in mind.
+        The sampling is done on the gpu using curand.
+
+    </p>
+
+    <h3>
+        BSDF's
+    </h3>
+    <p>
+        <code>src/bsdf.h</code> <br>
+
+        Again, BSDF's are not virtual functions, some trade offs needed to be made.
+        The renderer support Diffuse, Dielectric and Mirror BSDF's, and is in principle extensible, but using enums is a bit tedius
+        and unsafe.
+    </p>
+
+    <h3>
+        Helper Functions
+    </h3>
+    <p>
+        <code>src/cudaHelpers</code> <br>
+
+        All the main CUDA kernels are stored here. This includes the main render loop and some
+        GPU allocation function, as well as the integrators.
+
+        The integrators are implemented as functions (or inside functions) and can be switched by commenting out the line (not all might work anymore).
+
+    </p>
 
 
 

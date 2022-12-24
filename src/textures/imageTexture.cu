@@ -44,10 +44,6 @@ __host__ Texture::Texture(const std::filesystem::path &imagePath, bool isEnvMap)
     float totalSum = thrust::transform_reduce(deviceTexturePtr, deviceTexturePtr + width*height,
                                                     colorToRadiance, 0.f, thrust::plus<float>());
 
-    //TODO remove
-    std::cout << "Total texture sum is " << totalSum << '\n';
-
-
     ColorToCDF colorToCdf{deviceTexture, width, height, totalSum, isEnvMap};
 
     thrust::transform_inclusive_scan(deviceTexturePtr, deviceTexturePtr + width*height,

@@ -23,16 +23,16 @@ __device__ void Triangle::setHitInformation(const Ray3f &ray, Intersection &its)
 
     //TODO fix normals
     Vector3f edge1 = p1-p0, edge2 = p2-p0;
-//    Vector2f dUV1 = uv1-uv0, dUV2 = uv2-uv0;
-//    float uvMatDetInv = 1.f/(dUV1[0]*dUV2[1] - dUV1[1]*dUV2[0]);
-
-//    Vector3f tangent = (uvMatDetInv * (dUV2[1] * edge1 - dUV1[1] * edge2)).normalized();
-    Vector3f tangent = edge1.normalized();
+    Vector2f dUV1 = uv1-uv0, dUV2 = uv2-uv0;
+    float uvMatDetInv = 1.f/(dUV1[0]*dUV2[1] - dUV1[1]*dUV2[0]);
+//
+    Vector3f tangent = (uvMatDetInv * (dUV2[1] * edge1 - dUV1[1] * edge2)).normalized();
+//    Vector3f tangent = edge1.normalized();
 //    const auto tangent = Vector3f{0.f, normal[2], -normal[1]    }.normalized();
 
     const Frame f{tangent, normal.cross(tangent), normal};
 
-    const Vector3f nMap = (2.f*its.mesh->normalMap.eval(its.uv) - Vector3f{1.f}).normalized();
+    const Vector3f nMap = (2.f*its.mesh->normalMap.eval(its.uv)  - Vector3f{1.f}).normalized();
 
     its.shFrame =       Frame{f.toWorld(nMap)};
 }
