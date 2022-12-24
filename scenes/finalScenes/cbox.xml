@@ -1,6 +1,6 @@
 <scene version='3.0.0'>
 	<integrator type="path">
-		<integer name="max_depth" value="200"/>
+		<integer name="max_depth" value="5"/>
 	</integrator>
 
 	<sensor type="perspective">
@@ -21,12 +21,14 @@
 
 
 		<sampler type="independent">
-			<integer name="sample_count" value="64"/>
+			<integer name="sample_count" value="1"/>
 		</sampler>
 
 		<film type="hdrfilm">
-			<integer name="height" value="600"/>
-			<integer name="width" value="800"/>
+			<integer name="height" value="300"/>
+			<integer name="width" value="400"/>
+<!--			<integer name="height" value="600"/>-->
+<!--			<integer name="width" value="800"/>-->
 		</film>
 
 	</sensor>

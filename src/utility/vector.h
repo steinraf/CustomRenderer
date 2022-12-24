@@ -22,6 +22,9 @@ namespace CustomRenderer {
         return a < b ? a : b;
     }
 
+
+
+
     template<typename T>
     [[nodiscard]] __host__ __device__ constexpr __forceinline__ T clamp(const T &v, const T &mi, const T&ma) noexcept{
         return max(min(ma, v), mi);
@@ -116,7 +119,6 @@ public:
     [[nodiscard]] __host__ __device__ constexpr inline float maxCoeff() const noexcept;
 
     [[nodiscard]] __host__ __device__ constexpr inline bool isValid() const noexcept{
-        return true;
         return isfinite(data[0]) && isfinite(data[1]) && isfinite(data[2]);
     }
 

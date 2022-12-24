@@ -310,15 +310,15 @@ namespace cudaHelpers {
             //TODO redirect samples to pixels that need it
 //            assert(false);
             //Adaptive sampling
-            if(!updatedVariance && subSamples > 64 && (m2 / static_cast<float>((subSamples - 1))).maxCoeff() < EPSILON) {
-                atomicAdd(counter, 1);
-                updatedVariance = true;
-            }
-            if(counter[0] >= blockDim.x*blockDim.y){
-                assert(updatedVariance);
-                actualSamples = subSamples;
-                break;
-            }
+//            if(!updatedVariance && subSamples > 64 && (m2 / static_cast<float>((subSamples - 1))).maxCoeff() < EPSILON) {
+//                atomicAdd(counter, 1);
+//                updatedVariance = true;
+//            }
+//            if(counter[0] >= blockDim.x*blockDim.y){
+//                assert(updatedVariance);
+//                actualSamples = subSamples;
+//                break;
+//            }
         }
 
 
@@ -328,6 +328,7 @@ namespace cudaHelpers {
             printf("Current progress is %f% \r", progress);
         }
 
+        assert(actualSamples - 1 > 0);
         const Vector3f unbiasedVarianceMean = m2 / (static_cast<float>(actualSamples - 1));
 
 

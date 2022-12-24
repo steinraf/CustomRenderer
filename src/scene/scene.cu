@@ -2,6 +2,7 @@
 // Created by steinraf on 19/08/22.
 //
 
+
 #include "scene.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -178,14 +179,14 @@ void Scene::render() {
 
     volatile bool currentlyRendering = true;
 
-    std::thread drawingThread;
+//    std::thread drawingThread;
 
-    if(device == GPU) {
-        drawingThread = std::thread{[this](Vector3f *v, volatile bool &render) {
-                                        OpenGLDraw(v, render);
-                                    },
-                                    deviceImageBuffer, std::ref(currentlyRendering)};
-    }
+//    if(device == GPU) {
+//        drawingThread = std::thread{[this](Vector3f *v, volatile bool &render) {
+//                                        OpenGLDraw(v, render);
+//                                    },
+//                                    deviceImageBuffer, std::ref(currentlyRendering)};
+//    }
 
 
     std::cout << "Starting render...\n";
@@ -218,7 +219,7 @@ void Scene::render() {
 
 //#endif
 
-    std::cout << "Starting denoise...\n";
+    std::cout << "Finished Rendering.\n";
     checkCudaErrors(cudaMemcpy(hostImageBuffer, deviceImageBuffer, imageBufferByteSize, cudaMemcpyDeviceToHost));
     float *deviceWeights;
 
@@ -232,22 +233,63 @@ void Scene::render() {
     checkCudaErrors(cudaFree(varianceCopy));
 
 
-    denoise<<<blockSize, threadSize>>>(deviceImageBuffer, deviceImageBufferDenoised, deviceFeatureBuffer, deviceWeights, sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height, sceneRepresentation.cameraInfo.origin);
+//    denoise<<<blockSize, threadSize>>>(deviceImageBuffer, deviceImageBufferDenoised, deviceFeatureBuffer, deviceWeights, sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height, sceneRepresentation.cameraInfo.origin);
+//    checkCudaErrors(cudaDeviceSynchronize());
+//    denoiseApplyWeights<<<blockSize, threadSize>>>(deviceImageBufferDenoised, deviceWeights, sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height);
     checkCudaErrors(cudaDeviceSynchronize());
-    denoiseApplyWeights<<<blockSize, threadSize>>>(deviceImageBufferDenoised, deviceWeights, sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height);
-    checkCudaErrors(cudaDeviceSynchronize());
+
+
+
+
+
     checkCudaErrors(cudaFree(deviceWeights));
 
-    checkCudaErrors(cudaMemcpy(hostImageBufferDenoised, deviceImageBufferDenoised,
-                               imageBufferByteSize, cudaMemcpyDeviceToHost));
+//    checkCudaErrors(cudaMemcpy(hostImageBufferDenoised, deviceImageBufferDenoised,
+//                               imageBufferByteSize, cudaMemcpyDeviceToHost));
+
+
+
+    auto oidnDevice = oidn::newDevice();
+    oidnDevice.commit();
+
+    int width = sceneRepresentation.sceneInfo.width;
+    int height = sceneRepresentation.sceneInfo.height;
+
+    std::vector<Vector3f> albedos(width*height);
+
+    checkCudaErrors(cudaMemcpy(albedos.data(), deviceFeatureBuffer.albedos, imageBufferByteSize, cudaMemcpyDeviceToHost));
+
+    std::vector<Vector3f> normals(width*height);
+    checkCudaErrors(cudaMemcpy(normals.data(), deviceFeatureBuffer.normals, imageBufferByteSize, cudaMemcpyDeviceToHost));
+
     checkCudaErrors(cudaDeviceSynchronize());
+
+    std::cout << "Starting denoise...\n";
+
+
+    oidn::FilterRef filter = oidnDevice.newFilter("RT");
+    filter.setImage("color",  hostImageBuffer,  oidn::Format::Float3, width, height);
+    filter.setImage("albedo", albedos.data(), oidn::Format::Float3, width, height);
+    filter.setImage("normal", normals.data(), oidn::Format::Float3, width, height);
+    filter.setImage("output", hostImageBufferDenoised, oidn::Format::Float3, width, height);
+    filter.commit();
+
+    filter.execute();
+
+    // Check for errors
+    const char* errorMessage;
+    if (oidnDevice.getError(errorMessage) != oidn::Error::None)
+        std::cout << "Error: " << errorMessage << std::endl;
+
+
+
 
 
     currentlyRendering = false;
 
-    if(device == GPU) {
-        drawingThread.join();
-    }
+//    if(device == GPU) {
+//        drawingThread.join();
+//    }
 
 
     std::cout << "Joined draw thread...\n";
