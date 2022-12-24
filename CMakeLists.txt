@@ -6,14 +6,18 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CUDA_CXX_STANDARD 17)
 set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 
+set(OIDN_NEURAL_RUNTIME DNNL)
+add_subdirectory(libs/OpenImageDenoise)
 
 
 include_directories(libs/pugixml/src)
+include_directories(libs/OpenImageDenoise/include)
 
 
 add_library(GLAD "libs/glad/glad.cu")
 
 add_library(pugixml STATIC libs/pugixml/src/pugixml.cpp)
+
 
 include_directories(libs/stb)
 
@@ -57,7 +61,15 @@ add_executable(CustomRenderer
         src/emitters/areaLight.cu
         src/utility/frame.h
         src/textures/imageTexture.cu
-        src/textures/imageTexture.h src/emitters/environmentEmitter.h src/shapes/triangle.cu src/medium/medium.h src/medium/medium.cu src/medium/isotropicPhaseFunction.cu src/medium/isotropicPhaseFunction.h src/denoise/denoise.cu src/denoise/denoise.h)
+        src/textures/imageTexture.h
+        src/emitters/environmentEmitter.h
+        src/shapes/triangle.cu
+        src/medium/medium.h
+        src/medium/medium.cu
+        src/medium/isotropicPhaseFunction.cu
+        src/medium/isotropicPhaseFunction.h
+        src/denoise/denoise.cu
+        src/denoise/denoise.h)
 
 add_dependencies(CustomRenderer pugixml)
 
@@ -65,5 +77,5 @@ add_dependencies(CustomRenderer pugixml)
 set_target_properties(CustomRenderer PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 
-target_link_libraries(CustomRenderer PRIVATE PNGwriter::PNGwriter glfw3 X11 GL GLAD dl pthread pugixml ${OPENEXR_LIBRARIES})
+target_link_libraries(CustomRenderer PRIVATE PNGwriter::PNGwriter glfw3 X11 GL GLAD dl pthread pugixml OpenImageDenoise ${OPENEXR_LIBRARIES})
 

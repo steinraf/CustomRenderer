@@ -1,3 +1,7 @@
 [submodule "libs/std"]
 	path = libs/stb
 	url = git@github.com:nothings/stb.git
+
+[submodule "libs/OpenImageDenoise"]
+	path = libs/OpenImageDenoise
+	url = git@github.com:OpenImageDenoise/oidn.git

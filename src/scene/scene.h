@@ -20,6 +20,9 @@
 #include "../utility/meshLoader.h"
 #include "../utility/vector.h"
 
+#include <OpenImageDenoise/oidn.hpp>
+
+
 
 enum Device {
     CPU,

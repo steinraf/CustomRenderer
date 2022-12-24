@@ -17,17 +17,17 @@
         </transform>
 
         <sampler type="independent">
-            <integer name="sample_count" value="16"/>
+            <integer name="sample_count" value="1024"/>
         </sampler>
 
         <film type="hdrfilm">
-<!--            <integer name="height" value="600"/>-->
-<!--            <integer name="width" value="800"/>-->
+            <integer name="height" value="600"/>
+            <integer name="width" value="800"/>
 <!--            <integer name="height" value="216"/>-->
 <!--            <integer name="width" value="384"/>-->
-            <integer name="height" value="2160"/>
-            <integer name="width" value="3840"/>
-        </film> 
+<!--            <integer name="height" value="2160"/>-->
+<!--            <integer name="width" value="3840"/>-->
+        </film>
 
     </sensor>
 
@@ -65,9 +65,6 @@
             <scale value="1.5, 1.5, 1.5"/>
             <translate value="300, 50, 0"/>
         </transform>
-        <string name="texture" value="scenes/textures/moon.jpg"/>
-
-        <bsdf type="diffuse"/>
 
         <emitter type="area">
             <rgb name="radiance" value="1, 1, 1"/>
@@ -82,21 +79,6 @@
     </shape>
 
 
-    <shape type="obj" name="moon">
-        <string name="filename" value="scenes/obj/sphere2.obj"/>
-
-        <transform name="to_world">
-            <scale value="1, 1, 1"/>
-            <translate value="-30, 30, -200"/>
-        </transform>
-        <string name="texture" value="scenes/textures/moon.jpg"/>
-
-        <bsdf type="diffuse"/>
-
-        <emitter type="area">
-            <rgb name="radiance" value="10, 10, 10"/>
-        </emitter>
-    </shape>
 
     <shape type="obj" name="lights">
         <string name="filename" value="scenes/compOBJ/poolLights.obj"/>
@@ -114,11 +96,6 @@
             <rgb name="reflectance" value="1, 1, 1"/>
         </bsdf>
     </shape>
-
-
-    <emitter type="envmap">
-        <string name="filename" value="scenes/envmap/highres/starmap.hdr"/>
-    </emitter>
 
 
 

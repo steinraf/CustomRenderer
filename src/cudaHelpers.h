@@ -538,8 +538,8 @@ namespace cudaHelpers {
 
             if(numBounces == 0) {
                 featureBuffer.position = its.p;
-                featureBuffer.normal = its.shFrame.n;
-                featureBuffer.albedo = its.mesh->getBSDF()->getAlbedo(its.uv);
+                featureBuffer.normal = its.mesh->getBSDF().material == Material::DIELECTRIC ? Vector3f{1.f} : its.shFrame.n;
+                featureBuffer.albedo = its.mesh->getBSDF().material == Material::DIELECTRIC ? Vector3f{1.f} : its.mesh->getBSDF()->getAlbedo(its.uv);
             }
 
 
@@ -656,7 +656,7 @@ namespace cudaHelpers {
 
 
             //environmentMap Sampling
-            constexpr int maxEnvSamples = 3;
+            constexpr int maxEnvSamples = 0;
             for(int envSamples = 0; envSamples < maxEnvSamples; ++envSamples){
                 EmitterQueryRecord envMapEQR{its.p};
 
@@ -673,7 +673,6 @@ namespace cudaHelpers {
 
                     const float tempPDF = scene->environmentEmitter.pdf(envMapEQR);
 
-                    //                printf("Normal is %f, %f, %f\n", its.shFrame.n[0], its.shFrame.n[1], its.shFrame.n[2]);
                     Li += envMapEMSSample
                           * t
                           * its.mesh->getBSDF()->eval(bsdfQueryRecord)
@@ -691,8 +690,9 @@ namespace cudaHelpers {
             const auto *light = scene->getRandomEmitter(sampler.getSample1D());
 
             EmitterQueryRecord emitterQueryRecord{
-                    its.p};
-//
+                    its.p
+            };
+
             const Color3f emsSample = light->sample(emitterQueryRecord, sampler.getSample3D()) * scene->numEmitters;
 
             if(!scene->rayIntersect(emitterQueryRecord.shadowRay)) {
@@ -704,8 +704,12 @@ namespace cudaHelpers {
                 bsdfQueryRecord.measure = ESolidAngle;
                 bsdfQueryRecord.uv = its.uv;
 
-                Li += emsSample * its.mesh->getBSDF()->eval(bsdfQueryRecord) * Frame::cosTheta(its.shFrame.toLocal(emitterQueryRecord.wi)) * light->pdf(emitterQueryRecord) /
-                      (its.mesh->getBSDF()->pdf(bsdfQueryRecord) + light->pdf(emitterQueryRecord)) * t;
+                Li += emsSample
+                      * its.mesh->getBSDF()->eval(bsdfQueryRecord)
+                      * Frame::cosTheta(its.shFrame.toLocal(emitterQueryRecord.wi))
+                      * light->pdf(emitterQueryRecord)
+                      /(its.mesh->getBSDF()->pdf(bsdfQueryRecord) + light->pdf(emitterQueryRecord))
+                      * t;
             }
 
             if(its.mesh->isEmitter())
