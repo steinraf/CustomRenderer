@@ -203,4 +203,15 @@ public:
                 }
         }
     }
+
+    [[nodiscard]] __host__ __device__ constexpr bool isDeltaDistribution() const noexcept{
+            switch(material){
+            break;case Material::DIFFUSE:
+                return false;
+            break;case Material::MIRROR:
+                return true;
+            break;case Material::DIELECTRIC:
+                return true;
+            }
+    };
 };

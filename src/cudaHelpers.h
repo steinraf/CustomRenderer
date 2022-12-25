@@ -632,6 +632,7 @@ namespace cudaHelpers {
         Ray3f currentRay = ray;
 
         int numBounces = 0;
+        bool foundNonDeltaBSDF = false;
 
         float wMat = 1.0f;
 
@@ -650,8 +651,13 @@ namespace cudaHelpers {
 
             if(numBounces == 0) {
                 featureBuffer.position = its.p;
-                featureBuffer.normal = its.shFrame.n;
-                featureBuffer.albedo = its.mesh->getBSDF()->getAlbedo(its.uv);
+
+                const bool isDeltaDistribution = its.mesh->getBSDF().isDeltaDistribution();
+
+                featureBuffer.normal = isDeltaDistribution ? Vector3f{1.f} : its.shFrame.n;
+
+                featureBuffer.albedo = isDeltaDistribution ? Vector3f{1.f} : its.mesh->getBSDF()->getAlbedo(its.uv);
+
             }
 
 

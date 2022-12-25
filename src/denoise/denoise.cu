@@ -9,14 +9,14 @@
 __global__ void denoiseApplyWeights(Vector3f *output, float *weights, int width, int height){
     int i, j, pixelIndex;
     if(!cudaHelpers::initIndices(i, j, pixelIndex, width, height)) return;
-    if(weights[pixelIndex] == 0.f) {
-#ifndef NDEBUG
-        printf("Output would have been (%f, %f, %f)\n", output[pixelIndex][0], output[pixelIndex][1], output[pixelIndex][2]);
-#endif
-        output[pixelIndex] = Vector3f{0.f, 0.f, 1.f};
-        return;
-    }
-    output[pixelIndex] /= weights[pixelIndex];
+//    if(weights[pixelIndex] == 0.f) {
+//#ifndef NDEBUG
+//        printf("Output would have been (%f, %f, %f)\n", output[pixelIndex][0], output[pixelIndex][1], output[pixelIndex][2]);
+//#endif
+//        output[pixelIndex] = Vector3f{0.f, 0.f, 1.f};
+//        return;
+//    }
+//    output[pixelIndex] /= weights[pixelIndex];
 }
 
 
@@ -26,8 +26,8 @@ __global__ void denoise(Vector3f *input, Vector3f *output, FeatureBuffer feature
     if(!cudaHelpers::initIndices(i, j, pixelIndex, width, height)) return;
 
     //        bilateralFilterWiki(input, output, i, j, width, height);
-    bilateralFilterSlides(input, output, featureBuffer, weights, i, j, width, height);
-    return;
+//    bilateralFilterSlides(input, output, featureBuffer, weights, i, j, width, height);
+//    return;
 
     //        auto getNeighbour = [i, j, width, height]__device__ (Vector3f *array, int dx, int dy,
     //                                                             BOUNDARY boundary = BOUNDARY::PERIODIC) {
@@ -73,9 +73,9 @@ __global__ void denoise(Vector3f *input, Vector3f *output, FeatureBuffer feature
     //TODO when modifying something here, remember to maybe uncomment weights application
 
     //        output[pixelIndex] = Vector3f{(featureBuffer[pixelIndex].position-cameraOrigin).norm()/200};
-    //                output[pixelIndex] = featureBuffer.normals[pixelIndex].absValues();
-    //                output[pixelIndex] = featureBuffer.albedos[pixelIndex];
-    output[pixelIndex] = featureBuffer.variances[pixelIndex];
+//                    output[pixelIndex] = featureBuffer.normals[pixelIndex].absValues();
+                    output[pixelIndex] = featureBuffer.albedos[pixelIndex];
+//    output[pixelIndex] = featureBuffer.variances[pixelIndex];
     //        output[pixelIndex] = Color3f(featureBuffer.variances[pixelIndex].norm());
 //            constexpr float numSamples = 16384.f;
 //            output[pixelIndex] = Vector3f{powf(static_cast<float>(featureBuffer.numSubSamples[pixelIndex])/(numSamples), 2.f)};

@@ -196,7 +196,9 @@ void Scene::render() {
     checkCudaErrors(cudaMalloc(&deviceCounter, sizeof(unsigned)));
     checkCudaErrors(cudaMemset(deviceCounter, 0, sizeof(unsigned)));
 
-    std::cout << "Starting draw thread...\n";
+    std::cout << "Starting Rendering...";
+
+    clock_t startRender = clock();
 
 
     cudaHelpers::render<<<blockSize, threadSize>>>(deviceImageBuffer, deviceCamera, meshAccelerationStructure,
@@ -205,8 +207,10 @@ void Scene::render() {
     checkCudaErrors(cudaGetLastError());
 
 
-    std::cout << "Synchronizing GPU...\n";
     checkCudaErrors(cudaDeviceSynchronize());
+
+    std::cout << "\rRendering took " << ((double) (clock() - startRender)) / CLOCKS_PER_SEC << " seconds.\n";
+
 
 //#ifndef NDEBUG
 
@@ -219,7 +223,10 @@ void Scene::render() {
 
 //#endif
 
-    std::cout << "Finished Rendering.\n";
+    clock_t startDenoise = clock();
+
+    std::cout << "Starting denoise...";
+
     checkCudaErrors(cudaMemcpy(hostImageBuffer, deviceImageBuffer, imageBufferByteSize, cudaMemcpyDeviceToHost));
     float *deviceWeights;
 
@@ -236,16 +243,16 @@ void Scene::render() {
 //    denoise<<<blockSize, threadSize>>>(deviceImageBuffer, deviceImageBufferDenoised, deviceFeatureBuffer, deviceWeights, sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height, sceneRepresentation.cameraInfo.origin);
 //    checkCudaErrors(cudaDeviceSynchronize());
 //    denoiseApplyWeights<<<blockSize, threadSize>>>(deviceImageBufferDenoised, deviceWeights, sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height);
-    checkCudaErrors(cudaDeviceSynchronize());
-
+//    checkCudaErrors(cudaDeviceSynchronize());
+//    checkCudaErrors(cudaMemcpy(hostImageBufferDenoised, deviceImageBufferDenoised,
+//                               imageBufferByteSize, cudaMemcpyDeviceToHost));
 
 
 
 
     checkCudaErrors(cudaFree(deviceWeights));
 
-//    checkCudaErrors(cudaMemcpy(hostImageBufferDenoised, deviceImageBufferDenoised,
-//                               imageBufferByteSize, cudaMemcpyDeviceToHost));
+
 
 
 
@@ -282,6 +289,7 @@ void Scene::render() {
         std::cout << "Error: " << errorMessage << std::endl;
 
 
+    std::cout << "Denoising took " << ((double) (clock() - startDenoise)) / CLOCKS_PER_SEC << " seconds.\n";
 
 
 
@@ -307,14 +315,11 @@ __host__ void Scene::renderGPU() {
 __host__ void Scene::renderCPU() {
     //    initOpenGL();
 
-    clock_t start, stop;
-    start = clock();
+    clock_t start = clock();
 
     render();
 
-    stop = clock();
-    double timer_seconds = ((double) (stop - start)) / CLOCKS_PER_SEC;
-    std::cout << "Computation took " << timer_seconds << " seconds.\n";
+    std::cout << "Computation took " << ((double) (clock() - start)) / CLOCKS_PER_SEC << " seconds.\n";
 
     std::cout << "Writing resulting image to disk...\n";
 
