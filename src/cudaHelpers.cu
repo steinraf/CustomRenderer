@@ -332,19 +332,23 @@ namespace cudaHelpers {
         const Vector3f unbiasedVarianceMean = m2 / (static_cast<float>(actualSamples - 1));
 
 
+//        totalColor /= static_cast<float>(actualSamples);
 
-        totalColor /= static_cast<float>(actualSamples);
+        const auto totalSamples = actualSamples + featureBuffer.numSubSamples[pixelIndex];
+
+
+
+        const Vector3f outVec = (totalColor.gammaCorrected() + output[pixelIndex] * featureBuffer.numSubSamples[pixelIndex]) / totalSamples;
 
         featureBuffer.albedos[pixelIndex] = tmpBuffer.albedo;
         featureBuffer.normals[pixelIndex] = tmpBuffer.normal;
         featureBuffer.positions[pixelIndex] = tmpBuffer.position;
-        featureBuffer.numSubSamples[pixelIndex] = tmpBuffer.numSubSample;
 
+        output[pixelIndex] = outVec;
 
-        output[pixelIndex] = totalColor;
-
+        //TODO update variance cou
         featureBuffer.variances[pixelIndex] = unbiasedVarianceMean;
-        featureBuffer.numSubSamples[pixelIndex] = actualSamples;
+        featureBuffer.numSubSamples[pixelIndex] = totalSamples;
     }
 
 }// namespace cudaHelpers

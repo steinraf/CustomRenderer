@@ -11,6 +11,8 @@
 #include <sstream>
 #include <thrust/extrema.h>
 
+
+
 namespace CustomRenderer {
     template<typename T>
     [[nodiscard]] __host__ __device__ constexpr __forceinline__ T max(const T &a, const T &b) noexcept {
@@ -31,6 +33,12 @@ namespace CustomRenderer {
     }
 }// namespace CustomRenderer
 
+namespace Warp{
+    [[nodiscard]] __host__ __device__ constexpr float gammaCorrect(float value) noexcept {
+        if(value <= 0.0031308f) return CustomRenderer::clamp(12.92f * value, 0.f, 1.f);
+        return CustomRenderer::clamp(1.055f * std::pow(value, 1.f / 2.4f) - 0.055f, 0.f, 1.f);
+    }
+}
 
 class Vector3f {
 public:
@@ -121,6 +129,8 @@ public:
     [[nodiscard]] __host__ __device__ constexpr inline bool isValid() const noexcept{
         return isfinite(data[0]) && isfinite(data[1]) && isfinite(data[2]);
     }
+
+    [[nodiscard]] __host__ __device__ constexpr inline Vector3f gammaCorrected() const noexcept;
 
     __device__ static inline void atomicCudaAdd(Vector3f *address, const Vector3f &vec) noexcept;
 
@@ -482,6 +492,15 @@ Vector3f::applyTransform(const Matrix4f &transform, bool isTranslationInvariant)
 __host__ __device__ constexpr float Vector3f::maxCoeff() const noexcept {
     return CustomRenderer::max(data[0], CustomRenderer::max(data[1], data[2]));
 }
+
+[[nodiscard]] __host__ __device__ constexpr inline Vector3f Vector3f::gammaCorrected() const noexcept{
+    return Vector3f{
+            Warp::gammaCorrect(data[0]),
+            Warp::gammaCorrect(data[1]),
+            Warp::gammaCorrect(data[2]),
+    };
+}
+
 __device__ void Vector3f::atomicCudaAdd(Vector3f *address, const Vector3f &vec) noexcept {
     Vector3f &v = *address;
     atomicAdd(&(v[0]), vec[0]);

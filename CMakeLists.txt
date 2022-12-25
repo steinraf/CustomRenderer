@@ -12,14 +12,17 @@ add_subdirectory(libs/OpenImageDenoise)
 
 include_directories(libs/pugixml/src)
 include_directories(libs/OpenImageDenoise/include)
+include_directories(libs/ImGui)
+include_directories(libs/ImGui/backends)
 
-
-add_library(GLAD "libs/glad/glad.cu")
 
 add_library(pugixml STATIC libs/pugixml/src/pugixml.cpp)
 
 
 include_directories(libs/stb)
+include_directories(libs/ImGui)
+include_directories(libs/ImGui/backends)
+
 
 
 find_package(PNGwriter 0.7.0 REQUIRED)
@@ -38,6 +41,17 @@ set(CMAKE_CUDA_FLAGS "-extended-lambda --expt-relaxed-constexpr -dopt=on -extra-
 
 
 add_executable(CustomRenderer
+
+        libs/ImGui/imgui.cpp
+        libs/ImGui/imgui_demo.cpp
+        libs/ImGui/imgui_draw.cpp
+        libs/ImGui/imgui_internal.h
+        libs/ImGui/imgui_tables.cpp
+        libs/ImGui/imgui_widgets.cpp
+
+        libs/ImGui/backends/imgui_impl_glfw.cpp
+        libs/ImGui/backends/imgui_impl_opengl3.cpp
+
         main.cu
         src/utility/vector.h
         src/cudaHelpers.cu
@@ -77,5 +91,6 @@ add_dependencies(CustomRenderer pugixml)
 set_target_properties(CustomRenderer PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 
-target_link_libraries(CustomRenderer PRIVATE PNGwriter::PNGwriter glfw3 X11 GL GLAD dl pthread pugixml OpenImageDenoise ${OPENEXR_LIBRARIES})
+
+target_link_libraries(CustomRenderer PRIVATE PNGwriter::PNGwriter glfw3 GL GLEW X11 pthread pugixml OpenImageDenoise ${OPENEXR_LIBRARIES})
 

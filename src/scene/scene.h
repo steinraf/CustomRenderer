@@ -10,9 +10,6 @@
 
 #include "sceneLoader.h"
 
-#include "glad/glad.h"
-#include "GLFW/glfw3.h"
-#include "cuda_gl_interop.h"
 #include "pngwriter.h"
 
 
@@ -23,17 +20,19 @@
 #include <OpenImageDenoise/oidn.hpp>
 
 
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+
 
 enum Device {
     CPU,
     GPU
 };
 
-struct PixelInfo {
-    Color3f color;
-    Vector3f intersection;
-    Vector3f normal;
-};
 
 struct ColorToNorm{
     __device__ constexpr float operator()(const Vector3f &vec) const noexcept {
@@ -48,24 +47,22 @@ public:
 
     __host__ ~Scene();
 
-    __host__ void render();
+    [[nodiscard]] __host__ bool render();
+    __host__ void denoise();
 
-    __host__ void renderGPU();
+    __host__ void saveOutput();
 
-    __host__ void renderCPU();
+    __host__ ImVec2 getDimensions() const noexcept {
+        return {static_cast<float>(sceneRepresentation.sceneInfo.width),
+                static_cast<float>(sceneRepresentation.sceneInfo.height)};
+    }
+
+    __host__ float getPercentage() const noexcept {
+        return 100.f * actualSamples / sceneRepresentation.sceneInfo.samplePerPixel;
+    }
 
 
 private:
-    __host__ void initOpenGL();
-
-    __host__ void OpenGLDraw(Vector3f *deviceVector, volatile bool &isRendering);
-
-    __host__ void loadShader();
-
-    __host__ static void checkShaderCompileError(unsigned int shader, const std::string &type);
-
-    const std::string fragmentShaderPath = "/home/steinraf/ETH/CG/CustomRenderer/shaders/fragmentShader.glsl";
-    const std::string vertexShaderPath = "/home/steinraf/ETH/CG/CustomRenderer/shaders/vertexShader.glsl";
 
     SceneRepresentation sceneRepresentation;
 
@@ -102,11 +99,11 @@ private:
 
     curandState *deviceCurandState;
 
-    GLuint VAO, VBO, EBO, PBO;
+    int actualSamples = 0;
 
-    unsigned int shaderID;
 
-    GLFWwindow *window;
+public:
 
-    struct cudaGraphicsResource *cudaPBOResource;
+    GLuint hostImageTexture;
+
 };

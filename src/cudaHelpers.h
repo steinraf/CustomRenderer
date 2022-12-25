@@ -632,7 +632,6 @@ namespace cudaHelpers {
         Ray3f currentRay = ray;
 
         int numBounces = 0;
-        bool foundNonDeltaBSDF = false;
 
         float wMat = 1.0f;
 

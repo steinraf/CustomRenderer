@@ -5,3 +5,6 @@
 [submodule "libs/OpenImageDenoise"]
 	path = libs/OpenImageDenoise
 	url = git@github.com:OpenImageDenoise/oidn.git
+[submodule "libs/ImGui"]
+	path = libs/ImGui
+	url = git@github.com:ocornut/imgui.git

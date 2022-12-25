@@ -21,7 +21,7 @@
 
 
 		<sampler type="independent">
-			<integer name="sample_count" value="1"/>
+			<integer name="sample_count" value="1024"/>
 		</sampler>
 
 		<film type="hdrfilm">
