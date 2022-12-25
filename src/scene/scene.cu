@@ -212,17 +212,18 @@ bool Scene::render() {
     if(actualSamples >= sceneRepresentation.sceneInfo.samplePerPixel)
         return false;
 
-    auto samplesToDo = CustomRenderer::min(2, sceneRepresentation.sceneInfo.samplePerPixel - actualSamples);
+    const auto samplesRemaining = CustomRenderer::clamp(actualSamples, 1, sceneRepresentation.sceneInfo.samplePerPixel - actualSamples);
+//    auto samplesRemaining = CustomRenderer::min(CustomRenderer::max(1, actualSamples), );
 
     cudaHelpers::render<<<blockSize, threadSize>>>(deviceImageBuffer, deviceCamera, meshAccelerationStructure,
-                                                   sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height, samplesToDo, sceneRepresentation.sceneInfo.maxRayDepth,
+                                                   sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height, samplesRemaining, sceneRepresentation.sceneInfo.maxRayDepth,
                                                    deviceCurandState, deviceFeatureBuffer, deviceCounter);
     checkCudaErrors(cudaGetLastError());
 
 
     checkCudaErrors(cudaDeviceSynchronize());
 
-    actualSamples += samplesToDo;
+    actualSamples += samplesRemaining;
 
     checkCudaErrors(cudaMemcpy(hostImageBuffer, deviceImageBuffer, imageBufferByteSize, cudaMemcpyDeviceToHost));
 

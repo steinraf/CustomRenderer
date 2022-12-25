@@ -91,9 +91,10 @@ int main(int argc, char **argv){
             static float f = 0.0f;
             static int counter = 0;
 
-            ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
+            ImGui::Begin("Debug Info");
 
-            ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
+            ImGui::Text("Progress: %f percent", scene.getPercentage());
+
 
             ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
             ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
@@ -111,22 +112,22 @@ int main(int argc, char **argv){
             ImGui::Begin("CUDA GPU Path Tracing");
 
             if(needsRender){
-                ImGui::Text("Progress: %f percent", scene.getPercentage());
-
                 if(!scene.render()){
                     needsRender = false;
                     scene.denoise();
                     scene.saveOutput();
                 }
-                const auto size = ImGui::GetWindowSize();
-                const auto sceneDim = scene.getDimensions();
-                const auto finalDim = ImVec2(size[0], size[1]);
-                ImGui::Text("Dim %f/%f", finalDim[0], finalDim[1]);
-                ImGui::Image((void *) (intptr_t)scene.hostImageTexture,
-                             finalDim,
-                             ImVec2(0.f, 0.f), ImVec2(1.f, 1.f));
+                const auto availableSize = ImVec2{
+                    ImGui::GetWindowContentRegionMax().x - ImGui::GetWindowContentRegionMin().x,
+                    ImGui::GetWindowContentRegionMax().y - ImGui::GetWindowContentRegionMin().y,
+                };
+                ImGui::Image((void *) (intptr_t)scene.hostImageTexture, availableSize);
             }else{
-                ImGui::Image((void *) (intptr_t)scene.hostImageTexture, scene.getDimensions());
+                const auto availableSize = ImVec2{
+                        ImGui::GetWindowContentRegionMax().x - ImGui::GetWindowContentRegionMin().x,
+                        ImGui::GetWindowContentRegionMax().y - ImGui::GetWindowContentRegionMin().y,
+                };
+                ImGui::Image((void *) (intptr_t)scene.hostImageTexture, availableSize);
             }
 
 

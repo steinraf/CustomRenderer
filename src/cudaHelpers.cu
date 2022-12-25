@@ -238,11 +238,11 @@ namespace cudaHelpers {
 
         __syncthreads();
 
-        if(!inBounds) {
-            atomicAdd(counter, 1);
-            return;
-        }
-        bool updatedVariance = false;
+//        if(!inBounds) {
+//            atomicAdd(counter, 1);
+//            return;
+//        }
+//        bool updatedVariance = false;
 
         auto sampler = Sampler(&globalRandState[pixelIndex]);
 
@@ -255,7 +255,7 @@ namespace cudaHelpers {
         Color3f totalColor{0.0f};
 
         //welfords algorithm to compute variance
-        Color3f mean{0.f}, m2{0.f};
+//        Color3f mean{0.f}, m2{0.f};
 
         FeatureBufferAccumulator tmpBuffer;
         //TODO add variance computations
@@ -300,10 +300,10 @@ namespace cudaHelpers {
             const Vector3f currentColor = getColor(ray, tlas, maxRayDepth, sampler, tmpBuffer, pixelIndex);
 
 
-            const Vector3f delta = currentColor - mean;
-            mean += delta / static_cast<float>(subSamples + 1);
-            const Vector3f delta2 = currentColor - mean;
-            m2 += delta * delta2;
+//            const Vector3f delta = currentColor - mean;
+//            mean += delta / static_cast<float>(subSamples + 1);
+//            const Vector3f delta2 = currentColor - mean;
+//            m2 += delta * delta2;
 
             totalColor += currentColor;
 
@@ -322,23 +322,15 @@ namespace cudaHelpers {
         }
 
 
-        atomicAdd(progressCounter, 1);
-        if(*progressCounter % 1000 == 0) {
-            const float progress = 100.f * (*progressCounter) / (width * height);
-            printf("Current progress is %f% \r", progress);
-        }
 
-        assert(actualSamples - 1 > 0);
-        const Vector3f unbiasedVarianceMean = m2 / (static_cast<float>(actualSamples - 1));
-
-
-//        totalColor /= static_cast<float>(actualSamples);
+//        assert(actualSamples - 1 > 0);
+//        const Vector3f unbiasedVarianceMean = m2 / (static_cast<float>(actualSamples - 1));
 
         const auto totalSamples = actualSamples + featureBuffer.numSubSamples[pixelIndex];
 
 
 
-        const Vector3f outVec = (totalColor.gammaCorrected() + output[pixelIndex] * featureBuffer.numSubSamples[pixelIndex]) / totalSamples;
+        const Vector3f outVec = (totalColor + output[pixelIndex] * featureBuffer.numSubSamples[pixelIndex]) / totalSamples;
 
         featureBuffer.albedos[pixelIndex] = tmpBuffer.albedo;
         featureBuffer.normals[pixelIndex] = tmpBuffer.normal;
@@ -346,8 +338,8 @@ namespace cudaHelpers {
 
         output[pixelIndex] = outVec;
 
-        //TODO update variance cou
-        featureBuffer.variances[pixelIndex] = unbiasedVarianceMean;
+        //TODO reintroduce variance computation
+//        featureBuffer.variances[pixelIndex] = unbiasedVarianceMean;
         featureBuffer.numSubSamples[pixelIndex] = totalSamples;
     }
 
