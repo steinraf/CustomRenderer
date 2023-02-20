@@ -80,12 +80,10 @@ enum class Material {
 
 class BSDF {
 public:
-    //private:
     Material material;
     Texture texture;
     float m_intIOR, m_extIOR;
 
-public:
     __device__ __host__ constexpr BSDF() noexcept
         : material(Material::DIFFUSE), texture(Vector3f{1.f}), m_intIOR(1.5046f), m_extIOR(1.000277f) {
     }

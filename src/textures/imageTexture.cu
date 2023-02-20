@@ -36,7 +36,6 @@ __host__ Texture::Texture(const std::filesystem::path &imagePath, bool isEnvMap)
     checkCudaErrors(cudaMemcpy(deviceTexture, hostTexture, width * height * sizeof(Vector3f), cudaMemcpyHostToDevice));
 
 
-    //TODO is this actually called Radiance?
     ColorToRadiance colorToRadiance(deviceTexture, width, height, isEnvMap);
 
 
@@ -48,7 +47,6 @@ __host__ Texture::Texture(const std::filesystem::path &imagePath, bool isEnvMap)
 
     thrust::transform_inclusive_scan(deviceTexturePtr, deviceTexturePtr + width*height,
                                      deviceCDF, colorToCdf, thrust::plus<float>());
-
 
     assert(dim == 3);
 }

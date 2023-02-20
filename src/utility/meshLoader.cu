@@ -45,7 +45,6 @@ HostMeshInfo loadMesh(const std::filesystem::path &filePath, const Matrix4f &tra
             vertices.push_back(Vector3f{x, y, z}.applyTransform(transform));
             //            std::cout << filePath << ", found coord x y z " << x << ' ' << y << ' ' << z << '\n';
 
-
         } else if(start == "vt") {
             float u, v, w;
             line >> u >> v >> w;

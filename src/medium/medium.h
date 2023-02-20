@@ -1,5 +1,5 @@
 //
-// Created by steinraf on 20/12/22.
+// Created by steinraf on 20/12/22. Ported from code written by joluther.
 //
 
 #pragma once
@@ -60,8 +60,6 @@ public:
     }
 
     [[nodiscard]] __device__ __host__ float getExtinction(const Vector3f &p) const noexcept{
-//        printf("Extinction at (%f, %f, %f)\n", p[0], p[1], p[2]);
-
         return (m_sigmaA + m_sigmaS) * galaxy(p);
     }
 
@@ -74,6 +72,6 @@ public:
     }
 
     [[nodiscard]] __device__ __host__ Color3f getAlbedo(const Vector3f &p) const noexcept{
-        return Color3f{1.f};//Color3f(Color3f{1.0, 0.0, 0.0} + 0.5*Color3f{galaxy(p)}).clamp(0.f,1.f);
+        return Color3f{1.f}; //Color3f(Color3f{1.0, 0.0, 0.0} + 0.5*Color3f{galaxy(p)}).clamp(0.f,1.f);
     }
 };

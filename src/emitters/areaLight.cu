@@ -15,7 +15,6 @@ __device__ float AreaLight::pdf(const EmitterQueryRecord &emitterQueryRecord) co
 
 //    if(emitterQueryRecord.n.dot(emitterQueryRecord.wi) >= 0)
 //        return 0.f;
-
     //TODO take into account feedback received in exercise
 
     return (emitterQueryRecord.ref - emitterQueryRecord.p).squaredNorm() * blas->pdfSurface(sRec) / abs(emitterQueryRecord.n.dot(-emitterQueryRecord.wi) + EPSILON);

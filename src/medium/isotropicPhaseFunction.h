@@ -1,39 +1,33 @@
 //
-// Created by steinraf on 20/12/22.
+// Created by steinraf on 20/12/22. Ported from code written by joluther.
 //
 
 #pragma once
 
 #include "../bsdf.h"
 #include "../utility/vector.h"
+
 struct PhaseFunctionQueryRecord {
-    /// Incident direction
     Vector3f wi;
-
-    /// Outgoing direction
     Vector3f wo;
-
-    /// Relative refractive index in the sampled direction
     float eta;
 
-    /// Measure associated with the sample
     EMeasure measure;
 
-    /// Create a new record for sampling the PhaseFunction
+    Vector3f p;
+
+
     __device__ PhaseFunctionQueryRecord(const Vector3f &wi)
         : wi(wi), measure(EUnknownMeasure) {
 
     }
 
-    /// Create a new record for querying the PhaseFunction
     __device__ PhaseFunctionQueryRecord(const Vector3f &wi,
                              const Vector3f &wo, EMeasure measure)
         : wi(wi), wo(wo), measure(measure) {
 
     }
 
-    /// Point associated with the point
-    Vector3f p;
 };
 
 
@@ -63,6 +57,4 @@ public:
     __device__ const IsotropicPhaseFunction* operator->() const{
         return this;
     }
-
-
 };

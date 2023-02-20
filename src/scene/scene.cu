@@ -8,13 +8,8 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-
-
-
 #include <fstream>
 #include <thread>
-
-#include "../denoise/denoise.h"
 
 __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) : sceneRepresentation(sceneRepr),
                                                                      imageBufferByteSize(sceneRepr.sceneInfo.width * sceneRepr.sceneInfo.height * sizeof(Vector3f)),
@@ -44,7 +39,8 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) : sceneRepres
         checkCudaErrors(cudaMemset(deviceImageBuffer, 0.f, imageBufferByteSize));
         checkCudaErrors(cudaMalloc(&deviceImageBufferDenoised, imageBufferByteSize));
     } else {
-
+        //GPU mode does not work properly yet.
+        //TODO fix GPU drawing mode
         //        checkCudaErrors(cudaMalloc(&deviceImageBuffer, imageBufferByteSize)); Allocated by OpenGL instead
         checkCudaErrors(cudaMalloc(&deviceImageBufferDenoised, imageBufferByteSize));
     }
@@ -73,7 +69,6 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) : sceneRepres
 
 
     checkCudaErrors(cudaMalloc(&meshAccelerationStructure, sizeof(TLAS)));
-//    checkCudaErrors(cudaMalloc(&emitterAccelerationStructure, sizeof(TLAS)));
 
     // No need to sync because can run independently
     //    checkCudaErrors(cudaDeviceSynchronize());
@@ -157,25 +152,17 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) : sceneRepres
     hostImageBuffer = new Vector3f[imageBufferByteSize];
     hostImageBufferDenoised = new Vector3f[imageBufferByteSize];
 
-//    unsigned int fbo;
-//    glGenFramebuffers(1, &fbo);
-//    assert(false);
-
-
 }
 
 __host__ Scene::~Scene() {
 
+    //TODO properly cuda free buffers
 
     delete[] hostImageBuffer;
     delete[] hostImageBufferDenoised;
 
     if(device == CPU) {
         checkCudaErrors(cudaDeviceSynchronize());
-        //                checkCudaErrors(cudaFree(deviceImageBuffer));
-        //        glDeleteVertexArrays(1, &VAO);
-        //        glDeleteBuffers(1, &VBO);
-        //        glDeleteBuffers(1, &EBO);
     } else {
 
     }
@@ -195,6 +182,8 @@ void Scene::reset() noexcept{
 
 
 bool Scene::render() {
+
+    //TODO fix GPU drawing mode
 
     volatile bool currentlyRendering = true;
 
@@ -222,8 +211,6 @@ bool Scene::render() {
     const auto samplesRemaining = CustomRenderer::clamp(1, 1, sceneRepresentation.sceneInfo.samplePerPixel - actualSamples);
 //    auto samplesRemaining = CustomRenderer::min(CustomRenderer::max(1, actualSamples), );
 
-    std::cout << "DEBUG render 1\n";
-
     cudaHelpers::render<<<blockSize, threadSize>>>(deviceImageBuffer, deviceCamera, meshAccelerationStructure,
                                                    sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height, samplesRemaining, sceneRepresentation.sceneInfo.maxRayDepth,
                                                    deviceCurandState, deviceFeatureBuffer, nullptr);
@@ -231,8 +218,6 @@ bool Scene::render() {
 
 
     checkCudaErrors(cudaDeviceSynchronize());
-
-    std::cout << "DEBUG render 2\n";
 
 
     actualSamples += samplesRemaining;
@@ -357,8 +342,6 @@ __host__ void Scene::saveOutput() {
     const std::string hdrPath = "./data/image.hdr";
     const std::string hdrPathDenoised = "./data/imageDenoised.hdr";
 
-    //    stbi_set_flip_vertically_on_load(true);
-
     const bool didHDR = stbi_write_hdr(hdrPath.c_str(), sceneRepresentation.sceneInfo.width,
                                        sceneRepresentation.sceneInfo.height, 3, (float *) hostImageBuffer);
     assert(didHDR);
@@ -393,11 +376,6 @@ __host__ void Scene::saveOutput() {
 }
 
 __host__ void Scene::step(float dt) noexcept {
-    std::cout << "DEBUG step 1\n";
-
     deviceCamera.addVelocity(cameraVelocity, dt);
-
-    std::cout << "DEBUG step 2\n";
-
     std::cout << std::flush;
 }

@@ -13,6 +13,9 @@
 
 struct AABB {
 
+    Vector3f min, max;
+
+
     __host__ __device__ constexpr AABB() noexcept
         : min(INFINITY), max(-INFINITY) {
     }
@@ -85,6 +88,4 @@ struct AABB {
         };
     }
 
-    //private:
-    Vector3f min, max;
 };

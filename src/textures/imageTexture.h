@@ -12,16 +12,14 @@
 
 
 class Texture {
-//private:
+
 public:
     Vector3f *deviceTexture = nullptr;
     int width, height;
     int dim;
     Vector3f radiance;
 
-//public:
     float *deviceCDF = nullptr;
-
 
 
     __host__ explicit Texture(const std::filesystem::path &imagePath, bool isEnvMap = false) noexcept;
@@ -44,7 +42,7 @@ public:
 
 #ifndef NDEBUG
                 if((deviceCDF[idx+1] - deviceCDF[idx]) < FLT_EPSILON){
-                    printf("CDF SMALLER THAN EPSILON!!! %f\n", deviceCDF[idx+1] - deviceCDF[idx]);
+                    printf("CDF SMALLER THAN EPSILON! %f\n", deviceCDF[idx+1] - deviceCDF[idx]);
 //                    assert(false);
                 }
 #endif

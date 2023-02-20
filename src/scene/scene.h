@@ -48,6 +48,7 @@ public:
     __host__ ~Scene();
 
     [[nodiscard]] __host__ bool render();
+
     __host__ void denoise();
 
     __host__ void saveOutput();
@@ -61,8 +62,6 @@ public:
     }
 
     __host__ Vector3f getCameraPosition() const noexcept {
-        std::cout << "DEBUG Camera Pos\n";
-
         return deviceCamera.getPosition();
     }
 

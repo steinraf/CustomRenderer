@@ -49,7 +49,6 @@ public:
     //Nori Triangle Ray3f intersect
     __device__ constexpr bool rayIntersect(const Ray3f &r, Intersection &its) const noexcept {
 
-
         /* Find vectors for two edges sharing v[0] */
         const Vector3f edge1 = p1 - p0, edge2 = p2 - p0;
 
@@ -58,9 +57,6 @@ public:
 
         /* If determinant is near zero, ray lies in plane of triangle */
         const float det = edge1.dot(pvec);
-
-
-
 
         if(det > -FLT_EPSILON && det < FLT_EPSILON) {
             return false;
@@ -117,7 +113,6 @@ public:
         return bary[0] * n0 + bary[1] * n1 + bary[2] * n2;
     }
 
-//private:
     Vector3f p0, p1, p2;
     Vector2f uv0, uv1, uv2;
     Vector3f n0, n1, n2;

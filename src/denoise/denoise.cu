@@ -4,6 +4,8 @@
 
 #include "denoise.h"
 
+//Denoise feature is a bit clumsy to use in current state
+//TODO add easier customizability
 
 
 __global__ void denoiseApplyWeights(Vector3f *output, float *weights, int width, int height){

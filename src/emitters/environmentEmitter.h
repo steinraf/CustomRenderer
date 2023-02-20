@@ -12,10 +12,8 @@
 
 class EnvironmentEmitter {
 public:
-//private:
     Texture texture;
 
-public:
     explicit __host__ __device__ constexpr EnvironmentEmitter(Texture texture) noexcept
         : texture(texture) {
 
@@ -25,7 +23,7 @@ public:
 
         assert(ray.getDirection().norm() != 0.f);
         const Vector3f dir = ray.getDirection().normalized();
-\
+
         const float u = atan2(dir[0], -dir[2]) * 0.5f * M_1_PIf;
         const float v = CustomRenderer::clamp(acos(-dir[1]) * M_1_PIf, -1.f, 1.f);
 
@@ -64,12 +62,6 @@ public:
         assert(u >= 0 && u <= 1 && v >= 0 && v <= 1);
 
         const Vector3f warpSample{Warp::squareToUniformSphere(Vector2f{u, v})};
-
-//        const Vector3f dirSample{
-//                warpSample[0],
-//                warpSample[2],
-//                -warpSample[1]
-//        };
 
         const Vector3f dirSample = warpSample;
 

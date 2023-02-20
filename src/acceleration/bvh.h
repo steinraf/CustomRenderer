@@ -237,14 +237,12 @@ public:
         Ray3f r = _r;
 
 
-        //Adaptive ray epsilon nori
+        //Adaptive ray epsilon idea from nori
         if (r.minDist == EPSILON)
             r.minDist = CustomRenderer::max(r.minDist, r.minDist * r.getOrigin().absValues().maxCoeff());
 
         Intersection record;
         bool hasHit = false;
-
-
 
         for(int i = 0; i < numMeshes; ++i) {
             if(meshBlasArr[i]->rayIntersect(r, record, isShadowRay)) {

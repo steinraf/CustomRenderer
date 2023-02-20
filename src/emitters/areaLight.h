@@ -54,7 +54,7 @@ public:
         return !radiance.isZero();
     }
 
-    //private: //TODO add texture as radiance option
+    //TODO add texture as radiance option
     Color3f radiance;
     const BLAS *blas = nullptr;
 };

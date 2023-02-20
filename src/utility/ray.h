@@ -28,7 +28,6 @@ public:
     [[nodiscard]] __device__ constexpr Vector3f getDirection() const noexcept { return d; }
 
 
-    //private:
     Vector3f o;
     Vector3f d;
     float minDist;

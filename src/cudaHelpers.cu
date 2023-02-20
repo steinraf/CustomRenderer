@@ -238,12 +238,6 @@ namespace cudaHelpers {
 
         __syncthreads();
 
-//        if(!inBounds) {
-//            atomicAdd(counter, 1);
-//            return;
-//        }
-//        bool updatedVariance = false;
-
         auto sampler = Sampler(&globalRandState[pixelIndex]);
 
         const auto iFloat = static_cast<float>(i);

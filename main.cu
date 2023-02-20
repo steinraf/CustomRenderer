@@ -12,7 +12,6 @@ static void glfw_error_callback(int error, const char* description){
 
 int main(int argc, char **argv){
 
-
     std::cout << "Parsing obj...\n";
 
     if(argc != 2){
@@ -20,10 +19,6 @@ int main(int argc, char **argv){
     }
 
     const std::filesystem::path filePath = argv[1];
-
-    //    const std::filesystem::path filePath = "./scenes/simple.xml";
-    //    const std::filesystem::path filePath = "./scenes/clocks.xml";
-
 
     assert(filePath.extension() == ".xml");
 
@@ -35,8 +30,6 @@ int main(int argc, char **argv){
         std::cerr << "Error while initializing glfw. Exiting.\n";
         exit(1);
     }
-
-
 
     const char* glsl_version = "#version 130";
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -52,21 +45,19 @@ int main(int argc, char **argv){
         exit(1);
     }
     glfwMakeContextCurrent(window);
-    glfwSwapInterval(1); // Enable vsync
+    glfwSwapInterval(1);
 
-    // Setup Dear ImGui context
+    //ImGui Setup
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
 
     ImGui::StyleColorsDark();
 
-    // Setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-
 
     if(glewInit() != GLEW_OK){
         std::cerr << "Glew not correctly initialized. Exiting.\n";
@@ -78,8 +69,7 @@ int main(int argc, char **argv){
     bool needsRender = true;
 
 
-    while (!glfwWindowShouldClose(window))
-    {
+    while (!glfwWindowShouldClose(window)){
 
         glfwPollEvents();
 
@@ -137,7 +127,7 @@ int main(int argc, char **argv){
 
             Vector3f vCamera{0.f};
 
-            //right/up/front
+
             if(ImGui::IsKeyDown(ImGuiKey_W))
                 vCamera[2] += 1.f;
             if(ImGui::IsKeyDown(ImGuiKey_S))
@@ -187,11 +177,6 @@ int main(int argc, char **argv){
 
     scene.saveOutput();
     std::cout << "Drew image to file\n";
-
-
-
-
-
 
 
     return EXIT_SUCCESS;

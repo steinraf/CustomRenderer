@@ -462,8 +462,6 @@ struct SceneRepresentation {
         }
     }
 
-    //private:
-
     struct CameraInfo {
         CameraInfo()
             : target(0.f, 0.f, -1.f), origin(0.f), up(0.f, 1.f, 0.f), fov(30), aperture(0.f), focusDist(1.f), k1(0.f), k2(0.f) {

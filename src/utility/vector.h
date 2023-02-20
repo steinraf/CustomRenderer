@@ -25,8 +25,6 @@ namespace CustomRenderer {
     }
 
 
-
-
     template<typename T>
     [[nodiscard]] __host__ __device__ constexpr __forceinline__ T clamp(const T &v, const T &mi, const T&ma) noexcept{
         return max(min(ma, v), mi);
