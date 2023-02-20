@@ -52,6 +52,21 @@ public:
 
     __host__ void saveOutput();
 
+    __host__ void reset() noexcept;
+
+    __host__ void step(float dt) noexcept;
+
+    __host__ void setCameraVelocity(const Vector3f &vel) noexcept {
+        cameraVelocity = vel;
+    }
+
+    __host__ Vector3f getCameraPosition() const noexcept {
+        std::cout << "DEBUG Camera Pos\n";
+
+        return deviceCamera.getPosition();
+    }
+
+
     __host__ ImVec2 getDimensions() const noexcept {
         return {static_cast<float>(sceneRepresentation.sceneInfo.width),
                 static_cast<float>(sceneRepresentation.sceneInfo.height)};
@@ -60,6 +75,8 @@ public:
     __host__ float getPercentage() const noexcept {
         return 100.f * actualSamples / sceneRepresentation.sceneInfo.samplePerPixel;
     }
+
+
 
 
 private:
@@ -93,6 +110,8 @@ private:
     std::vector<float> totalEmitterArea;
 
     Camera deviceCamera;
+
+    Vector3f cameraVelocity{0.f};
 
 
     TLAS *meshAccelerationStructure;

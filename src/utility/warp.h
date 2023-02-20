@@ -138,7 +138,7 @@ namespace Warp {
         while(begin >= start && begin < ending){
             if((*(begin + 1) - *begin) == 0){
 #ifndef NDEBUG
-                const int diff = begin - start;
+//                const int diff = begin - start;
                 //TODO find a better fix for this
 //                printf("DEBUG: PDF difference is zero for idx %i with value %f\n", diff, *begin);
 #endif

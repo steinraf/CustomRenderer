@@ -153,13 +153,13 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) : sceneRepres
 
     checkCudaErrors(cudaGetLastError());
 
+
     hostImageBuffer = new Vector3f[imageBufferByteSize];
     hostImageBufferDenoised = new Vector3f[imageBufferByteSize];
 
 //    unsigned int fbo;
 //    glGenFramebuffers(1, &fbo);
 //    assert(false);
-
 
 
 }
@@ -182,6 +182,17 @@ __host__ Scene::~Scene() {
     cudaHelpers::freeVariables<<<blockSize, threadSize>>>();
 }
 
+void Scene::reset() noexcept{
+    checkCudaErrors(cudaMemset(deviceImageBuffer, 0.f, imageBufferByteSize));
+    checkCudaErrors(cudaMemset(deviceFeatureBuffer.variances, 0.f, imageBufferByteSize));
+    checkCudaErrors(cudaMemset(deviceFeatureBuffer.albedos  , 0.f, imageBufferByteSize));
+    checkCudaErrors(cudaMemset(deviceFeatureBuffer.positions, 0.f, imageBufferByteSize));
+    checkCudaErrors(cudaMemset(deviceFeatureBuffer.normals  , 0.f, imageBufferByteSize));
+    checkCudaErrors(cudaMemset(deviceFeatureBuffer.numSubSamples, 0.f, sizeof(int) * sceneRepresentation.sceneInfo.width * sceneRepresentation.sceneInfo.height));
+
+    actualSamples = 0;
+}
+
 
 bool Scene::render() {
 
@@ -199,11 +210,6 @@ bool Scene::render() {
 
 //    std::cout << "Starting render...\n";
 
-    unsigned *deviceCounter;
-
-    checkCudaErrors(cudaMalloc(&deviceCounter, sizeof(unsigned)));
-    checkCudaErrors(cudaMemset(deviceCounter, 0, sizeof(unsigned)));
-
 //    std::cout << "Starting Rendering...";
 
     clock_t startRender = clock();
@@ -212,16 +218,22 @@ bool Scene::render() {
     if(actualSamples >= sceneRepresentation.sceneInfo.samplePerPixel)
         return false;
 
-    const auto samplesRemaining = CustomRenderer::clamp(actualSamples, 1, sceneRepresentation.sceneInfo.samplePerPixel - actualSamples);
+    //Exponentially increasing number of samples
+    const auto samplesRemaining = CustomRenderer::clamp(1, 1, sceneRepresentation.sceneInfo.samplePerPixel - actualSamples);
 //    auto samplesRemaining = CustomRenderer::min(CustomRenderer::max(1, actualSamples), );
+
+    std::cout << "DEBUG render 1\n";
 
     cudaHelpers::render<<<blockSize, threadSize>>>(deviceImageBuffer, deviceCamera, meshAccelerationStructure,
                                                    sceneRepresentation.sceneInfo.width, sceneRepresentation.sceneInfo.height, samplesRemaining, sceneRepresentation.sceneInfo.maxRayDepth,
-                                                   deviceCurandState, deviceFeatureBuffer, deviceCounter);
+                                                   deviceCurandState, deviceFeatureBuffer, nullptr);
     checkCudaErrors(cudaGetLastError());
 
 
     checkCudaErrors(cudaDeviceSynchronize());
+
+    std::cout << "DEBUG render 2\n";
+
 
     actualSamples += samplesRemaining;
 
@@ -239,7 +251,13 @@ bool Scene::render() {
                                               colorToNorm, 0.f, thrust::plus<float>());
 #endif
 
-    glGenTextures(1, &hostImageTexture);
+    if(actualSamples == samplesRemaining){
+
+    }
+
+    if(!hostImageTexture)
+        glGenTextures(1, &hostImageTexture);
+
     glBindTexture(GL_TEXTURE_2D, hostImageTexture);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -374,3 +392,12 @@ __host__ void Scene::saveOutput() {
     pngDenoised.close();
 }
 
+__host__ void Scene::step(float dt) noexcept {
+    std::cout << "DEBUG step 1\n";
+
+    deviceCamera.addVelocity(cameraVelocity, dt);
+
+    std::cout << "DEBUG step 2\n";
+
+    std::cout << std::flush;
+}

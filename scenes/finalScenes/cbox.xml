@@ -4,7 +4,9 @@
 	</integrator>
 
 	<sensor type="perspective">
-		<float name="fov" value="27.7856"/>
+<!--		<float name="fov" value="27.7856"/>-->
+		<float name="fov" value="90"/>
+
 
 		<transform name="to_world">
 			<lookat target="0, 0.893051, 4.41198"
@@ -21,14 +23,14 @@
 
 
 		<sampler type="independent">
-			<integer name="sample_count" value="1024"/>
+			<integer name="sample_count" value="100024"/>
 		</sampler>
 
 		<film type="hdrfilm">
-<!--			<integer name="height" value="300"/>-->
-<!--			<integer name="width" value="400"/>-->
-			<integer name="height" value="600"/>
-			<integer name="width" value="800"/>
+			<integer name="height" value="300"/>
+			<integer name="width" value="400"/>
+<!--			<integer name="height" value="600"/>-->
+<!--			<integer name="width" value="800"/>-->
 		</film>
 
 	</sensor>

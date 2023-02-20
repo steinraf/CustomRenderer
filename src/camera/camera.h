@@ -15,6 +15,18 @@ public:
 
     __device__ Ray3f getRay(float s, float t, const Vector2f &sample) const;
 
+    //relative velocity with right/up/front
+    __host__ __device__ Vector3f addVelocity(const Vector3f v, float t) noexcept {
+        printf("DEBUG VELOCITY ADD 1\n");
+        printf("V is %f, %f, %f\n", v[0], v[1], v[2]);
+        cameraToWorld.addPosition((v[0] * right + v[1] * up + v[2] * front)* t);
+        printf("DEBUG VELOCITY ADD 2\n");
+    }
+
+    __host__ __device__ Vector3f getPosition() const noexcept{
+        return cameraToWorld.getPosition();
+    }
+
 private:
     Vector3f origin;
     Vector3f right, up, front;

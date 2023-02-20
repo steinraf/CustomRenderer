@@ -95,6 +95,9 @@ int main(int argc, char **argv){
 
             ImGui::Text("Progress: %f percent", scene.getPercentage());
 
+            const Vector3f cameraPos = scene.getCameraPosition();
+
+            ImGui::Text("Camera Position (%f, %f, %f)", cameraPos[0], cameraPos[1], cameraPos[2]);
 
             ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
             ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
@@ -112,6 +115,7 @@ int main(int argc, char **argv){
             ImGui::Begin("CUDA GPU Path Tracing");
 
             if(needsRender){
+                scene.step(1.f/CustomRenderer::min(ImGui::GetIO().Framerate, 1000.f));
                 if(!scene.render()){
                     needsRender = false;
                     scene.denoise();
@@ -122,6 +126,7 @@ int main(int argc, char **argv){
                     ImGui::GetWindowContentRegionMax().y - ImGui::GetWindowContentRegionMin().y,
                 };
                 ImGui::Image((void *) (intptr_t)scene.hostImageTexture, availableSize);
+
             }else{
                 const auto availableSize = ImVec2{
                         ImGui::GetWindowContentRegionMax().x - ImGui::GetWindowContentRegionMin().x,
@@ -130,8 +135,28 @@ int main(int argc, char **argv){
                 ImGui::Image((void *) (intptr_t)scene.hostImageTexture, availableSize);
             }
 
+            Vector3f vCamera{0.f};
 
+            //right/up/front
+            if(ImGui::IsKeyDown(ImGuiKey_W))
+                vCamera[2] += 1.f;
+            if(ImGui::IsKeyDown(ImGuiKey_S))
+                vCamera[2] -= 1.f;
 
+            if(ImGui::IsKeyDown(ImGuiKey_D))
+                vCamera[0] += 1.f;
+            if(ImGui::IsKeyDown(ImGuiKey_A))
+                vCamera[0] -= 1.f;
+
+            if(ImGui::IsKeyDown(ImGuiKey_Space))
+                vCamera[1] += 1.f;
+            if(ImGui::IsKeyDown(ImGuiKey_LeftShift))
+                vCamera[1] -= 1.f;
+
+            scene.setCameraVelocity(vCamera);
+
+            if(vCamera.squaredNorm() != 0.f)
+                scene.reset();
 //            scene.denoise();
 
             ImGui::End();
@@ -147,6 +172,8 @@ int main(int argc, char **argv){
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         glfwSwapBuffers(window);
+
+
     }
 
 

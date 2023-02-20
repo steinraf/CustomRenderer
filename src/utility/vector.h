@@ -278,6 +278,20 @@ struct Matrix4f{
         return Matrix4f{matrix};
     }
 
+    __host__ __device__ constexpr Vector3f getPosition() const noexcept {
+        return Vector3f{
+            mat[0][3],
+            mat[1][3],
+            mat[2][3]
+        };
+    }
+
+    __host__ __device__ constexpr void addPosition(const Vector3f &pos) noexcept {
+        mat[0][3] += pos[0];
+        mat[1][3] += pos[1];
+        mat[2][3] += pos[2];
+    }
+
 //private:
     float mat[4][4];
 };
