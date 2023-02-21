@@ -16,7 +16,7 @@ public:
     __device__ Ray3f getRay(float s, float t, const Vector2f &sample) const;
 
     //relative velocity with right/up/front
-    __host__ __device__ Vector3f addVelocity(const Vector3f v, float t) noexcept {
+    __host__ __device__ void addVelocity(const Vector3f v, float t) noexcept {
         cameraToWorld.addPosition((v[0] * right + v[1] * up + v[2] * front)* t);
     }
 
