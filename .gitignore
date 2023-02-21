@@ -9,3 +9,5 @@ tmp/*
 scenes/tmp/*
 scenes/envmap/highres/*
 *.zip
+imgui.ini
+report
