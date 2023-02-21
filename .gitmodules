@@ -1,4 +1,4 @@
-[submodule "libs/std"]
+[submodule "libs/stb"]
 	path = libs/stb
 	url = git@github.com:nothings/stb.git
 
@@ -8,3 +8,6 @@
 [submodule "libs/ImGui"]
 	path = libs/ImGui
 	url = git@github.com:ocornut/imgui.git
+[submodule "libs/pugixml"]
+	path = libs/pugixml
+	url = git@github.com:zeux/pugixml.git
