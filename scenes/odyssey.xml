@@ -15,7 +15,6 @@
         </transform>
 
 
-
         <sampler type="independent">
             <integer name="sample_count" value="1024"/>
         </sampler>
@@ -59,9 +58,7 @@
             <scale value="1, 10, 18"/>
             <translate value="-12, 0, 0"/>
         </transform>
-        <bsdf type="diffuse">
-            <rgb name="reflectance" value="0.0, 0.0, 0.0"/>
-        </bsdf>
+
         <emitter type="area">
             <rgb name="radiance" value="1.0, 1.0, 1.0"/>
         </emitter>

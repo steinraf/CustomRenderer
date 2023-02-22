@@ -19,7 +19,7 @@ __host__ Texture::Texture(const std::filesystem::path &imagePath, bool isEnvMap)
 
 #ifndef NDEBUG
     if(!hostTexture){
-        printf("The failure reaston is %s\n", stbi__g_failure_reason);
+        printf("The failure reason is %s\n", stbi__g_failure_reason);
         assert(false);
     }
 #endif

@@ -1,32 +1,33 @@
 <scene version='3.0.0'>
-    <default name="spp" value="256"/>
+    <default name="spp" value="2048"/>
 
     <integrator type='path'/>
 
     <sensor type="perspective" id="camera">
+        <float name="fov" value="39.3077"/>
 
         <transform name="to_world">
             <lookat target="489.857, -114.686, 503.183"
                     origin="490.447, -114.755, 503.987"
                     up    ="0.0407857, 0.99762, 0.0555876"/>
-
         </transform>
+
         <sampler type="independent">
             <integer name="sample_count" value="$spp"/>
         </sampler>
 
         <film type="hdrfilm">
-            <rfilter type="box"/>
             <integer name="width"  value="800"/>
             <integer name="height" value="600"/>
         </film>
+
     </sensor>
 
     <shape type="obj" id="light">
         <string name="filename" value="scenes/clockOBJ/light.obj"/>
-        <bsdf type="diffuse">
-            <rgb name="reflectance" value="0.0, 0.0, 0.0"/>
-        </bsdf>
+<!--        <bsdf type="diffuse">-->
+<!--            <rgb name="reflectance" value="0.0, 0.0, 0.0"/>-->
+<!--        </bsdf>-->
         <emitter type="area">
             <rgb name="radiance" value="34000, 24000, 8000"/>
         </emitter>
@@ -55,9 +56,7 @@
 
     <shape type="obj" id="copper">
         <string name="filename" value="scenes/clockOBJ/copper.obj"/>
-        <bsdf type="diffuse">
-            <rgb name="reflectance" value="0.2, 0.2, 0.2"/>
-        </bsdf>
+        <bsdf type="mirror"/>
     </shape>
 
     <shape type="obj" id="dark-red">
@@ -69,13 +68,6 @@
 
     <shape type="obj" id="floor">
         <string name="filename" value="scenes/clockOBJ/floor.obj"/>
-        <bsdf type="diffuse">
-            <rgb name="reflectance" value="0.75, 0.75, 0.75"/>
-        </bsdf>
-    </shape>
-
-    <shape type="obj" id="glass">
-        <string name="filename" value="scenes/clockOBJ/glass.obj"/>
         <bsdf type="diffuse">
             <rgb name="reflectance" value="0.75, 0.75, 0.75"/>
         </bsdf>
@@ -97,9 +89,7 @@
 
     <shape type="obj" id="metals">
         <string name="filename" value="scenes/clockOBJ/metals.obj"/>
-        <bsdf type="diffuse">
-            <rgb name="reflectance" value="0.2, 0.2, 0.2"/>
-        </bsdf>
+        <bsdf type="mirror"/>
     </shape>
 
     <shape type="obj" id="red">

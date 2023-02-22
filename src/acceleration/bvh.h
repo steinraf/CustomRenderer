@@ -253,6 +253,10 @@ public:
             }
         }
 
+//TMPDEBUG
+//        if(hasHit)
+//            assert(record.shFrame.n.isValid());
+
         for(int i = 0; i < numEmitters; ++i) {
             if(emitterBlasArr[i]->rayIntersect(r, record, isShadowRay)) {
                 if(isShadowRay)
@@ -261,6 +265,11 @@ public:
                 r.maxDist = record.t;
             }
         }
+
+//TMPDEBUG
+
+//        if(hasHit)
+//            assert(record.shFrame.n.isValid());
 
         rec = record;
         return hasHit;

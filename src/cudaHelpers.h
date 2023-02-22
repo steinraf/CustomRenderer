@@ -529,6 +529,7 @@ namespace cudaHelpers {
 
         while(true) {
             assert(currentRay.getDirection().norm() != 0.f);
+            assert(currentRay.getDirection().isValid());
 
             if(!scene->rayIntersect(currentRay, its)) {
                 if(t.norm() > EPSILON)
@@ -596,6 +597,8 @@ namespace cudaHelpers {
                     its.shFrame.toWorld(bsdfQueryRecord.wo)
             };
 
+            assert(currentRay.getDirection().isValid());
+
 
             const float masPDF = its.mesh->getBSDF()->pdf(bsdfQueryRecord);
 
@@ -639,6 +642,7 @@ namespace cudaHelpers {
 
         while(true) {
             assert(currentRay.getDirection().norm() != 0.f);
+            assert(currentRay.getDirection().isValid());
 
             if(!scene->rayIntersect(currentRay, its)) {
                 if(t.norm() > EPSILON)
@@ -646,6 +650,9 @@ namespace cudaHelpers {
                 else
                     return Li;
             }
+
+            //TMPDEBUG
+//            assert(its.shFrame.n.isValid());
 
             //TODO fix normals for ajax
 
@@ -743,7 +750,6 @@ namespace cudaHelpers {
                     its.p,
                     its.shFrame.toWorld(bsdfQueryRecord.wo)
             };
-
 
             const float masPDF = its.mesh->getBSDF()->pdf(bsdfQueryRecord);
 

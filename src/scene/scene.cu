@@ -106,6 +106,11 @@ __host__ Scene::Scene(SceneRepresentation &&sceneRepr, Device dev) : sceneRepres
 
     auto numEmitters = sceneRepresentation.emitterInfos.size();
 
+    if(numEmitters == 0){
+        std::cerr << "The scene seems to not contain any emitters. Please add a valid one and try again.\n";
+        exit(1);
+    }
+
     std::vector<BLAS *> hostEmitterBlasVector(numEmitters);
 
     std::vector<AreaLight> hostAreaLights(numEmitters);
@@ -373,6 +378,8 @@ __host__ void Scene::saveOutput() {
 
     png.close();
     pngDenoised.close();
+
+    std::cout << "Saving images completed.\n";
 }
 
 __host__ void Scene::step(float dt) noexcept {

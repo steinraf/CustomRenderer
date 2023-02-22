@@ -17,7 +17,7 @@
         </transform>
 
         <sampler type="independent">
-            <integer name="sample_count" value="64"/>
+            <integer name="sample_count" value="1024"/>
         </sampler>
 
         <film type="hdrfilm">
@@ -74,7 +74,7 @@
 
         <transform name="to_world">
 <!--            <scale value="0.003263, 0.003263, 0.003263"/>-->
-            <rotateAxis axis="0, 1, 0" angle="180"/>
+            <rotateAxis axis="0, 1, 0" angle="135"/>
             <scale value="0.5, 0.5, 0.5"/>
             <translate value="0, 0.3, -0.3"/>
         </transform>

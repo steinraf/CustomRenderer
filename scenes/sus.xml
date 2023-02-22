@@ -21,12 +21,12 @@
 		</sampler>
 
 		<film type="hdrfilm">
-			<integer name="height" value="216"/>
-			<integer name="width" value="384"/>
+<!--			<integer name="height" value="216"/>-->
+<!--			<integer name="width" value="384"/>-->
 <!--			<integer name="height" value="2160"/>-->
 <!--			<integer name="width" value="3840"/>-->
-<!--			<integer name="height" value="600"/>-->
-<!--			<integer name="width" value="800"/>-->
+			<integer name="height" value="600"/>
+			<integer name="width" value="800"/>
 <!--			<integer name="height" value="2400"/>-->
 <!--			<integer name="width" value="3200"/>-->
 		</film>

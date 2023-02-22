@@ -89,13 +89,7 @@ int main(int argc, char **argv){
 
             ImGui::Text("Camera Position (%f, %f, %f)", cameraPos[0], cameraPos[1], cameraPos[2]);
 
-            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-            ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-
-            if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-                counter++;
-            ImGui::SameLine();
-            ImGui::Text("counter = %d", counter);
+            ImGui::ColorEdit3("clear color", (float*)&clear_color); 
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             ImGui::End();
@@ -106,6 +100,7 @@ int main(int argc, char **argv){
 
             if(needsRender){
                 scene.step(1.f/CustomRenderer::min(ImGui::GetIO().Framerate, 1000.f));
+                //TODO add correct tonemapping for live preview
                 if(!scene.render()){
                     needsRender = false;
                     scene.denoise();
