@@ -7,13 +7,30 @@ set(CMAKE_CUDA_CXX_STANDARD 17)
 set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 
 set(OIDN_NEURAL_RUNTIME DNNL)
-add_subdirectory(libs/OpenImageDenoise)
+
+find_package(TBB REQUIRED)
+
 
 
 include_directories(libs/pugixml/src)
+include_directories(libs/oneTBB)
+include_directories(libs/oneTBB/include)
+
+add_subdirectory(libs/OpenImageDenoise)
+
 include_directories(libs/OpenImageDenoise/include)
 include_directories(libs/ImGui)
 include_directories(libs/ImGui/backends)
+include_directories(libs/pngwriter/src)
+include_directories(libs/libpng/)
+include_directories(libs/libpng/scripts/)
+include_directories(libs/zlib)
+include_directories(libs/freetype/include)
+
+include_directories(libs/glew-2.1.0/include)
+
+
+
 
 
 add_library(pugixml STATIC libs/pugixml/src/pugixml.cpp)
@@ -22,11 +39,13 @@ add_library(pugixml STATIC libs/pugixml/src/pugixml.cpp)
 include_directories(libs/stb)
 include_directories(libs/ImGui)
 include_directories(libs/ImGui/backends)
+include_directories(libs/glfw)
+include_directories(libs/glfw/include)
 
 
 
-find_package(PNGwriter 0.7.0 REQUIRED)
-find_package(glfw3 REQUIRED)
+#find_package(PNGwriter 0.7.0 REQUIRED)
+#find_package(glfw REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(X11 REQUIRED)
 find_package(OpenMP REQUIRED)
@@ -49,6 +68,7 @@ add_executable(CustomRenderer
 
         libs/ImGui/backends/imgui_impl_glfw.cpp
         libs/ImGui/backends/imgui_impl_opengl3.cpp
+
 
         main.cu
         src/utility/vector.h
@@ -90,5 +110,5 @@ set_target_properties(CustomRenderer PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 
 
-target_link_libraries(CustomRenderer PRIVATE PNGwriter::PNGwriter glfw3 GL GLEW X11 pthread pugixml OpenImageDenoise ${OPENEXR_LIBRARIES})
+target_link_libraries(CustomRenderer PRIVATE glfw GL GLEW X11 pthread pugixml OpenImageDenoise PNGwriter TBB ${OPENEXR_LIBRARIES})
 

@@ -11,7 +11,7 @@ There are still a lot of open TODO's and ideas which may hopefully be explored i
 
 First clone the repository and initialize the submodules.
 
-Then the executable can be generated using the following commands:
+If all the prerequisites are installed, the executable can be generated using the following commands:
 ```
 mkdir build
 cd build
