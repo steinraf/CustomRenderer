@@ -44,7 +44,7 @@ include_directories(libs/glfw/include)
 
 
 
-#find_package(PNGwriter 0.7.0 REQUIRED)
+find_package(PNGwriter 0.7.0 REQUIRED)
 #find_package(glfw REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(X11 REQUIRED)
@@ -65,6 +65,9 @@ add_executable(CustomRenderer
         libs/ImGui/imgui_internal.h
         libs/ImGui/imgui_tables.cpp
         libs/ImGui/imgui_widgets.cpp
+
+        libs/pngwriter/src/pngwriter.cc
+        libs/pngwriter/src/pngwriter.h
 
         libs/ImGui/backends/imgui_impl_glfw.cpp
         libs/ImGui/backends/imgui_impl_opengl3.cpp
@@ -110,5 +113,5 @@ set_target_properties(CustomRenderer PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 
 
-target_link_libraries(CustomRenderer PRIVATE glfw GL GLEW X11 pthread pugixml OpenImageDenoise PNGwriter TBB ${OPENEXR_LIBRARIES})
+target_link_libraries(CustomRenderer PRIVATE glfw GL GLEW X11 pthread pugixml OpenImageDenoise PNGwriter::PNGwriter TBB ${OPENEXR_LIBRARIES})
 
