@@ -18,7 +18,7 @@ namespace cudaHelpers {
     __host__ void
     check_cuda(cudaError_t result, char const *const func, const char *const file, int line) noexcept(false) {
         if(result) {
-            std::cerr << "CUDA error = " << static_cast<unsigned int>(result) << " at " << file << ":" << line << " '" << func << "' \n";
+            std::cerr << "CUDA error = " << static_cast<unsigned int>(result) << ":" << cudaGetErrorString(result) << "\nAt " << file << ":" << line << " '" << func << "' \n";
             cudaDeviceReset();
             exit(99);
         }
